@@ -1,93 +1,114 @@
-# Life Plan — Flutter App
-### Abdelfattah M. Aboulfoutoh · 2026
+# Life Plan 🚀
 
-Cross-platform life dashboard: Windows · iOS · Android · macOS
+<div align="center">
+  <p>A comprehensive, cross-platform life dashboard built with Flutter & Supabase.</p>
+  <p>
+    <b>Windows • macOS • iOS • Android</b>
+  </p>
+</div>
 
 ---
 
-## 🚀 Quick Setup (5 steps)
+## 📖 Overview
 
-### 1. Install dependencies
+**Life Plan** is a meticulously crafted cross-platform application designed to serve as your ultimate life dashboard. Developed by Abdelfattah M. Aboulfoutoh in 2026, it seamlessly integrates schedule management, financial tracking, habit formation, goal setting, and focused work sessions into a single, unified interface wrapped in an elegant dark theme.
+
+## ✨ Features
+
+### Phase 1: Core Foundation (✅ Completed)
+- **Robust Authentication**: Full Supabase authentication flow (Sign Up, Sign In, Forgot Password, Sign Out).
+- **Adaptive Navigation**: Intelligent routing via `go_router` featuring auth guards, a desktop sidebar, and a mobile bottom navigation bar.
+- **Premium UI/UX**: Exclusively designed dark theme with typography powered by *Playfair Display* and *IBM Plex Mono*, enriched with custom shared widgets (`AppTextField`, `AppButton`, `AppCard`).
+- **Data Architecture**: Comprehensive data modeling, full Supabase service layer, custom database schema with Row Level Security (RLS) policies, and default automated data seeding on new sign-ups.
+
+### Phase 2: Feature Modules (🔜 Upcoming)
+- 📊 **Overview Dashboard**: High-level insights at a glance.
+- ⏱️ **Schedule**: Daily planner with intuitive drag-to-reorder time blocks.
+- 📅 **Calendar**: Advanced event and appointment management.
+- 💰 **Finance**: Complete financial oversight including banks, debts, and transactions.
+- 📈 **Habits**: Comprehensive habit tracking with streak maintenance.
+- 🎯 **Goals**: A structured goal and milestone pool.
+- 🍅 **Focus**: Built-in Pomodoro timer integrated with session analytics.
+
+## 🛠️ Tech Stack
+
+- **Framework**: [Flutter](https://flutter.dev/) (>=3.19.0)
+- **Backend & Auth**: [Supabase](https://supabase.com/)
+- **State Management**: [Riverpod](https://riverpod.dev/) (`flutter_riverpod`, `riverpod_annotation`)
+- **Navigation**: [GoRouter](https://pub.dev/packages/go_router)
+- **Local Storage**: [Hive](https://docs.hivedb.dev/) & [Shared Preferences](https://pub.dev/packages/shared_preferences)
+- **Key UI/UX Libraries**: `fl_chart`, `table_calendar`, `flutter_animate`
+
+---
+
+## 🚀 Quick Setup Guide
+
+Follow these 5 simple steps to get the project running locally:
+
+### 1. Install Dependencies
 ```bash
-cd life_plan
 flutter pub get
 ```
 
-### 2. Add fonts
-Download from Google Fonts and place in `assets/fonts/`:
-- **Playfair Display**: Regular, Bold, Black → PlayfairDisplay-Regular.ttf, PlayfairDisplay-Bold.ttf, PlayfairDisplay-Black.ttf
-- **IBM Plex Mono**: Regular, Medium, SemiBold → IBMPlexMono-Regular.ttf, IBMPlexMono-Medium.ttf, IBMPlexMono-SemiBold.ttf
+### 2. Configure Typography
+This app uses custom typography. Download the following fonts from Google Fonts and place them in the `assets/fonts/` directory:
+- [Playfair Display](https://fonts.google.com/specimen/Playfair+Display) (`PlayfairDisplay-Regular.ttf`, `PlayfairDisplay-Bold.ttf`, `PlayfairDisplay-Black.ttf`)
+- [IBM Plex Mono](https://fonts.google.com/specimen/IBM+Plex+Mono) (`IBMPlexMono-Regular.ttf`, `IBMPlexMono-Medium.ttf`, `IBMPlexMono-SemiBold.ttf`)
 
-Or use: https://fonts.google.com/specimen/Playfair+Display and https://fonts.google.com/specimen/IBM+Plex+Mono
-
-### 3. Create Supabase project
-1. Go to https://supabase.com → New Project
-2. Go to SQL Editor → paste contents of `supabase/schema.sql` → Run
-3. Go to Project Settings → API → copy **Project URL** and **anon key**
-4. Paste into `lib/core/constants/app_constants.dart`:
+### 3. Setup Supabase Backend
+1. Create a new project at [Supabase](https://supabase.com/).
+2. Navigate to the **SQL Editor**, paste the contents of `supabase/schema.sql`, and hit **Run** to generate your tables and RLS policies.
+3. Navigate to **Project Settings > API** and copy your **Project URL** and **anon public key**.
+4. Inside your local project, open `lib/core/constants/app_constants.dart` and update the constants:
 ```dart
-static const supabaseUrl = 'https://xxxx.supabase.co';
+static const supabaseUrl = 'https://YOUR_PROJECT_ID.supabase.co';
 static const supabaseAnonKey = 'eyJ...';
 ```
 
-### 4. Run on Windows
+### 4. Run Locally (Desktop)
 ```bash
 flutter run -d windows
+# or macOS: flutter run -d macos
 ```
 
-### 5. Run on mobile
+### 5. Run Locally (Mobile)
 ```bash
-flutter run -d android   # or ios
+flutter run -d android
+# or iOS: flutter run -d ios
 ```
 
 ---
 
-## 📁 Structure
-```
+## 📁 Project Architecture
+
+The codebase follows a feature-centric, highly modular architecture to ensure scalability:
+
+```text
 lib/
-├── main.dart               ← App entry point
-├── core/
-│   ├── theme/              ← Dark theme, colors, typography
-│   ├── router/             ← GoRouter with auth guards
-│   └── constants/          ← App constants, category info
+├── main.dart                 # Application entry point
+├── core/                     # Foundational configurations
+│   ├── theme/                # Dark theme definition, colors, and typography 
+│   ├── router/               # GoRouter configuration and auth guards
+│   └── constants/            # Application-wide constants 
 ├── services/
-│   └── supabase_service.dart ← All DB operations
-├── shared/
-│   ├── models/             ← All data models
-│   ├── widgets/            ← Reusable UI components
-│   └── screens/            ← Shell navigation
-└── features/
-    ├── auth/               ← Login, signup, forgot password
-    ├── overview/           ← Dashboard (Part 2)
-    ├── schedule/           ← Daily schedule editor (Part 2)
-    ├── calendar/           ← Calendar + events (Part 2)
-    ├── finance/            ← Banks, debts, transactions (Part 2)
-    ├── habits/             ← Habit tracker (Part 2)
-    ├── goals/              ← Goal pool (Part 2)
-    └── focus/              ← Pomodoro timer (Part 2)
+│   └── supabase_service.dart # Centralized backend and DB operations
+├── shared/                   # Cross-feature reusables
+│   ├── models/               # Universal data models
+│   ├── widgets/              # Reusable UI components (buttons, text fields, cards)
+│   └── screens/              # Shell navigation structural screens
+└── features/                 # Modular feature domains
+    ├── auth/                 # Authentication workflows
+    ├── overview/             # Central dashboard (Part 2) 
+    ├── schedule/             # Daily schedule editor (Part 2)
+    ├── calendar/             # Calendar and event integration (Part 2)
+    ├── finance/              # Wealth tracking (Part 2)
+    ├── habits/               # Habit monitoring (Part 2)
+    ├── goals/                # Goal tracking (Part 2)
+    └── focus/                # Pomodoro timer (Part 2)
 ```
 
 ---
 
-## 🏗️ What's built (Part 1)
-- ✅ Full project structure
-- ✅ Dark theme (matches web app aesthetic exactly)
-- ✅ GoRouter with auth guards
-- ✅ Supabase auth (sign up, sign in, forgot password, sign out)
-- ✅ All data models
-- ✅ Full Supabase service layer
-- ✅ Adaptive navigation (sidebar on desktop, bottom bar on mobile)
-- ✅ All shared widgets (AppTextField, AppButton, AppCard, etc.)
-- ✅ Database schema with RLS policies
-- ✅ Default data seeding on sign-up
-- ✅ Auth screens (Login, Signup, Forgot Password)
-
-## 🔜 Part 2 will add
-- Full Overview dashboard
-- Schedule screen with drag-to-reorder blocks
-- Calendar with event CRUD
-- Finance dashboard (banks, debts, transactions)
-- Habits tracker with streaks
-- Goals pool
-- Pomodoro focus timer with analytics
-
+<div align="center">
+  <p>© 2026 Abdelfattah M. Aboulfoutoh</p>
+</div>
