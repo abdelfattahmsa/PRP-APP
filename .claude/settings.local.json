@@ -21,7 +21,10 @@
       "Bash(cp PlayfairDisplay-Regular.ttf PlayfairDisplay-Black.ttf)",
       "Bash(flutter clean:*)",
       "Read(//c/tmp/**)",
-      "Bash(flutter create:*)"
+      "Bash(flutter create:*)",
+      "Bash(./build/windows/x64/runner/Debug/life_plan.exe)",
+      "Bash(flutter build:*)",
+      "Bash(start \"\" \"./build/windows/x64/runner/Debug/life_plan.exe\")"
     ]
   }
 }
