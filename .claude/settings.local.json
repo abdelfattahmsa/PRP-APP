@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(for dir:*)",
+      "Bash(do echo:*)",
+      "Read(//c/Users/abdel/Documents/LP/**)",
+      "Bash(done)",
+      "Bash(xargs grep:*)",
+      "Bash(xxd)",
+      "Bash(printf '// ======================================================================\\\\n// FOCUS SCREEN  \\(Pomodoro + Analytics\\)\\\\n// ======================================================================\\\\n')",
+      "Bash(flutter analyze:*)",
+      "Bash(flutter run:*)",
+      "Bash(curl -sL \"https://fonts.google.com/download?family=Playfair+Display\" -o playfair.zip)",
+      "Bash(unzip -o playfair.zip -d Playfair_tmp)",
+      "Bash(curl -sL \"https://github.com/google/fonts/raw/main/ofl/playfairdisplay/PlayfairDisplay%5Bwght%5D.ttf\" -o PlayfairDisplay-Regular.ttf)",
+      "Bash(curl -sL \"https://github.com/google/fonts/raw/main/ofl/ibmplexmono/IBMPlexMono-Regular.ttf\" -o IBMPlexMono-Regular.ttf)",
+      "Bash(curl -sL \"https://github.com/google/fonts/raw/main/ofl/ibmplexmono/IBMPlexMono-Medium.ttf\" -o IBMPlexMono-Medium.ttf)",
+      "Bash(curl -sL \"https://github.com/google/fonts/raw/main/ofl/ibmplexmono/IBMPlexMono-SemiBold.ttf\" -o IBMPlexMono-SemiBold.ttf)",
+      "Bash(ls -la *.ttf)",
+      "Bash(cp PlayfairDisplay-Regular.ttf PlayfairDisplay-Bold.ttf)",
+      "Bash(cp PlayfairDisplay-Regular.ttf PlayfairDisplay-Black.ttf)",
+      "Bash(flutter clean:*)",
+      "Read(//c/tmp/**)",
+      "Bash(flutter create:*)"
+    ]
+  }
+}
