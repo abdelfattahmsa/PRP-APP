@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -8,6 +10,20 @@ import 'core/constants/app_constants.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Catch all Flutter framework errors
+  FlutterError.onError = (details) {
+    FlutterError.presentError(details);
+    debugPrint('FLUTTER ERROR: ${details.exception}');
+    debugPrint('${details.stack}');
+  };
+
+  // Catch async errors not caught by Flutter
+  PlatformDispatcher.instance.onError = (error, stack) {
+    debugPrint('PLATFORM ERROR: $error');
+    debugPrint('$stack');
+    return true;
+  };
 
   // Supabase
   await Supabase.initialize(
@@ -34,7 +50,6 @@ class LifePlanApp extends ConsumerWidget {
       theme: AppTheme.dark,
       routerConfig: router,
       builder: (context, child) {
-        // Enforce minimum font scale — prevents system font size from breaking layout
         return MediaQuery(
           data: MediaQuery.of(context).copyWith(
             textScaler: TextScaler.linear(
