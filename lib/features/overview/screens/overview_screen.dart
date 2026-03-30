@@ -6,6 +6,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/router/app_router.dart';
+import '../../../shared/models/models.dart';
 import '../../../shared/models/all_providers.dart';
 import '../../../features/auth/providers/auth_provider.dart';
 
@@ -23,9 +24,9 @@ class _OverviewScreenState extends ConsumerState<OverviewScreen> {
     final userAsync = ref.watch(currentUserProvider);
     final habits    = ref.watch(habitsTodayProvider);
     final summary   = ref.watch(financeSummaryProvider);
-    final goals     = ref.watch(goalsProvider).valueOrNull ?? [];
-    final sessions  = ref.watch(focusSessionsProvider).valueOrNull ?? [];
-    final calEvents = ref.watch(calendarProvider).valueOrNull ?? [];
+    final goals     = ref.watch(goalsProvider).value ?? [];
+    final sessions  = ref.watch(focusSessionsProvider).value ?? [];
+    final calEvents = ref.watch(calendarProvider).value ?? [];
     final schedMode = 'normal'; // could read from prefs
 
     // Today focus time
@@ -39,19 +40,17 @@ class _OverviewScreenState extends ConsumerState<OverviewScreen> {
     final blocks = schedAsync.value ?? [];
     final now = DateTime.now();
     final nowMins = now.hour * 60 + now.minute;
-    final curBlock = blocks.cast<dynamic>().firstWhere(
-      (b) {
-        final idx = blocks.indexOf(b as dynamic);
-        final nextMins = idx + 1 < blocks.length ? blocks[idx + 1].minutesSinceMidnight : 24 * 60;
-        return nowMins >= b.minutesSinceMidnight && nowMins < nextMins;
-      },
-      orElse: () => null,
-    );
-    final nextBlock = curBlock != null
-        ? blocks.cast<dynamic>().firstWhere(
-            (b) => b.minutesSinceMidnight > curBlock.minutesSinceMidnight,
-            orElse: () => null)
-        : null;
+    ScheduleBlock? curBlock;
+    ScheduleBlock? nextBlock;
+    for (var i = 0; i < blocks.length; i++) {
+      final b = blocks[i];
+      final nextMins = i + 1 < blocks.length ? blocks[i + 1].minutesSinceMidnight : 24 * 60;
+      if (nowMins >= b.minutesSinceMidnight && nowMins < nextMins) {
+        curBlock = b;
+        if (i + 1 < blocks.length) nextBlock = blocks[i + 1];
+        break;
+      }
+    }
 
     // Upcoming events
     final today = DateTime(now.year, now.month, now.day);

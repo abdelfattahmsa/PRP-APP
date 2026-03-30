@@ -79,13 +79,13 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                 markersMaxCount: 4,
                 cellMargin: const EdgeInsets.all(2),
               ),
-              headerStyle: const HeaderStyle(
+              headerStyle: HeaderStyle(
                 formatButtonVisible: true,
                 titleCentered: true,
                 formatButtonDecoration: BoxDecoration(
                   color: AppColors.card,
                   borderRadius: BorderRadius.all(Radius.circular(8)),
-                  border: BorderSide(color: AppColors.border) as dynamic,
+                  border: Border.all(color: AppColors.border),
                 ),
                 formatButtonTextStyle: TextStyle(color: AppColors.textSecondary, fontSize: 11, fontFamily: 'IBMPlexMono'),
                 leftChevronIcon: Icon(Icons.chevron_left, color: AppColors.textSecondary),

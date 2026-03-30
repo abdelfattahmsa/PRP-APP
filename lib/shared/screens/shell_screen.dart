@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gap/gap.dart';
-import '../core/theme/app_theme.dart';
-import '../core/router/app_router.dart';
-import '../core/constants/app_constants.dart';
-import '../features/auth/providers/auth_provider.dart';
+import '../../core/theme/app_theme.dart';
+import '../../core/router/app_router.dart';
+import '../../core/constants/app_constants.dart';
+import '../../features/auth/providers/auth_provider.dart';
 
 // ignore: library_private_types_in_public_api
 class ShellScreen extends ConsumerWidget {

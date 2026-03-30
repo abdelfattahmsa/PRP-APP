@@ -11,35 +11,36 @@ import '../models/models.dart';
 const _uuid = Uuid();
 
 // ── SCHEDULE PROVIDER ─────────────────────────────────────────
+// Riverpod 3.x removed FamilyAsyncNotifier — use FutureProvider.family
+// + a helper class for mutations.
 final scheduleProvider =
-    AsyncNotifierProviderFamily<ScheduleNotifier, List<ScheduleBlock>, String>(
-  ScheduleNotifier.new,
-);
+    FutureProvider.family<List<ScheduleBlock>, String>((ref, mode) {
+  return SupabaseService.instance.getScheduleBlocks(mode);
+});
 
-class ScheduleNotifier
-    extends FamilyAsyncNotifier<List<ScheduleBlock>, String> {
-  @override
-  Future<List<ScheduleBlock>> build(String mode) =>
-      SupabaseService.instance.getScheduleBlocks(mode);
+/// Helper for schedule mutations (works with both WidgetRef and Ref).
+class ScheduleActions {
+  ScheduleActions._();
+  static final instance = ScheduleActions._();
 
-  Future<void> addBlock(ScheduleBlock block) async {
+  Future<void> addBlock(dynamic ref, ScheduleBlock block) async {
     await SupabaseService.instance.upsertBlock(block);
-    ref.invalidateSelf();
+    ref.invalidate(scheduleProvider(block.scheduleMode));
   }
 
-  Future<void> updateBlock(ScheduleBlock block) async {
+  Future<void> updateBlock(dynamic ref, ScheduleBlock block) async {
     await SupabaseService.instance.upsertBlock(block);
-    state = AsyncData(state.value!.map((b) => b.id == block.id ? block : b).toList());
+    ref.invalidate(scheduleProvider(block.scheduleMode));
   }
 
-  Future<void> deleteBlock(String id) async {
+  Future<void> deleteBlock(dynamic ref, String id, String mode) async {
     await SupabaseService.instance.deleteBlock(id);
-    state = AsyncData(state.value!.where((b) => b.id != id).toList());
+    ref.invalidate(scheduleProvider(mode));
   }
 
-  Future<void> reorder(List<ScheduleBlock> reordered) async {
-    state = AsyncData(reordered);
+  Future<void> reorder(dynamic ref, List<ScheduleBlock> reordered, String mode) async {
     await SupabaseService.instance.reorderBlocks(reordered);
+    ref.invalidate(scheduleProvider(mode));
   }
 }
 
@@ -184,9 +185,9 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
 
 // Finance summary computed provider
 final financeSummaryProvider = Provider((ref) {
-  final banks = ref.watch(bankAccountsProvider).valueOrNull ?? [];
-  final debts = ref.watch(debtsProvider).valueOrNull ?? [];
-  final txs = ref.watch(transactionsProvider).valueOrNull ?? [];
+  final banks = ref.watch(bankAccountsProvider).value ?? [];
+  final debts = ref.watch(debtsProvider).value ?? [];
+  final txs = ref.watch(transactionsProvider).value ?? [];
 
   final totalCC = banks.fold(0.0, (s, b) => s + b.creditCardBalance);
   final totalLimit = banks.fold(0.0, (s, b) => s + b.creditCardLimit);
@@ -245,7 +246,7 @@ class HabitsNotifier extends AsyncNotifier<List<Habit>> {
     state = AsyncData([...state.value!, habit]);
   }
 
-  Future<void> update(Habit habit) async {
+  Future<void> upsert(Habit habit) async {
     await SupabaseService.instance.upsertHabit(habit);
     state = AsyncData(
         state.value!.map((h) => h.id == habit.id ? habit : h).toList());
@@ -276,7 +277,7 @@ class HabitsNotifier extends AsyncNotifier<List<Habit>> {
 
 // Derived: today's completion %
 final habitsTodayProvider = Provider((ref) {
-  final habits = ref.watch(habitsProvider).valueOrNull ?? [];
+  final habits = ref.watch(habitsProvider).value ?? [];
   if (habits.isEmpty) return (done: 0, total: 0, pct: 0.0);
   final done = habits.where((h) => h.isDoneToday).length;
   return (done: done, total: habits.length, pct: done / habits.length);
@@ -295,7 +296,7 @@ class GoalsNotifier extends AsyncNotifier<List<Goal>> {
     state = AsyncData([...state.value!, saved]);
   }
 
-  Future<void> update(Goal goal) async {
+  Future<void> upsert(Goal goal) async {
     final saved = await SupabaseService.instance.upsertGoal(goal);
     state = AsyncData(
         state.value!.map((g) => g.id == saved.id ? saved : g).toList());
@@ -308,12 +309,12 @@ class GoalsNotifier extends AsyncNotifier<List<Goal>> {
 
   Future<void> setProgress(String id, int progress) async {
     final goal = state.value!.firstWhere((g) => g.id == id);
-    await update(goal.copyWith(progress: progress));
+    await upsert(goal.copyWith(progress: progress));
   }
 
   Future<void> setStatus(String id, String status) async {
     final goal = state.value!.firstWhere((g) => g.id == id);
-    await update(goal.copyWith(status: status));
+    await upsert(goal.copyWith(status: status));
   }
 }
 
@@ -432,3 +433,17 @@ class FocusTimerNotifier extends Notifier<FocusTimerState> {
 
 final focusTimerProvider =
     NotifierProvider<FocusTimerNotifier, FocusTimerState>(FocusTimerNotifier.new);
+
+// ── CASH ON HAND PROVIDER ────────────────────────────────────
+class CashOnHandNotifier extends AsyncNotifier<double> {
+  @override
+  Future<double> build() => SupabaseService.instance.getCashOnHand();
+
+  Future<void> set(double amount) async {
+    await SupabaseService.instance.setCashOnHand(amount);
+    state = AsyncData(amount);
+  }
+}
+
+final cashOnHandProvider =
+    AsyncNotifierProvider<CashOnHandNotifier, double>(CashOnHandNotifier.new);

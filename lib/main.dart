@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'core/theme/app_theme.dart';
 import 'core/router/app_router.dart';
@@ -15,11 +14,6 @@ void main() async {
     url: AppConstants.supabaseUrl,
     anonKey: AppConstants.supabaseAnonKey,
   );
-
-  // Local storage
-  await Hive.initFlutter();
-  await Hive.openBox(AppConstants.hiveBoxSettings);
-  await Hive.openBox(AppConstants.hiveBoxCache);
 
   // Timezones (for notifications)
   tz.initializeTimeZones();

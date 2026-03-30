@@ -11,7 +11,7 @@ final authStateProvider = StreamProvider<User?>((ref) {
 /// Current logged-in user model
 final currentUserProvider = FutureProvider<AppUser?>((ref) async {
   final authState = ref.watch(authStateProvider);
-  if (authState.valueOrNull == null) return null;
+  if (authState.value == null) return null;
   return SupabaseService.instance.getProfile();
 });
 

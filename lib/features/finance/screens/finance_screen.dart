@@ -150,7 +150,7 @@ class _BanksTab extends ConsumerWidget {
     final banksAsync = ref.watch(bankAccountsProvider);
     return banksAsync.when(
       loading: () => const Center(child: CircularProgressIndicator(color: AppColors.gold)),
-      error: (e, _) => Center(child: Text('$e', style: const TextStyle(color: AppColors.error))),
+      error: (e, _) => Center(child: Text('Unable to load data. Please try again.', style: const TextStyle(color: AppColors.error))),
       data: (banks) => ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -305,13 +305,29 @@ class _CashCard extends ConsumerStatefulWidget {
 }
 
 class _CashCardState extends ConsumerState<_CashCard> {
-  // Cash is stored as part of the bank concept; for simplicity we use a local key
-  // In prod this would be a separate field in user settings
-  final _ctrl = TextEditingController(text: '0');
+  final _ctrl = TextEditingController();
   bool _editing = false;
+  bool _initialized = false;
+
+  @override
+  void dispose() { _ctrl.dispose(); super.dispose(); }
+
+  void _save() {
+    final amount = double.tryParse(_ctrl.text) ?? 0;
+    ref.read(cashOnHandProvider.notifier).set(amount);
+    setState(() => _editing = false);
+  }
 
   @override
   Widget build(BuildContext context) {
+    final cashAsync = ref.watch(cashOnHandProvider);
+    final cash = cashAsync.value ?? 0;
+    // Initialize controller with provider value once
+    if (!_initialized && !_editing) {
+      _ctrl.text = cash.toStringAsFixed(0);
+      if (cashAsync.hasValue) _initialized = true;
+    }
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
@@ -324,12 +340,12 @@ class _CashCardState extends ConsumerState<_CashCard> {
         const Gap(10),
         const Expanded(child: Text('Cash on Hand', style: TextStyle(fontFamily: 'PlayfairDisplay', fontSize: 14, fontWeight: FontWeight.w700))),
         _editing
-            ? SizedBox(width: 100, child: TextField(controller: _ctrl, keyboardType: TextInputType.number, textAlign: TextAlign.right, style: const TextStyle(fontFamily: 'IBMPlexMono', fontSize: 13, color: AppColors.textPrimary), decoration: const InputDecoration(isDense: true, contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 6))))
-            : Text('EGP ${_ctrl.text}', style: const TextStyle(fontFamily: 'IBMPlexMono', fontSize: 13, color: AppColors.gold, fontWeight: FontWeight.w600)),
+            ? SizedBox(width: 100, child: TextField(controller: _ctrl, keyboardType: TextInputType.number, textAlign: TextAlign.right, autofocus: true, style: const TextStyle(fontFamily: 'IBMPlexMono', fontSize: 13, color: AppColors.textPrimary), decoration: const InputDecoration(isDense: true, contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 6)), onSubmitted: (_) => _save()))
+            : Text('EGP ${_fmt.format(cash)}', style: const TextStyle(fontFamily: 'IBMPlexMono', fontSize: 13, color: AppColors.gold, fontWeight: FontWeight.w600)),
         const Gap(8),
         IconButton(
           icon: Icon(_editing ? Icons.check : Icons.edit_outlined, size: 16, color: AppColors.gold),
-          onPressed: () => setState(() => _editing = !_editing),
+          onPressed: _editing ? _save : () => setState(() => _editing = true),
           padding: EdgeInsets.zero, constraints: const BoxConstraints(),
         ),
       ]),
@@ -365,7 +381,7 @@ class _DebtsTabState extends ConsumerState<_DebtsTab> {
     final debtsAsync = ref.watch(debtsProvider);
     return debtsAsync.when(
       loading: () => const Center(child: CircularProgressIndicator(color: AppColors.gold)),
-      error: (e, _) => Center(child: Text('$e')),
+      error: (e, _) => Center(child: Text('Something went wrong. Please try again.', style: const TextStyle(color: AppColors.error))),
       data: (debts) {
         final total = debts.fold(0.0, (s, d) => s + d.amount);
         return ListView(
@@ -475,7 +491,7 @@ class _TxTabState extends ConsumerState<_TransactionsTab> {
 
     return txAsync.when(
       loading: () => const Center(child: CircularProgressIndicator(color: AppColors.gold)),
-      error: (e, _) => Center(child: Text('$e')),
+      error: (e, _) => Center(child: Text('Something went wrong. Please try again.', style: const TextStyle(color: AppColors.error))),
       data: (txs) {
         final filtered = _catFilter == 'All' ? txs : txs.where((t) => t.category == _catFilter).toList();
         final total = filtered.fold(0.0, (s, t) => s + t.amount);

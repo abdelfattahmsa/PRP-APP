@@ -89,7 +89,7 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
         Expanded(
           child: blocksAsync.when(
             loading: () => const Center(child: CircularProgressIndicator(color: AppColors.gold)),
-            error: (e, _) => Center(child: Text('Error: $e', style: const TextStyle(color: AppColors.error))),
+            error: (e, _) => Center(child: Text('Unable to load schedule. Pull to retry.', style: const TextStyle(color: AppColors.error))),
             data: (blocks) => blocks.isEmpty
                 ? _emptyState(context)
                 : _BlocksList(blocks: blocks, mode: _mode, accent: _accent),
@@ -136,7 +136,7 @@ class _BlocksList extends ConsumerWidget {
         if (n > o) n--;
         final list = List<ScheduleBlock>.from(blocks);
         list.insert(n, list.removeAt(o));
-        ref.read(scheduleProvider(mode).notifier).reorder(list);
+        ScheduleActions.instance.reorder(ref, list, mode);
       },
       itemBuilder: (ctx, i) => _BlockTile(
         key: ValueKey(blocks[i].id),
@@ -178,7 +178,7 @@ class _BlockTile extends ConsumerWidget {
             ],
           ),
         ),
-        onDismissed: (_) => ref.read(scheduleProvider(mode).notifier).deleteBlock(block.id),
+        onDismissed: (_) => ScheduleActions.instance.deleteBlock(ref, block.id, mode),
         child: AnimatedContainer(
           duration: 200.ms,
           decoration: BoxDecoration(
@@ -262,25 +262,47 @@ class _EditBlockState extends ConsumerState<EditBlockScreen> {
   @override
   void dispose() { _label.dispose(); _time.dispose(); _dur.dispose(); _note.dispose(); super.dispose(); }
 
+  static final _timeRegex = RegExp(r'^([01]\d|2[0-3]):([0-5]\d)$');
+
   Future<void> _save() async {
     if (_label.text.isEmpty || _time.text.isEmpty) return;
-    setState(() => _saving = true);
-    final block = ScheduleBlock(
-      id: _existing?.id ?? _uuid.v4(),
-      scheduleMode: widget.scheduleMode,
-      time: _time.text.trim(), label: _label.text.trim(),
-      categoryKey: _cat,
-      duration: _dur.text.trim().isEmpty ? null : _dur.text.trim(),
-      note: _note.text.trim().isEmpty ? null : _note.text.trim(),
-      order: _existing?.order ?? 99,
-      notifyOnStart: _notifyS, notifyOnEnd: _notifyE,
-    );
-    if (_existing != null) {
-      await ref.read(scheduleProvider(widget.scheduleMode).notifier).updateBlock(block);
-    } else {
-      await ref.read(scheduleProvider(widget.scheduleMode).notifier).addBlock(block);
+    // Validate HH:MM format
+    final timeStr = _time.text.trim();
+    if (!_timeRegex.hasMatch(timeStr)) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please enter a valid time in HH:MM format (e.g. 04:55)'), backgroundColor: AppColors.error),
+        );
+      }
+      return;
     }
-    if (mounted) context.pop();
+    setState(() => _saving = true);
+    try {
+      final block = ScheduleBlock(
+        id: _existing?.id ?? _uuid.v4(),
+        scheduleMode: widget.scheduleMode,
+        time: timeStr, label: _label.text.trim(),
+        categoryKey: _cat,
+        duration: _dur.text.trim().isEmpty ? null : _dur.text.trim(),
+        note: _note.text.trim().isEmpty ? null : _note.text.trim(),
+        order: _existing?.order ?? 99,
+        notifyOnStart: _notifyS, notifyOnEnd: _notifyE,
+      );
+      if (_existing != null) {
+        await ScheduleActions.instance.updateBlock(ref, block);
+      } else {
+        await ScheduleActions.instance.addBlock(ref, block);
+      }
+      if (mounted) context.pop();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not save block. Please try again.'), backgroundColor: AppColors.error),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
   }
 
   @override
@@ -355,7 +377,7 @@ class _EditBlockState extends ConsumerState<EditBlockScreen> {
                 label: const Text('Delete Block', style: TextStyle(color: AppColors.error)),
                 style: OutlinedButton.styleFrom(side: const BorderSide(color: AppColors.error)),
                 onPressed: () async {
-                  await ref.read(scheduleProvider(widget.scheduleMode).notifier).deleteBlock(widget.blockId!);
+                  await ScheduleActions.instance.deleteBlock(ref, widget.blockId!, widget.scheduleMode);
                   if (context.mounted) context.pop();
                 },
               ),

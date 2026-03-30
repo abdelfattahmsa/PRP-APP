@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import '../shared/models/models.dart';
@@ -23,7 +25,7 @@ class NotificationService {
       guid: 'a8b9c0d1-e2f3-4567-890a-bcdef1234567',
     );
     await _plugin.initialize(
-      const InitializationSettings(
+      settings: const InitializationSettings(
         android: android,
         iOS: darwin,
         macOS: darwin,
@@ -51,7 +53,7 @@ class NotificationService {
   ) async {
     // Cancel existing schedule notifications (IDs 1000-1999)
     for (var i = 1000; i < 2000; i++) {
-      await _plugin.cancel(i);
+      await _plugin.cancel(id: i);
     }
 
     final location = tz.getLocation(timezone);
@@ -71,11 +73,11 @@ class NotificationService {
       }
 
       await _plugin.zonedSchedule(
-        1000 + i,
-        '⏰ ${block.label}',
-        block.note ?? _categoryLabel(block.categoryKey),
-        scheduled,
-        NotificationDetails(
+        id: 1000 + i,
+        title: '⏰ ${block.label}',
+        body: block.note ?? _categoryLabel(block.categoryKey),
+        scheduledDate: scheduled,
+        notificationDetails: NotificationDetails(
           android: AndroidNotificationDetails(
             'schedule_blocks',
             'Schedule Blocks',
@@ -102,10 +104,10 @@ class NotificationService {
     int id = 0,
   }) async {
     await _plugin.show(
-      id,
-      title,
-      body,
-      const NotificationDetails(
+      id: id,
+      title: title,
+      body: body,
+      notificationDetails: const NotificationDetails(
         android: AndroidNotificationDetails(
           'general', 'General',
           importance: Importance.defaultImportance,
@@ -132,16 +134,15 @@ class NotificationService {
     };
   }
 
-  // Returns Android Color int
-  int _categoryColor(String key) {
+  Color _categoryColor(String key) {
     return switch (key) {
-      'deen' => 0xFF54C478,
-      'pmp' => 0xFF6A8EF0,
-      'study' => 0xFF4AAAE0,
-      'health' => 0xFFD07848,
-      'kyb' => 0xFFAA70EE,
-      'work' => 0xFFC09840,
-      _ => 0xFFC8A050,
+      'deen' => const Color(0xFF54C478),
+      'pmp' => const Color(0xFF6A8EF0),
+      'study' => const Color(0xFF4AAAE0),
+      'health' => const Color(0xFFD07848),
+      'kyb' => const Color(0xFFAA70EE),
+      'work' => const Color(0xFFC09840),
+      _ => const Color(0xFFC8A050),
     };
   }
 }

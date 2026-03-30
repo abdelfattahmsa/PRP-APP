@@ -10,6 +10,10 @@ import '../../features/schedule/screens/schedule_screen.dart';
 import '../../features/calendar/screens/calendar_screen.dart';
 import '../../features/finance/screens/finance_screen.dart';
 import '../../features/habits/screens/habits_screen.dart';
+import '../../features/goals/screens/goals_screen.dart';
+import '../../features/focus/screens/focus_screen.dart';
+// ForgotPasswordScreen is in signup_screen.dart (exported via forgot_password_screen.dart)
+import '../../features/auth/screens/signup_screen.dart' show ForgotPasswordScreen;
 
 class Routes {
   static const login          = '/login';
@@ -29,7 +33,7 @@ final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: Routes.overview,
     redirect: (context, state) {
-      final isLoggedIn = authState.valueOrNull != null;
+      final isLoggedIn = authState.value != null;
       final isAuthRoute = state.matchedLocation.startsWith('/login') ||
           state.matchedLocation.startsWith('/signup') ||
           state.matchedLocation.startsWith('/forgot');

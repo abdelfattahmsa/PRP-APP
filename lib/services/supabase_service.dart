@@ -1,5 +1,8 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:uuid/uuid.dart';
 import '../shared/models/models.dart';
+
+const _uuidGen = Uuid();
 
 /// Central service for all Supabase operations.
 /// Each feature gets its own method group.
@@ -288,6 +291,9 @@ class SupabaseService {
 
     // Seed default schedule blocks (normal mode)
     await _seedScheduleBlocks(uid);
+
+    // Seed default calendar events (milestones + Islamic dates)
+    await _seedDefaultCalendarEvents(uid);
   }
 
   Future<void> _seedScheduleBlocks(String uid) async {
@@ -316,14 +322,33 @@ class SupabaseService {
     await _db.from('schedule_blocks').insert(rows);
   }
 
-  String _uuid() {
-    // Simple UUID v4-ish
-    const chars = '0123456789abcdef';
-    final r = StringBuffer();
-    for (var i = 0; i < 32; i++) {
-      if (i == 8 || i == 12 || i == 16 || i == 20) r.write('-');
-      r.write(chars[DateTime.now().microsecondsSinceEpoch % 16]);
-    }
-    return r.toString();
+  String _uuid() => _uuidGen.v4();
+
+  // ── CASH ON HAND ───────────────────────────────────────────
+  Future<double> getCashOnHand() async {
+    final row = await _db.from('profiles').select('cash_on_hand').eq('id', _uid).maybeSingle();
+    return (row?['cash_on_hand'] as num?)?.toDouble() ?? 0;
+  }
+
+  Future<void> setCashOnHand(double amount) async {
+    await _db.from('profiles').update({'cash_on_hand': amount}).eq('id', _uid);
+  }
+
+  // ── SEED CALENDAR EVENTS ───────────────────────────────────
+  Future<void> _seedDefaultCalendarEvents(String uid) async {
+    final events = <Map<String, dynamic>>[
+      {'id': _uuid(), 'user_id': uid, 'title': 'Engagement', 'date': '2026-05-30', 'type': 'milestone', 'is_done': false, 'notes': 'إن شاء الله 🤍'},
+      {'id': _uuid(), 'user_id': uid, 'title': 'Wedding', 'date': '2027-03-01', 'type': 'milestone', 'is_done': false, 'notes': 'March 2027 إن شاء الله'},
+      {'id': _uuid(), 'user_id': uid, 'title': 'PMP Exam Deadline', 'date': '2026-06-30', 'type': 'deadline', 'is_done': false},
+      {'id': _uuid(), 'user_id': uid, 'title': 'Product #1 MVP', 'date': '2026-04-10', 'type': 'deadline', 'is_done': false},
+      {'id': _uuid(), 'user_id': uid, 'title': 'First Kyberia Client', 'date': '2026-05-01', 'type': 'deadline', 'is_done': false},
+      {'id': _uuid(), 'user_id': uid, 'title': 'Ramadan Start', 'date': '2026-02-18', 'type': 'islamic', 'is_done': false},
+      {'id': _uuid(), 'user_id': uid, 'title': 'Eid Al-Fitr', 'date': '2026-03-20', 'type': 'islamic', 'is_done': false},
+      {'id': _uuid(), 'user_id': uid, 'title': 'Eid Al-Adha', 'date': '2026-05-27', 'type': 'islamic', 'is_done': false},
+      {'id': _uuid(), 'user_id': uid, 'title': 'Islamic New Year', 'date': '2026-06-17', 'type': 'islamic', 'is_done': false},
+      {'id': _uuid(), 'user_id': uid, 'title': 'Mawlid Al-Nabi', 'date': '2026-08-26', 'type': 'islamic', 'is_done': false},
+      {'id': _uuid(), 'user_id': uid, 'title': 'Debt ≤ 100K Target', 'date': '2026-09-15', 'type': 'deadline', 'is_done': false},
+    ];
+    await _db.from('calendar_events').insert(events);
   }
 }
