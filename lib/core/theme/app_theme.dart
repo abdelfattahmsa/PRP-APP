@@ -1,20 +1,69 @@
 import 'package:flutter/material.dart';
 
-/// Central color palette — matches the web app aesthetic
+// ══════════════════════════════════════════════════════════════
+// DESIGN SYSTEM v2.0 — Life Plan
+// ══════════════════════════════════════════════════════════════
+
+/// Spacing system based on 4px grid
+class Spacing {
+  Spacing._();
+  static const double xs = 4;
+  static const double sm = 8;
+  static const double md = 12;
+  static const double base = 16;
+  static const double lg = 20;
+  static const double xl = 28;
+  static const double xxl = 40;
+
+  /// Standard page padding (responsive)
+  static EdgeInsets pagePadding(BuildContext context) {
+    final w = MediaQuery.of(context).size.width;
+    final h = w >= 768 ? 24.0 : 16.0;
+    return EdgeInsets.symmetric(horizontal: h, vertical: lg);
+  }
+
+  /// Standard card padding
+  static const cardPadding = EdgeInsets.all(md);
+  static const cardPaddingCompact = EdgeInsets.symmetric(horizontal: md, vertical: sm);
+}
+
+/// Responsive breakpoints
+class Breakpoints {
+  Breakpoints._();
+  static const double mobile = 480;
+  static const double tablet = 768;
+  static const double desktop = 1200;
+
+  static bool isMobile(BuildContext context) =>
+      MediaQuery.of(context).size.width < tablet;
+  static bool isTablet(BuildContext context) {
+    final w = MediaQuery.of(context).size.width;
+    return w >= tablet && w < desktop;
+  }
+  static bool isDesktop(BuildContext context) =>
+      MediaQuery.of(context).size.width >= desktop;
+  static bool isWide(BuildContext context) =>
+      MediaQuery.of(context).size.width >= tablet;
+}
+
+/// Central color palette
 class AppColors {
   AppColors._();
 
   // Core backgrounds
-  static const bg = Color(0xFF09080D);
-  static const surface = Color(0xFF0E0C14);
-  static const card = Color(0xFF131120);
+  static const bg = Color(0xFF08070C);
+  static const surface = Color(0xFF0D0B13);
+  static const card = Color(0xFF12101E);
+  static const cardHover = Color(0xFF171526);
   static const cardAlt = Color(0xFF171526);
   static const border = Color(0xFF1E1B2C);
+  static const borderLight = Color(0xFF2A2640);
 
   // Brand
   static const gold = Color(0xFFC8A050);
   static const goldLight = Color(0xFFE8C97A);
   static const goldDim = Color(0xFF5A4418);
+  static const goldFaint = Color(0xFF2A2010);
 
   // Category colors
   static const deen = Color(0xFF54C478);
@@ -25,6 +74,7 @@ class AppColors {
   static const work = Color(0xFFC09840);
   static const fasting = Color(0xFFE08840);
   static const commute = Color(0xFF3AB8A8);
+  static const rest = Color(0xFF6B6080);
 
   // Semantic
   static const success = Color(0xFF54C478);
@@ -42,9 +92,9 @@ class AppColors {
   static const done = Color(0xFF405040);
 
   // Text
-  static const textPrimary = Color(0xFFDDD6F0);
+  static const textPrimary = Color(0xFFE0DAF0);
   static const textSecondary = Color(0xFF7A7090);
-  static const textMuted = Color(0xFF2E2840);
+  static const textMuted = Color(0xFF3A3450);
 
   static Color categoryColor(String key) {
     return switch (key) {
@@ -56,6 +106,7 @@ class AppColors {
       'work' => work,
       'fast' || 'fasting' => fasting,
       'com' || 'commute' => commute,
+      'rest' => rest,
       'personal' => personal,
       'islamic' => islamic,
       'finance' => finance,
@@ -69,7 +120,7 @@ class AppColors {
   }
 
   static Color categoryBg(String key) {
-    return categoryColor(key).withOpacity(0.08);
+    return categoryColor(key).withValues(alpha: 0.08);
   }
 }
 
@@ -116,6 +167,14 @@ class AppTheme {
           borderRadius: BorderRadius.circular(8),
           borderSide: const BorderSide(color: AppColors.gold, width: 1.5),
         ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: AppColors.error),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: AppColors.error, width: 1.5),
+        ),
         labelStyle: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
         hintStyle: const TextStyle(color: AppColors.textMuted, fontSize: 12),
         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -125,6 +184,7 @@ class AppTheme {
           backgroundColor: AppColors.gold,
           foregroundColor: AppColors.bg,
           elevation: 0,
+          minimumSize: const Size(0, 44), // 44px min tap target
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 13),
           textStyle: const TextStyle(
@@ -139,8 +199,20 @@ class AppTheme {
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.textSecondary,
           side: const BorderSide(color: AppColors.border),
+          minimumSize: const Size(0, 44),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 13),
+          textStyle: const TextStyle(
+            fontFamily: 'IBMPlexMono',
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: AppColors.gold,
+          minimumSize: const Size(0, 44),
           textStyle: const TextStyle(
             fontFamily: 'IBMPlexMono',
             fontSize: 12,
@@ -153,27 +225,10 @@ class AppTheme {
         thickness: 1,
         space: 0,
       ),
-      navigationRailTheme: const NavigationRailThemeData(
-        backgroundColor: AppColors.surface,
-        selectedIconTheme: IconThemeData(color: AppColors.gold),
-        unselectedIconTheme: IconThemeData(color: AppColors.textSecondary),
-        selectedLabelTextStyle: TextStyle(
-          color: AppColors.gold,
-          fontSize: 10,
-          fontFamily: 'IBMPlexMono',
-          fontWeight: FontWeight.w600,
-        ),
-        unselectedLabelTextStyle: TextStyle(
-          color: AppColors.textSecondary,
-          fontSize: 10,
-          fontFamily: 'IBMPlexMono',
-        ),
-        indicatorColor: Color(0x22C8A050),
-        labelType: NavigationRailLabelType.all,
-      ),
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: AppColors.surface,
-        indicatorColor: AppColors.gold.withOpacity(0.15),
+        indicatorColor: AppColors.gold.withValues(alpha: 0.15),
+        elevation: 0,
         iconTheme: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
             return const IconThemeData(color: AppColors.gold, size: 22);
@@ -197,11 +252,12 @@ class AppTheme {
         }),
         surfaceTintColor: Colors.transparent,
         shadowColor: Colors.transparent,
-        height: 70,
+        height: 64,
       ),
       appBarTheme: const AppBarTheme(
-        backgroundColor: AppColors.surface,
+        backgroundColor: Colors.transparent,
         elevation: 0,
+        scrolledUnderElevation: 0,
         centerTitle: false,
         titleTextStyle: TextStyle(
           fontFamily: 'PlayfairDisplay',
@@ -227,13 +283,12 @@ class AppTheme {
           color: AppColors.textPrimary,
         ),
       ),
-      snackBarTheme: const SnackBarThemeData(
+      snackBarTheme: SnackBarThemeData(
         backgroundColor: AppColors.cardAlt,
-        contentTextStyle: TextStyle(color: AppColors.textPrimary, fontSize: 13),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(8)),
-        ),
+        contentTextStyle: const TextStyle(color: AppColors.textPrimary, fontSize: 13),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         behavior: SnackBarBehavior.floating,
+        elevation: 0,
       ),
       chipTheme: ChipThemeData(
         backgroundColor: AppColors.card,
@@ -251,7 +306,7 @@ class AppTheme {
             s.contains(WidgetState.selected) ? AppColors.gold : AppColors.textSecondary),
         trackColor: WidgetStateProperty.resolveWith((s) =>
             s.contains(WidgetState.selected)
-                ? AppColors.gold.withOpacity(0.3)
+                ? AppColors.gold.withValues(alpha: 0.3)
                 : AppColors.border),
       ),
       sliderTheme: const SliderThemeData(
@@ -260,32 +315,44 @@ class AppTheme {
         thumbColor: AppColors.gold,
         overlayColor: Color(0x22C8A050),
       ),
+      tooltipTheme: TooltipThemeData(
+        decoration: BoxDecoration(
+          color: AppColors.cardAlt,
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: AppColors.border),
+        ),
+        textStyle: const TextStyle(
+          color: AppColors.textPrimary,
+          fontSize: 11,
+          fontFamily: 'IBMPlexMono',
+        ),
+      ),
     );
   }
 
   static const _textTheme = TextTheme(
     displayLarge: TextStyle(
       fontFamily: 'PlayfairDisplay',
-      fontSize: 48,
+      fontSize: 40,
       fontWeight: FontWeight.w900,
       color: AppColors.textPrimary,
       letterSpacing: -1,
     ),
     displayMedium: TextStyle(
       fontFamily: 'PlayfairDisplay',
-      fontSize: 36,
+      fontSize: 32,
       fontWeight: FontWeight.w700,
       color: AppColors.textPrimary,
     ),
     headlineLarge: TextStyle(
       fontFamily: 'PlayfairDisplay',
-      fontSize: 28,
+      fontSize: 24,
       fontWeight: FontWeight.w700,
       color: AppColors.textPrimary,
     ),
     headlineMedium: TextStyle(
       fontFamily: 'PlayfairDisplay',
-      fontSize: 22,
+      fontSize: 20,
       fontWeight: FontWeight.w700,
       color: AppColors.textPrimary,
     ),
@@ -315,12 +382,12 @@ class AppTheme {
       letterSpacing: 0.5,
     ),
     bodyLarge: TextStyle(
-      fontSize: 15,
+      fontSize: 14,
       color: AppColors.textPrimary,
       height: 1.6,
     ),
     bodyMedium: TextStyle(
-      fontSize: 13,
+      fontSize: 12,
       color: AppColors.textPrimary,
       height: 1.5,
     ),
@@ -345,7 +412,7 @@ class AppTheme {
       fontFamily: 'IBMPlexMono',
       fontSize: 9,
       fontWeight: FontWeight.w400,
-      letterSpacing: 1.0,
+      letterSpacing: 1.5,
       color: AppColors.textSecondary,
     ),
   );

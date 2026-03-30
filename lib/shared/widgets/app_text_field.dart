@@ -189,14 +189,14 @@ class AppCard extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         borderRadius: radius,
-        splashColor: (accentColor ?? AppColors.gold).withOpacity(0.08),
+        splashColor: (accentColor ?? AppColors.gold).withValues(alpha: 0.08),
         child: Container(
           padding: padding ?? const EdgeInsets.all(16),
           decoration: BoxDecoration(
             borderRadius: radius,
             border: Border.all(
               color: accentColor != null
-                  ? accentColor!.withOpacity(0.3)
+                  ? accentColor!.withValues(alpha: 0.3)
                   : AppColors.border,
             ),
           ),
@@ -219,7 +219,7 @@ class SectionLabel extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 10),
       child: Row(
         children: [
-          Expanded(child: Divider(color: AppColors.border.withOpacity(0.6))),
+          Expanded(child: Divider(color: AppColors.border.withValues(alpha: 0.6))),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 10),
             child: Text(
@@ -230,7 +230,7 @@ class SectionLabel extends StatelessWidget {
                   ),
             ),
           ),
-          Expanded(child: Divider(color: AppColors.border.withOpacity(0.6))),
+          Expanded(child: Divider(color: AppColors.border.withValues(alpha: 0.6))),
         ],
       ),
     );
@@ -252,7 +252,7 @@ class CategoryDot extends StatelessWidget {
       decoration: BoxDecoration(
         color: color,
         shape: BoxShape.circle,
-        boxShadow: [BoxShadow(color: color.withOpacity(0.5), blurRadius: 4)],
+        boxShadow: [BoxShadow(color: color.withValues(alpha: 0.5), blurRadius: 4)],
       ),
     );
   }
@@ -429,21 +429,21 @@ class _DiamondPainter extends CustomPainter {
         ..lineTo(center.dx, center.dy + radius)
         ..lineTo(center.dx - radius, center.dy)
         ..close();
-      canvas.drawPath(path, paint..color = AppColors.gold.withOpacity(paint.color.opacity));
+      canvas.drawPath(path, paint..color = AppColors.gold.withValues(alpha: paint.color.a));
     }
 
     paint.color = AppColors.gold;
     diamond(size.width / 2 - 2);
-    paint.color = AppColors.gold.withOpacity(0.7);
+    paint.color = AppColors.gold.withValues(alpha: 0.7);
     diamond(size.width / 2 - 8);
-    paint.color = AppColors.gold.withOpacity(0.5);
+    paint.color = AppColors.gold.withValues(alpha: 0.5);
     diamond(size.width / 2 - 14);
 
     // Center dot
     canvas.drawCircle(
       center,
       3,
-      Paint()..color = AppColors.gold.withOpacity(0.8),
+      Paint()..color = AppColors.gold.withValues(alpha: 0.8),
     );
   }
 
@@ -486,10 +486,10 @@ class CategoryChip extends StatelessWidget {
         duration: 150.ms,
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         decoration: BoxDecoration(
-          color: selected ? color.withOpacity(0.18) : AppColors.card,
+          color: selected ? color.withValues(alpha: 0.18) : AppColors.card,
           borderRadius: BorderRadius.circular(6),
           border: Border.all(
-            color: selected ? color.withOpacity(0.5) : AppColors.border,
+            color: selected ? color.withValues(alpha: 0.5) : AppColors.border,
           ),
         ),
         child: Row(

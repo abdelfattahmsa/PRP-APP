@@ -12,6 +12,7 @@ import '../../features/finance/screens/finance_screen.dart';
 import '../../features/habits/screens/habits_screen.dart';
 import '../../features/goals/screens/goals_screen.dart';
 import '../../features/focus/screens/focus_screen.dart';
+import '../../features/settings/screens/settings_screen.dart';
 
 class Routes {
   static const login          = '/login';
@@ -24,6 +25,7 @@ class Routes {
   static const habits         = '/habits';
   static const goals          = '/goals';
   static const focus          = '/focus';
+  static const settings       = '/settings';
 }
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -72,6 +74,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(path: Routes.habits,  builder: (_, __) => const HabitsScreen()),
           GoRoute(path: Routes.goals,   builder: (_, __) => const GoalsScreen()),
           GoRoute(path: Routes.focus,   builder: (_, __) => const FocusScreen()),
+          GoRoute(path: Routes.settings, builder: (_, __) => const SettingsScreen()),
         ],
       ),
     ],

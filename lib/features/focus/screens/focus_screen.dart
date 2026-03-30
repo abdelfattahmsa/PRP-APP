@@ -110,9 +110,9 @@ class _FocusTimerView extends ConsumerWidget {
                 child: AnimatedContainer(
                   duration: 150.ms, margin: const EdgeInsets.all(4),
                   decoration: BoxDecoration(
-                    color: state.mode == m.$1 ? color.withOpacity(0.15) : Colors.transparent,
+                    color: state.mode == m.$1 ? color.withValues(alpha: 0.15) : Colors.transparent,
                     borderRadius: BorderRadius.circular(7),
-                    border: Border.all(color: state.mode == m.$1 ? color.withOpacity(0.4) : Colors.transparent),
+                    border: Border.all(color: state.mode == m.$1 ? color.withValues(alpha: 0.4) : Colors.transparent),
                   ),
                   child: Center(child: Text(m.$2, style: TextStyle(fontFamily: 'IBMPlexMono', fontSize: 11, color: state.mode == m.$1 ? color : AppColors.textSecondary, fontWeight: state.mode == m.$1 ? FontWeight.w700 : FontWeight.w400))),
                 ),
@@ -131,7 +131,7 @@ class _FocusTimerView extends ConsumerWidget {
               child: CircularProgressIndicator(
                 value: state.progress,
                 strokeWidth: 8, backgroundColor: AppColors.border,
-                valueColor: AlwaysStoppedAnimation(color.withOpacity(state.isRunning ? 1.0 : 0.4)),
+                valueColor: AlwaysStoppedAnimation(color.withValues(alpha: state.isRunning ? 1.0 : 0.4)),
               ),
             ),
             Column(mainAxisAlignment: MainAxisAlignment.center, children: [
@@ -199,7 +199,7 @@ class _TimerBtn extends StatelessWidget {
     onTap: onTap,
     child: Container(
       padding: EdgeInsets.symmetric(horizontal: large ? 32 : 20, vertical: large ? 14 : 10),
-      decoration: BoxDecoration(color: color.withOpacity(0.12), borderRadius: BorderRadius.circular(10), border: Border.all(color: color.withOpacity(0.4))),
+      decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(10), border: Border.all(color: color.withValues(alpha: 0.4))),
       child: Text(label, style: TextStyle(fontFamily: 'IBMPlexMono', fontSize: large ? 15 : 12, fontWeight: FontWeight.w700, color: color)),
     ),
   );

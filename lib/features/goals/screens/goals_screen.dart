@@ -132,9 +132,9 @@ class _SectionHeader extends StatelessWidget {
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.only(bottom: 8),
     child: Row(children: [
-      Expanded(child: Divider(color: AppColors.border.withOpacity(0.6))),
+      Expanded(child: Divider(color: AppColors.border.withValues(alpha: 0.6))),
       Padding(padding: const EdgeInsets.symmetric(horizontal: 10), child: Text(label, style: const TextStyle(fontFamily: 'IBMPlexMono', fontSize: 9, color: AppColors.textSecondary, letterSpacing: 1.5))),
-      Expanded(child: Divider(color: AppColors.border.withOpacity(0.6))),
+      Expanded(child: Divider(color: AppColors.border.withValues(alpha: 0.6))),
     ]),
   );
 }
@@ -172,7 +172,7 @@ class _GoalAddForm extends StatelessWidget {
                 child: AnimatedContainer(
                   duration: 120.ms,
                   padding: const EdgeInsets.symmetric(vertical: 7),
-                  decoration: BoxDecoration(color: sel ? c.withOpacity(0.15) : AppColors.surface, borderRadius: BorderRadius.circular(7), border: Border.all(color: sel ? c.withOpacity(0.5) : AppColors.border)),
+                  decoration: BoxDecoration(color: sel ? c.withValues(alpha: 0.15) : AppColors.surface, borderRadius: BorderRadius.circular(7), border: Border.all(color: sel ? c.withValues(alpha: 0.5) : AppColors.border)),
                   child: Center(child: Text(p, style: TextStyle(fontFamily: 'IBMPlexMono', fontSize: 10, color: sel ? c : AppColors.textSecondary, fontWeight: sel ? FontWeight.w700 : FontWeight.w400))),
                 ),
               ),
@@ -229,9 +229,9 @@ class _GoalTile extends ConsumerWidget {
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: faded ? AppColors.card.withOpacity(0.6) : AppColors.card,
+          color: faded ? AppColors.card.withValues(alpha: 0.6) : AppColors.card,
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: goal.status == 'done' ? AppColors.done.withOpacity(0.3) : AppColors.border),
+          border: Border.all(color: goal.status == 'done' ? AppColors.done.withValues(alpha: 0.3) : AppColors.border),
         ),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Row(children: [
@@ -263,7 +263,7 @@ class _GoalTile extends ConsumerWidget {
               SliderTheme(
                 data: SliderTheme.of(context).copyWith(
                   activeTrackColor: priColor, inactiveTrackColor: AppColors.border,
-                  thumbColor: priColor, overlayColor: priColor.withOpacity(0.1),
+                  thumbColor: priColor, overlayColor: priColor.withValues(alpha: 0.1),
                   trackHeight: 4, thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7),
                 ),
                 child: Slider(
@@ -308,7 +308,7 @@ class _StatusBtn extends StatelessWidget {
     onTap: onTap,
     child: Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-      decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(5), border: Border.all(color: color.withOpacity(0.3))),
+      decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(5), border: Border.all(color: color.withValues(alpha: 0.3))),
       child: Text(label, style: TextStyle(fontFamily: 'IBMPlexMono', fontSize: 9.5, color: color, fontWeight: FontWeight.w600)),
     ),
   );

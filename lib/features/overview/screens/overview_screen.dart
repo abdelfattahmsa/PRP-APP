@@ -10,6 +10,11 @@ import '../../../shared/models/models.dart';
 import '../../../shared/models/all_providers.dart';
 import '../../../features/auth/providers/auth_provider.dart';
 
+// ══════════════════════════════════════════════════════════════
+// OVERVIEW — Dashboard "today at a glance"
+// Dense, information-rich, zero wasted space
+// ══════════════════════════════════════════════════════════════
+
 class OverviewScreen extends ConsumerStatefulWidget {
   const OverviewScreen({super.key});
   @override
@@ -17,43 +22,40 @@ class OverviewScreen extends ConsumerStatefulWidget {
 }
 
 class _OverviewScreenState extends ConsumerState<OverviewScreen> {
-  late final _clock = Stream.periodic(const Duration(seconds: 1));
+  late final _clock = Stream.periodic(const Duration(seconds: 30));
 
   @override
   Widget build(BuildContext context) {
-    final userAsync = ref.watch(currentUserProvider);
-    final habits    = ref.watch(habitsTodayProvider);
-    final summary   = ref.watch(financeSummaryProvider);
-    final goals     = ref.watch(goalsProvider).value ?? [];
-    final sessions  = ref.watch(focusSessionsProvider).value ?? [];
+    ref.watch(currentUserProvider);
+    final habits = ref.watch(habitsTodayProvider);
+    final summary = ref.watch(financeSummaryProvider);
+    final goals = ref.watch(goalsProvider).value ?? [];
+    final sessions = ref.watch(focusSessionsProvider).value ?? [];
     final calEvents = ref.watch(calendarProvider).value ?? [];
-    final schedMode = 'normal'; // could read from prefs
 
-    // Today focus time
-    final todayKey = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final todayKey = DateFormat('yyyy-MM-dd').format(now);
     final todayMins = sessions
         .where((s) => DateFormat('yyyy-MM-dd').format(s.date) == todayKey && s.completed)
         .fold(0, (sum, s) => sum + s.actualMinutes);
 
-    // Current schedule block
-    final schedAsync = ref.watch(scheduleProvider(schedMode));
+    // Schedule
+    final schedAsync = ref.watch(scheduleProvider('normal'));
     final blocks = schedAsync.value ?? [];
-    final now = DateTime.now();
     final nowMins = now.hour * 60 + now.minute;
     ScheduleBlock? curBlock;
     ScheduleBlock? nextBlock;
     for (var i = 0; i < blocks.length; i++) {
       final b = blocks[i];
-      final nextMins = i + 1 < blocks.length ? blocks[i + 1].minutesSinceMidnight : 24 * 60;
-      if (nowMins >= b.minutesSinceMidnight && nowMins < nextMins) {
+      final nxt = i + 1 < blocks.length ? blocks[i + 1].minutesSinceMidnight : 24 * 60;
+      if (nowMins >= b.minutesSinceMidnight && nowMins < nxt) {
         curBlock = b;
         if (i + 1 < blocks.length) nextBlock = blocks[i + 1];
         break;
       }
     }
 
-    // Upcoming events
-    final today = DateTime(now.year, now.month, now.day);
     final upcoming = calEvents
         .where((e) => !e.isDone && DateTime(e.date.year, e.date.month, e.date.day).compareTo(today) >= 0)
         .toList()
@@ -62,146 +64,129 @@ class _OverviewScreenState extends ConsumerState<OverviewScreen> {
     final activeGoals = goals.where((g) => g.status == 'active').toList()
       ..sort((a, b) => a.targetDate.compareTo(b.targetDate));
 
+    final isWide = Breakpoints.isWide(context);
+    final pad = isWide ? 24.0 : 16.0;
+
     return Scaffold(
+      backgroundColor: AppColors.bg,
       body: CustomScrollView(
         slivers: [
-          // App bar with greeting
-          SliverAppBar(
-            expandedHeight: 120,
-            floating: true, snap: true, pinned: false,
-            backgroundColor: AppColors.surface,
-            flexibleSpace: FlexibleSpaceBar(
-              background: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [const Color(0xFF0F0B1C), AppColors.bg],
-                    begin: Alignment.topLeft, end: Alignment.bottomRight,
-                  ),
-                ),
-                padding: const EdgeInsets.fromLTRB(16, 50, 16, 12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    StreamBuilder(
-                      stream: _clock,
-                      builder: (ctx, _) => Text(
-                        DateFormat('HH:mm:ss').format(DateTime.now()),
-                        style: const TextStyle(fontFamily: 'IBMPlexMono', fontSize: 28, fontWeight: FontWeight.w700, color: AppColors.gold),
-                      ),
-                    ),
-                    Text(
-                      DateFormat('EEEE, d MMMM yyyy').format(DateTime.now()),
-                      style: const TextStyle(fontFamily: 'IBMPlexMono', fontSize: 11, color: AppColors.textSecondary),
-                    ),
-                  ],
+          // ── HEADER ──
+          SliverToBoxAdapter(
+            child: Container(
+              padding: EdgeInsets.fromLTRB(pad, isWide ? 28 : 48, pad, 16),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Color(0xFF100B1C), AppColors.bg],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
                 ),
               ),
-            ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Greeting row
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              _greeting(),
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.goldDim),
+                            ),
+                            const Gap(2),
+                            Text(
+                              DateFormat('EEEE, d MMMM').format(now),
+                              style: Theme.of(context).textTheme.headlineLarge,
+                            ),
+                          ],
+                        ),
+                      ),
+                      StreamBuilder(
+                        stream: _clock,
+                        builder: (_, __) => Text(
+                          DateFormat('HH:mm').format(DateTime.now()),
+                          style: const TextStyle(
+                            fontFamily: 'IBMPlexMono',
+                            fontSize: 32,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.gold,
+                            height: 1,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ).animate().fadeIn(duration: 400.ms),
           ),
 
+          // ── CONTENT ──
           SliverPadding(
-            padding: const EdgeInsets.fromLTRB(14, 14, 14, 80),
+            padding: EdgeInsets.fromLTRB(pad, 0, pad, 100),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
-
                 // Current block
-                if (curBlock != null) _CurrentBlock(block: curBlock, nextBlock: nextBlock)
-                    .animate().fadeIn(duration: 300.ms).slideY(begin: 0.05),
-                const Gap(12),
+                if (curBlock != null) ...[
+                  _CurrentBlockCard(block: curBlock, nextBlock: nextBlock)
+                      .animate().fadeIn(duration: 300.ms).slideY(begin: 0.03),
+                  const Gap(Spacing.md),
+                ],
 
-                // Quick stats row
-                Row(children: [
-                  Expanded(child: _QuickStat(label: 'Habits', value: '${habits.done}/${habits.total}', color: habits.pct == 1.0 ? AppColors.deen : AppColors.gold, icon: Icons.check_circle_outline, onTap: () => context.go(Routes.habits))),
-                  const Gap(8),
-                  Expanded(child: _QuickStat(label: 'Focus', value: '${todayMins}m', color: AppColors.pmp, icon: Icons.timer_outlined, onTap: () => context.go(Routes.focus))),
-                  const Gap(8),
-                  Expanded(child: _QuickStat(label: 'Goals', value: '${activeGoals.length}', color: AppColors.kyberia, icon: Icons.flag_outlined, onTap: () => context.go(Routes.goals))),
-                ]).animate(delay: 100.ms).fadeIn(duration: 300.ms),
-                const Gap(8),
-                Row(children: [
-                  Expanded(child: _QuickStat(label: 'CC Debt', value: 'EGP ${_fmt(summary.totalCC)}', color: AppColors.error, icon: Icons.credit_card, onTap: () => context.go(Routes.finance))),
-                  const Gap(8),
-                  Expanded(child: _QuickStat(label: 'Savings', value: 'EGP ${_fmt(summary.totalSavings)}', color: AppColors.gold, icon: Icons.savings_outlined, onTap: () => context.go(Routes.finance))),
-                  const Gap(8),
-                  Expanded(child: _QuickStat(label: 'Rem. Limit', value: 'EGP ${_fmt(summary.remainingLimit)}', color: summary.remainingLimit < 0 ? AppColors.error : AppColors.deen, icon: Icons.account_balance_outlined, onTap: () => context.go(Routes.finance))),
-                ]).animate(delay: 150.ms).fadeIn(duration: 300.ms),
-                const Gap(16),
+                // ── STATS GRID ──
+                _StatsGrid(
+                  habits: habits,
+                  todayMins: todayMins,
+                  activeGoals: activeGoals.length,
+                  summary: summary,
+                  onTap: (route) => context.go(route),
+                ).animate(delay: 80.ms).fadeIn(duration: 300.ms),
+                const Gap(Spacing.lg),
 
-                // Upcoming events
-                _SectionTitle(title: 'Upcoming Events', action: 'See all', onAction: () => context.go(Routes.calendar)),
-                ...upcoming.take(5).map((ev) {
-                  final color = AppColors.categoryColor(ev.typeKey);
-                  final daysAway = ev.date.difference(today).inDays;
-                  return Container(
-                    margin: const EdgeInsets.only(bottom: 6),
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                    decoration: BoxDecoration(color: AppColors.card, borderRadius: BorderRadius.circular(9), border: Border.all(color: color.withOpacity(0.25))),
-                    child: Row(children: [
-                      Container(width: 3, height: 32, decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(2))),
-                      const Gap(10),
-                      Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                        Text(ev.title, style: const TextStyle(fontSize: 13, color: AppColors.textPrimary, fontWeight: FontWeight.w500), maxLines: 1, overflow: TextOverflow.ellipsis),
-                        Text(DateFormat('d MMM yyyy').format(ev.date), style: const TextStyle(fontFamily: 'IBMPlexMono', fontSize: 9.5, color: AppColors.textSecondary)),
-                      ])),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-                        decoration: BoxDecoration(color: color.withOpacity(0.12), borderRadius: BorderRadius.circular(4)),
-                        child: Text(daysAway == 0 ? 'Today' : daysAway == 1 ? 'Tomorrow' : '${daysAway}d', style: TextStyle(fontFamily: 'IBMPlexMono', fontSize: 9, color: color, fontWeight: FontWeight.w600)),
+                // ── TWO-COLUMN on desktop ──
+                if (isWide) ...[
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Left: Events
+                      Expanded(
+                        child: _EventsSection(
+                          upcoming: upcoming,
+                          today: today,
+                          onSeeAll: () => context.go(Routes.calendar),
+                        ),
                       ),
-                    ]),
-                  );
-                }),
+                      const Gap(Spacing.md),
+                      // Right: Goals
+                      Expanded(
+                        child: _GoalsSection(
+                          goals: activeGoals,
+                          onSeeAll: () => context.go(Routes.goals),
+                        ),
+                      ),
+                    ],
+                  ),
+                ] else ...[
+                  // Mobile: stack vertically
+                  _EventsSection(
+                    upcoming: upcoming,
+                    today: today,
+                    onSeeAll: () => context.go(Routes.calendar),
+                  ),
+                  const Gap(Spacing.lg),
+                  _GoalsSection(
+                    goals: activeGoals,
+                    onSeeAll: () => context.go(Routes.goals),
+                  ),
+                ],
+                const Gap(Spacing.lg),
 
-                if (upcoming.isEmpty) const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 12),
-                  child: Text('No upcoming events', style: TextStyle(color: AppColors.textSecondary, fontStyle: FontStyle.italic, fontSize: 13)),
-                ),
-                const Gap(16),
-
-                // Top goals
-                _SectionTitle(title: 'Active Goals', action: 'See all', onAction: () => context.go(Routes.goals)),
-                ...activeGoals.take(4).map((g) {
-                  final pColor = g.priority == 'high' ? AppColors.error : g.priority == 'medium' ? AppColors.gold : AppColors.deen;
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                      decoration: BoxDecoration(color: AppColors.card, borderRadius: BorderRadius.circular(9), border: Border.all(color: AppColors.border)),
-                      child: Column(children: [
-                        Row(children: [
-                          Expanded(child: Text(g.title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500))),
-                          Text('${g.progress}%', style: TextStyle(fontFamily: 'IBMPlexMono', fontSize: 11, color: pColor, fontWeight: FontWeight.w600)),
-                        ]),
-                        const Gap(6),
-                        ClipRRect(borderRadius: BorderRadius.circular(3),
-                          child: LinearProgressIndicator(value: g.progress / 100, minHeight: 4, backgroundColor: AppColors.border, valueColor: AlwaysStoppedAnimation(pColor))),
-                        const Gap(4),
-                        Row(children: [
-                          Text(DateFormat('d MMM yy').format(g.targetDate), style: const TextStyle(fontFamily: 'IBMPlexMono', fontSize: 9, color: AppColors.textSecondary)),
-                          const Spacer(),
-                          Text(g.daysRemaining < 0 ? 'Overdue' : '${g.daysRemaining}d left', style: TextStyle(fontFamily: 'IBMPlexMono', fontSize: 9, color: g.daysRemaining < 0 ? AppColors.error : AppColors.textSecondary)),
-                        ]),
-                      ]),
-                    ),
-                  );
-                }),
-                const Gap(16),
-
-                // Milestone strip
-                _SectionTitle(title: '2026 Milestones', action: null, onAction: null),
-                const Gap(6),
-                Wrap(spacing: 6, runSpacing: 6, children: [
-                  for (final m in [
-                    ('🚀 Product #1', 'Apr 10', AppColors.error),
-                    ('💼 1st Client', 'May 1',  AppColors.kyberia),
-                    ('💍 Engaged',    'May 30', AppColors.personal),
-                    ('📋 PMP Exam',   '≤ Jun 30', AppColors.fasting),
-                    ('📉 Debt ≤100K', 'Sep',    AppColors.commute),
-                    ('📖 10 Juz',     'Dec 31', AppColors.quran),
-                    ('💒 Wedding',    'Mar \'27', AppColors.personal),
-                  ]) _MilestoneChip(label: m.$1, date: m.$2, color: m.$3),
-                ]),
+                // Milestones
+                _MilestonesStrip(),
               ]),
             ),
           ),
@@ -210,98 +195,480 @@ class _OverviewScreenState extends ConsumerState<OverviewScreen> {
     );
   }
 
-  String _fmt(double v) {
-    final n = NumberFormat('#,##0', 'en');
-    return n.format(v);
+  String _greeting() {
+    final h = DateTime.now().hour;
+    if (h < 5) return 'Good night';
+    if (h < 12) return 'Good morning';
+    if (h < 17) return 'Good afternoon';
+    return 'Good evening';
   }
 }
 
-class _CurrentBlock extends StatelessWidget {
-  const _CurrentBlock({required this.block, this.nextBlock});
-  final dynamic block;
-  final dynamic nextBlock;
+String _fmt(double v) => NumberFormat('#,##0', 'en').format(v);
+
+// ── CURRENT BLOCK ────────────────────────────────────────────
+
+class _CurrentBlockCard extends StatelessWidget {
+  const _CurrentBlockCard({required this.block, this.nextBlock});
+  final ScheduleBlock block;
+  final ScheduleBlock? nextBlock;
 
   @override
   Widget build(BuildContext context) {
     final color = AppColors.categoryColor(block.categoryKey);
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(Spacing.md),
       decoration: BoxDecoration(
-        gradient: LinearGradient(colors: [color.withOpacity(0.12), AppColors.card], begin: Alignment.topLeft, end: Alignment.bottomRight),
+        gradient: LinearGradient(
+          colors: [color.withValues(alpha: 0.10), AppColors.card],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.35)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Row(children: [
+      child: Row(
+        children: [
+          // Color bar
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-            decoration: BoxDecoration(color: color.withOpacity(0.2), borderRadius: BorderRadius.circular(4), border: Border.all(color: color.withOpacity(0.4))),
-            child: Text('NOW · ${block.time}', style: TextStyle(fontFamily: 'IBMPlexMono', fontSize: 8, color: color, fontWeight: FontWeight.w700)),
+            width: 4,
+            height: 48,
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(2),
+              boxShadow: [BoxShadow(color: color.withValues(alpha: 0.5), blurRadius: 8)],
+            ),
           ),
-          const Spacer(),
-          Container(width: 8, height: 8, decoration: BoxDecoration(color: color, shape: BoxShape.circle, boxShadow: [BoxShadow(color: color.withOpacity(0.6), blurRadius: 6)])),
-        ]),
-        const Gap(8),
-        Text(block.label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
-        if (block.note != null) ...[const Gap(3), Text(block.note!, style: const TextStyle(fontSize: 11, color: AppColors.textSecondary, fontStyle: FontStyle.italic))],
-        if (nextBlock != null) ...[
-          const Gap(6),
-          Text('Next: ${nextBlock!.time} · ${nextBlock!.label}', style: const TextStyle(fontFamily: 'IBMPlexMono', fontSize: 10, color: AppColors.textSecondary)),
+          const Gap(Spacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: color.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        'NOW',
+                        style: TextStyle(fontFamily: 'IBMPlexMono', fontSize: 8, color: color, fontWeight: FontWeight.w700, letterSpacing: 1),
+                      ),
+                    ),
+                    const Gap(Spacing.sm),
+                    Text(
+                      block.time,
+                      style: TextStyle(fontFamily: 'IBMPlexMono', fontSize: 10, color: color.withValues(alpha: 0.7)),
+                    ),
+                    if (block.duration != null) ...[
+                      Text(
+                        ' · ${block.duration}',
+                        style: const TextStyle(fontFamily: 'IBMPlexMono', fontSize: 10, color: AppColors.textMuted),
+                      ),
+                    ],
+                  ],
+                ),
+                const Gap(4),
+                Text(
+                  block.label,
+                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+                ),
+                if (block.note != null && block.note!.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Text(
+                      block.note!,
+                      style: const TextStyle(fontSize: 11, color: AppColors.textSecondary, fontStyle: FontStyle.italic),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          if (nextBlock != null)
+            Container(
+              padding: const EdgeInsets.all(Spacing.sm),
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Column(
+                children: [
+                  const Text('NEXT', style: TextStyle(fontFamily: 'IBMPlexMono', fontSize: 7, color: AppColors.textMuted, letterSpacing: 1)),
+                  const Gap(2),
+                  Text(nextBlock!.time, style: const TextStyle(fontFamily: 'IBMPlexMono', fontSize: 11, color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
+                ],
+              ),
+            ),
         ],
-      ]),
+      ),
     );
   }
 }
 
-class _QuickStat extends StatelessWidget {
-  const _QuickStat({required this.label, required this.value, required this.color, required this.icon, this.onTap});
-  final String label, value;
-  final Color color;
-  final IconData icon;
-  final VoidCallback? onTap;
+// ── STATS GRID ───────────────────────────────────────────────
+
+class _StatsGrid extends StatelessWidget {
+  const _StatsGrid({
+    required this.habits,
+    required this.todayMins,
+    required this.activeGoals,
+    required this.summary,
+    required this.onTap,
+  });
+  final ({int done, int total, double pct}) habits;
+  final int todayMins;
+  final int activeGoals;
+  final dynamic summary;
+  final void Function(String route) onTap;
+
   @override
-  Widget build(BuildContext context) => GestureDetector(
-    onTap: onTap,
-    child: Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-      decoration: BoxDecoration(color: AppColors.card, borderRadius: BorderRadius.circular(9), border: Border.all(color: AppColors.border)),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Row(children: [Icon(icon, size: 13, color: AppColors.textSecondary), const Gap(4), Text(label, style: const TextStyle(fontFamily: 'IBMPlexMono', fontSize: 9, color: AppColors.textSecondary))]),
-        const Gap(4),
-        Text(value, style: TextStyle(fontFamily: 'IBMPlexMono', fontSize: 13, fontWeight: FontWeight.w700, color: color), maxLines: 1, overflow: TextOverflow.ellipsis),
-      ]),
-    ),
-  );
+  Widget build(BuildContext context) {
+    final isWide = Breakpoints.isWide(context);
+    final cols = isWide ? 6 : 3;
+
+    final stats = [
+      _Stat('Habits', '${habits.done}/${habits.total}', habits.pct == 1.0 ? AppColors.success : AppColors.gold, Icons.check_circle_outline, Routes.habits),
+      _Stat('Focus', '${todayMins}m', AppColors.pmp, Icons.timer_outlined, Routes.focus),
+      _Stat('Goals', '$activeGoals', AppColors.kyberia, Icons.flag_outlined, Routes.goals),
+      _Stat('CC Debt', 'EGP ${_fmt(summary.totalCC)}', AppColors.error, Icons.credit_card, Routes.finance),
+      _Stat('Savings', 'EGP ${_fmt(summary.totalSavings)}', AppColors.gold, Icons.savings_outlined, Routes.finance),
+      _Stat('Limit', 'EGP ${_fmt(summary.remainingLimit)}', summary.remainingLimit < 0 ? AppColors.error : AppColors.success, Icons.account_balance_outlined, Routes.finance),
+    ];
+
+    return GridView.count(
+      crossAxisCount: cols,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      mainAxisSpacing: Spacing.sm,
+      crossAxisSpacing: Spacing.sm,
+      childAspectRatio: isWide ? 2.2 : 1.6,
+      children: stats.map((s) => _StatCard(stat: s, onTap: () => onTap(s.route))).toList(),
+    );
+  }
 }
 
-class _SectionTitle extends StatelessWidget {
-  const _SectionTitle({required this.title, required this.action, required this.onAction});
-  final String title;
-  final String? action;
-  final VoidCallback? onAction;
+class _Stat {
+  const _Stat(this.label, this.value, this.color, this.icon, this.route);
+  final String label, value, route;
+  final Color color;
+  final IconData icon;
+}
+
+class _StatCard extends StatelessWidget {
+  const _StatCard({required this.stat, required this.onTap});
+  final _Stat stat;
+  final VoidCallback onTap;
+
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(bottom: 8),
-    child: Row(children: [
-      Text(title, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontFamily: 'PlayfairDisplay', fontSize: 16)),
-      const Spacer(),
-      if (action != null && onAction != null)
-        GestureDetector(onTap: onAction, child: Text(action!, style: const TextStyle(fontFamily: 'IBMPlexMono', fontSize: 10, color: AppColors.gold))),
-    ]),
-  );
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppColors.card,
+      borderRadius: BorderRadius.circular(10),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(10),
+        hoverColor: AppColors.cardHover,
+        child: Container(
+          padding: const EdgeInsets.all(Spacing.sm),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: AppColors.border),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Row(
+                children: [
+                  Icon(stat.icon, size: 12, color: AppColors.textMuted),
+                  const Gap(4),
+                  Expanded(
+                    child: Text(
+                      stat.label,
+                      style: const TextStyle(fontFamily: 'IBMPlexMono', fontSize: 9, color: AppColors.textSecondary),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+              const Gap(4),
+              Text(
+                stat.value,
+                style: TextStyle(fontFamily: 'IBMPlexMono', fontSize: 13, fontWeight: FontWeight.w700, color: stat.color),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── EVENTS SECTION ───────────────────────────────────────────
+
+class _EventsSection extends StatelessWidget {
+  const _EventsSection({required this.upcoming, required this.today, required this.onSeeAll});
+  final List<CalendarEvent> upcoming;
+  final DateTime today;
+  final VoidCallback onSeeAll;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _SectionHeader(title: 'Upcoming Events', onAction: onSeeAll),
+        if (upcoming.isEmpty)
+          _EmptyHint(text: 'No upcoming events', icon: Icons.event_outlined)
+        else
+          for (final ev in upcoming.take(5)) ...[
+            _EventTile(event: ev, today: today),
+            const Gap(Spacing.xs),
+          ],
+      ],
+    );
+  }
+}
+
+class _EventTile extends StatelessWidget {
+  const _EventTile({required this.event, required this.today});
+  final CalendarEvent event;
+  final DateTime today;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = AppColors.categoryColor(event.typeKey);
+    final daysAway = DateTime(event.date.year, event.date.month, event.date.day).difference(today).inDays;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: Spacing.md, vertical: Spacing.sm),
+      decoration: BoxDecoration(
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        children: [
+          Container(width: 3, height: 28, decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(2))),
+          const Gap(Spacing.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(event.title, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500), maxLines: 1, overflow: TextOverflow.ellipsis),
+                Text(DateFormat('d MMM').format(event.date), style: const TextStyle(fontFamily: 'IBMPlexMono', fontSize: 9, color: AppColors.textSecondary)),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(4)),
+            child: Text(
+              daysAway == 0 ? 'Today' : daysAway == 1 ? 'Tmrw' : '${daysAway}d',
+              style: TextStyle(fontFamily: 'IBMPlexMono', fontSize: 9, color: color, fontWeight: FontWeight.w600),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── GOALS SECTION ────────────────────────────────────────────
+
+class _GoalsSection extends StatelessWidget {
+  const _GoalsSection({required this.goals, required this.onSeeAll});
+  final List<Goal> goals;
+  final VoidCallback onSeeAll;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _SectionHeader(title: 'Active Goals', onAction: onSeeAll),
+        if (goals.isEmpty)
+          _EmptyHint(text: 'No active goals', icon: Icons.flag_outlined)
+        else
+          for (final g in goals.take(4)) ...[
+            _GoalTile(goal: g),
+            const Gap(Spacing.xs),
+          ],
+      ],
+    );
+  }
+}
+
+class _GoalTile extends StatelessWidget {
+  const _GoalTile({required this.goal});
+  final Goal goal;
+
+  @override
+  Widget build(BuildContext context) {
+    final pColor = goal.priority == 'high' ? AppColors.error : goal.priority == 'medium' ? AppColors.gold : AppColors.success;
+    return Container(
+      padding: const EdgeInsets.all(Spacing.sm),
+      decoration: BoxDecoration(
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Expanded(child: Text(goal.title, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500), maxLines: 1, overflow: TextOverflow.ellipsis)),
+              Text('${goal.progress}%', style: TextStyle(fontFamily: 'IBMPlexMono', fontSize: 10, color: pColor, fontWeight: FontWeight.w600)),
+            ],
+          ),
+          const Gap(Spacing.xs),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(2),
+            child: LinearProgressIndicator(
+              value: goal.progress / 100,
+              minHeight: 3,
+              backgroundColor: AppColors.border,
+              valueColor: AlwaysStoppedAnimation(pColor),
+            ),
+          ),
+          const Gap(Spacing.xs),
+          Row(
+            children: [
+              Text(DateFormat('d MMM').format(goal.targetDate), style: const TextStyle(fontFamily: 'IBMPlexMono', fontSize: 9, color: AppColors.textSecondary)),
+              const Spacer(),
+              Text(
+                goal.daysRemaining < 0 ? 'Overdue' : '${goal.daysRemaining}d',
+                style: TextStyle(fontFamily: 'IBMPlexMono', fontSize: 9, color: goal.daysRemaining < 0 ? AppColors.error : AppColors.textSecondary),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── MILESTONES ───────────────────────────────────────────────
+
+class _MilestonesStrip extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final milestones = [
+      ('Product #1', 'Apr 10', AppColors.error),
+      ('1st Client', 'May 1', AppColors.kyberia),
+      ('Engaged', 'May 30', AppColors.personal),
+      ('PMP Exam', 'Jun 30', AppColors.fasting),
+      ('Debt <100K', 'Sep', AppColors.commute),
+      ('10 Juz', 'Dec 31', AppColors.quran),
+      ('Wedding', "Mar '27", AppColors.personal),
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _SectionHeader(title: 'Milestones', onAction: null),
+        const Gap(Spacing.xs),
+        Wrap(
+          spacing: Spacing.sm,
+          runSpacing: Spacing.sm,
+          children: milestones.map((m) => _MilestoneChip(label: m.$1, date: m.$2, color: m.$3)).toList(),
+        ),
+      ],
+    );
+  }
 }
 
 class _MilestoneChip extends StatelessWidget {
   const _MilestoneChip({required this.label, required this.date, required this.color});
   final String label, date;
   final Color color;
+
   @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
-    decoration: BoxDecoration(color: AppColors.card, borderRadius: BorderRadius.circular(6), border: Border.all(color: AppColors.border)),
-    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text(label, style: TextStyle(fontFamily: 'IBMPlexMono', fontSize: 10, fontWeight: FontWeight.w600, color: color)),
-      Text(date,  style: const TextStyle(fontFamily: 'IBMPlexMono', fontSize: 9, color: AppColors.textSecondary)),
-    ]),
-  );
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: color.withValues(alpha: 0.15)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(width: 5, height: 5, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+          const Gap(6),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label, style: TextStyle(fontFamily: 'IBMPlexMono', fontSize: 10, fontWeight: FontWeight.w600, color: color)),
+              Text(date, style: const TextStyle(fontFamily: 'IBMPlexMono', fontSize: 8, color: AppColors.textSecondary)),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── SHARED HELPERS ───────────────────────────────────────────
+
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader({required this.title, required this.onAction});
+  final String title;
+  final VoidCallback? onAction;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: Spacing.sm),
+      child: Row(
+        children: [
+          Text(title, style: Theme.of(context).textTheme.titleLarge),
+          const Spacer(),
+          if (onAction != null)
+            GestureDetector(
+              onTap: onAction,
+              child: const Row(
+                children: [
+                  Text('See all', style: TextStyle(fontFamily: 'IBMPlexMono', fontSize: 10, color: AppColors.gold)),
+                  Gap(2),
+                  Icon(Icons.chevron_right, size: 14, color: AppColors.gold),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _EmptyHint extends StatelessWidget {
+  const _EmptyHint({required this.text, required this.icon});
+  final String text;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: Spacing.lg),
+      decoration: BoxDecoration(
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, size: 24, color: AppColors.textMuted),
+          const Gap(Spacing.xs),
+          Text(text, style: const TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+        ],
+      ),
+    );
+  }
 }

@@ -57,12 +57,42 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Logo
-                  const DiamondLogo()
+                  // Brand mark
+                  Container(
+                    width: 64,
+                    height: 64,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [AppColors.gold, AppColors.goldDim],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.gold.withValues(alpha: 0.2),
+                          blurRadius: 20,
+                          spreadRadius: 2,
+                        ),
+                      ],
+                    ),
+                    child: const Center(
+                      child: Text(
+                        'LP',
+                        style: TextStyle(
+                          color: AppColors.bg,
+                          fontFamily: 'PlayfairDisplay',
+                          fontSize: 24,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: -1,
+                        ),
+                      ),
+                    ),
+                  )
                       .animate()
                       .fadeIn(duration: 600.ms)
                       .scale(begin: const Offset(0.8, 0.8)),
-                  const Gap(24),
+                  const Gap(20),
 
                   // Title
                   Text(
@@ -75,10 +105,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
                   const Gap(6),
                   Text(
-                    'ABDELFATTAH M. ABOULFOUTOH · 2026',
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          letterSpacing: 2,
-                          color: AppColors.goldDim,
+                    'Design your day. Own your year.',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppColors.textSecondary,
+                          fontStyle: FontStyle.italic,
                         ),
                   )
                       .animate()

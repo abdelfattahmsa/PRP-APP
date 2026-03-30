@@ -136,7 +136,7 @@ class _HabitTile extends ConsumerWidget {
         direction: DismissDirection.endToStart,
         background: Container(
           alignment: Alignment.centerRight, padding: const EdgeInsets.only(right: 16),
-          decoration: BoxDecoration(color: AppColors.error.withOpacity(0.15), borderRadius: BorderRadius.circular(10)),
+          decoration: BoxDecoration(color: AppColors.error.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(10)),
           child: const Icon(Icons.delete_outline, color: AppColors.error),
         ),
         onDismissed: (_) => ref.read(habitsProvider.notifier).delete(habit.id),
@@ -144,9 +144,9 @@ class _HabitTile extends ConsumerWidget {
           duration: 200.ms,
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           decoration: BoxDecoration(
-            color: done ? AppColors.deen.withOpacity(0.06) : AppColors.card,
+            color: done ? AppColors.deen.withValues(alpha: 0.06) : AppColors.card,
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: done ? AppColors.deen.withOpacity(0.25) : AppColors.border),
+            border: Border.all(color: done ? AppColors.deen.withValues(alpha: 0.25) : AppColors.border),
           ),
           child: Row(children: [
             Text(habit.icon, style: const TextStyle(fontSize: 22)),
@@ -173,7 +173,7 @@ class _HabitTile extends ConsumerWidget {
                 width: 34, height: 34,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: done ? AppColors.deen.withOpacity(0.2) : AppColors.surface,
+                  color: done ? AppColors.deen.withValues(alpha: 0.2) : AppColors.surface,
                   border: Border.all(color: done ? AppColors.deen : const Color(0xFF303040), width: 2),
                 ),
                 child: Center(

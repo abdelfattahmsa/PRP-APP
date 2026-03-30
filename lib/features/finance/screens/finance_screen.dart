@@ -69,14 +69,14 @@ class _OverviewTab extends StatelessWidget {
           decoration: BoxDecoration(
             gradient: const LinearGradient(colors: [Color(0xFF1F0D0D), Color(0xFF130D1A)], begin: Alignment.topLeft, end: Alignment.bottomRight),
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: AppColors.error.withOpacity(0.3)),
+            border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
           ),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
               const Text('Total Debt', style: TextStyle(fontFamily: 'IBMPlexMono', fontSize: 10, color: AppColors.textSecondary, letterSpacing: 1)),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(color: AppColors.error.withOpacity(0.15), borderRadius: BorderRadius.circular(5), border: Border.all(color: AppColors.error.withOpacity(0.3))),
+                decoration: BoxDecoration(color: AppColors.error.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(5), border: Border.all(color: AppColors.error.withValues(alpha: 0.3))),
                 child: const Text('TARGET ≤ 100K · SEP 2026', style: TextStyle(fontFamily: 'IBMPlexMono', fontSize: 8, color: AppColors.error, fontWeight: FontWeight.w600)),
               ),
             ]),
@@ -331,9 +331,9 @@ class _CashCardState extends ConsumerState<_CashCard> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: AppColors.gold.withOpacity(0.06),
+        color: AppColors.gold.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppColors.gold.withOpacity(0.2)),
+        border: Border.all(color: AppColors.gold.withValues(alpha: 0.2)),
       ),
       child: Row(children: [
         const Icon(Icons.payments_outlined, size: 18, color: AppColors.gold),
@@ -518,8 +518,8 @@ class _TxTabState extends ConsumerState<_TransactionsTab> {
                     selected: sel,
                     onSelected: (_) => setState(() => _catFilter = c),
                     backgroundColor: AppColors.card,
-                    selectedColor: AppColors.gold.withOpacity(0.15),
-                    side: BorderSide(color: sel ? AppColors.gold.withOpacity(0.5) : AppColors.border),
+                    selectedColor: AppColors.gold.withValues(alpha: 0.15),
+                    side: BorderSide(color: sel ? AppColors.gold.withValues(alpha: 0.5) : AppColors.border),
                     labelStyle: TextStyle(fontFamily: 'IBMPlexMono', fontSize: 10, color: sel ? AppColors.gold : AppColors.textSecondary, fontWeight: sel ? FontWeight.w600 : FontWeight.w400),
                     showCheckmark: false, padding: const EdgeInsets.symmetric(horizontal: 4),
                   ),

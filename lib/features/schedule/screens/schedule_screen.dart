@@ -76,9 +76,9 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
                 child: AnimatedContainer(
                   duration: 150.ms, margin: const EdgeInsets.all(4),
                   decoration: BoxDecoration(
-                    color: active ? m.$3.withOpacity(0.15) : Colors.transparent,
+                    color: active ? m.$3.withValues(alpha: 0.15) : Colors.transparent,
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: active ? m.$3.withOpacity(0.4) : Colors.transparent),
+                    border: Border.all(color: active ? m.$3.withValues(alpha: 0.4) : Colors.transparent),
                   ),
                   child: Center(child: Text(m.$2, style: TextStyle(fontFamily: 'IBMPlexMono', fontSize: 11, fontWeight: active ? FontWeight.w700 : FontWeight.w400, color: active ? m.$3 : AppColors.textSecondary))),
                 ),
@@ -101,7 +101,7 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
 
   Widget _emptyState(BuildContext ctx) => Center(
     child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-      Icon(Icons.schedule_outlined, size: 48, color: _accent.withOpacity(0.4)),
+      Icon(Icons.schedule_outlined, size: 48, color: _accent.withValues(alpha: 0.4)),
       const Gap(12),
       Text('No blocks for $_mode', style: const TextStyle(color: AppColors.textSecondary)),
       const Gap(16),
@@ -164,7 +164,7 @@ class _BlockTile extends ConsumerWidget {
         direction: DismissDirection.endToStart,
         background: Container(
           alignment: Alignment.centerRight, padding: const EdgeInsets.only(right: 16),
-          decoration: BoxDecoration(color: AppColors.error.withOpacity(0.15), borderRadius: BorderRadius.circular(10)),
+          decoration: BoxDecoration(color: AppColors.error.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(10)),
           child: const Icon(Icons.delete_outline, color: AppColors.error),
         ),
         confirmDismiss: (_) async => await showDialog<bool>(
@@ -182,9 +182,9 @@ class _BlockTile extends ConsumerWidget {
         child: AnimatedContainer(
           duration: 200.ms,
           decoration: BoxDecoration(
-            color: isCurrent ? color.withOpacity(0.12) : AppColors.card,
+            color: isCurrent ? color.withValues(alpha: 0.12) : AppColors.card,
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: isCurrent ? color.withOpacity(0.4) : isNext ? color.withOpacity(0.15) : AppColors.border),
+            border: Border.all(color: isCurrent ? color.withValues(alpha: 0.4) : isNext ? color.withValues(alpha: 0.15) : AppColors.border),
           ),
           child: InkWell(
             borderRadius: BorderRadius.circular(10),
@@ -193,14 +193,14 @@ class _BlockTile extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               child: Row(children: [
                 SizedBox(width: 44, child: Text(block.time, style: TextStyle(fontFamily: 'IBMPlexMono', fontSize: 10.5, fontWeight: FontWeight.w600, color: color))),
-                Container(width: 8, height: 8, decoration: BoxDecoration(color: color, shape: BoxShape.circle, boxShadow: isCurrent ? [BoxShadow(color: color.withOpacity(0.6), blurRadius: 6)] : null)),
+                Container(width: 8, height: 8, decoration: BoxDecoration(color: color, shape: BoxShape.circle, boxShadow: isCurrent ? [BoxShadow(color: color.withValues(alpha: 0.6), blurRadius: 6)] : null)),
                 const Gap(10),
                 Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Row(children: [
                     Expanded(child: Text(block.label, style: TextStyle(fontSize: 13.5, color: AppColors.textPrimary, fontWeight: isCurrent ? FontWeight.w600 : FontWeight.w400))),
                     if (isCurrent) Container(
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(color: color.withOpacity(0.2), borderRadius: BorderRadius.circular(4), border: Border.all(color: color.withOpacity(0.4))),
+                      decoration: BoxDecoration(color: color.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(4), border: Border.all(color: color.withValues(alpha: 0.4))),
                       child: Text('NOW', style: TextStyle(fontFamily: 'IBMPlexMono', fontSize: 8, fontWeight: FontWeight.w700, color: color)),
                     ),
                   ]),
@@ -210,7 +210,7 @@ class _BlockTile extends ConsumerWidget {
                   const Gap(8),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-                    decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(4), border: Border.all(color: color.withOpacity(0.3))),
+                    decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(4), border: Border.all(color: color.withValues(alpha: 0.3))),
                     child: Text(block.duration!, style: TextStyle(fontFamily: 'IBMPlexMono', fontSize: 9, color: color)),
                   ),
                 ],
@@ -341,9 +341,9 @@ class _EditBlockState extends ConsumerState<EditBlockScreen> {
                   duration: 120.ms,
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
-                    color: sel ? color.withOpacity(0.18) : AppColors.card,
+                    color: sel ? color.withValues(alpha: 0.18) : AppColors.card,
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: sel ? color.withOpacity(0.5) : AppColors.border),
+                    border: Border.all(color: sel ? color.withValues(alpha: 0.5) : AppColors.border),
                   ),
                   child: Text('${info?.emoji ?? ''} ${info?.label ?? k}', style: TextStyle(fontFamily: 'IBMPlexMono', fontSize: 11, color: sel ? color : AppColors.textSecondary, fontWeight: sel ? FontWeight.w600 : FontWeight.w400)),
                 ),

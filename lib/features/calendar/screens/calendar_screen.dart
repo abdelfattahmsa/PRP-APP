@@ -73,7 +73,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                 weekendTextStyle: const TextStyle(color: AppColors.gold, fontFamily: 'IBMPlexMono', fontSize: 12),
                 selectedDecoration: const BoxDecoration(color: AppColors.gold, shape: BoxShape.circle),
                 selectedTextStyle: const TextStyle(color: AppColors.bg, fontFamily: 'IBMPlexMono', fontSize: 12, fontWeight: FontWeight.w700),
-                todayDecoration: BoxDecoration(color: AppColors.gold.withOpacity(0.2), shape: BoxShape.circle, border: Border.all(color: AppColors.gold)),
+                todayDecoration: BoxDecoration(color: AppColors.gold.withValues(alpha: 0.2), shape: BoxShape.circle, border: Border.all(color: AppColors.gold)),
                 todayTextStyle: const TextStyle(color: AppColors.gold, fontFamily: 'IBMPlexMono', fontSize: 12),
                 markerDecoration: const BoxDecoration(color: AppColors.gold, shape: BoxShape.circle),
                 markersMaxCount: 4,
@@ -162,7 +162,7 @@ class _EventTile extends ConsumerWidget {
         direction: DismissDirection.endToStart,
         background: Container(
           alignment: Alignment.centerRight, padding: const EdgeInsets.only(right: 16),
-          decoration: BoxDecoration(color: AppColors.error.withOpacity(0.15), borderRadius: BorderRadius.circular(10)),
+          decoration: BoxDecoration(color: AppColors.error.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(10)),
           child: const Icon(Icons.delete_outline, color: AppColors.error),
         ),
         confirmDismiss: (_) async {
@@ -184,9 +184,9 @@ class _EventTile extends ConsumerWidget {
         onDismissed: (_) => ref.read(calendarProvider.notifier).deleteEvent(event.id),
         child: Container(
           decoration: BoxDecoration(
-            color: event.isDone ? AppColors.card.withOpacity(0.5) : AppColors.card,
+            color: event.isDone ? AppColors.card.withValues(alpha: 0.5) : AppColors.card,
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: event.isDone ? AppColors.done.withOpacity(0.3) : color.withOpacity(0.3)),
+            border: Border.all(color: event.isDone ? AppColors.done.withValues(alpha: 0.3) : color.withValues(alpha: 0.3)),
           ),
           child: InkWell(
             borderRadius: BorderRadius.circular(10),
@@ -207,13 +207,13 @@ class _EventTile extends ConsumerWidget {
                   Row(children: [
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(color: color.withOpacity(0.12), borderRadius: BorderRadius.circular(4)),
+                      decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(4)),
                       child: Text(typeInfo?.label ?? event.typeKey, style: TextStyle(fontFamily: 'IBMPlexMono', fontSize: 8, color: color, fontWeight: FontWeight.w600, letterSpacing: 0.5)),
                     ),
                     const Gap(6),
                     if (event.isDone) Container(
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(color: AppColors.done.withOpacity(0.2), borderRadius: BorderRadius.circular(4)),
+                      decoration: BoxDecoration(color: AppColors.done.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(4)),
                       child: const Text('DONE', style: TextStyle(fontFamily: 'IBMPlexMono', fontSize: 8, color: AppColors.done)),
                     ),
                   ]),
@@ -381,9 +381,9 @@ class _EventDetailState extends ConsumerState<EventDetailScreen> {
                   duration: 120.ms,
                   padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
                   decoration: BoxDecoration(
-                    color: sel ? color.withOpacity(0.18) : AppColors.card,
+                    color: sel ? color.withValues(alpha: 0.18) : AppColors.card,
                     borderRadius: BorderRadius.circular(7),
-                    border: Border.all(color: sel ? color.withOpacity(0.5) : AppColors.border),
+                    border: Border.all(color: sel ? color.withValues(alpha: 0.5) : AppColors.border),
                   ),
                   child: Text('${info?.emoji ?? ''} ${info?.label ?? k}', style: TextStyle(fontFamily: 'IBMPlexMono', fontSize: 10.5, color: sel ? color : AppColors.textSecondary, fontWeight: sel ? FontWeight.w600 : FontWeight.w400)),
                 ),
