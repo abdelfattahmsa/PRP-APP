@@ -6,7 +6,7 @@ class AppConstants {
   static const appVersion = '1.0.0';
 
   // Supabase — fill these in from your Supabase project settings
-  static const supabaseUrl = 'https://qjqkmlqrrkrowvisvcmc.supabase.co';
+  static const supabaseUrl = 'https://qjqkmvlqrrkowvisvcmc.supabase.co';
   static const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFqcWttdmxxcnJrb3d2aXN2Y21jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ3Njg4MjQsImV4cCI6MjA5MDM0NDgyNH0.aB1h2odqDdyAIFWq1_-61wz6_AMJHIQSR0aZl4BKhNQ';
 
   // Hive box names

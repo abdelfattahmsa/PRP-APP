@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../features/auth/providers/auth_provider.dart';
 import '../../features/auth/screens/login_screen.dart';
-import '../../features/auth/screens/signup_screen.dart';
+import '../../features/auth/screens/signup_screen.dart'; // includes SignupScreen + ForgotPasswordScreen
 import '../../shared/screens/shell_screen.dart';
 import '../../features/overview/screens/overview_screen.dart';
 import '../../features/schedule/screens/schedule_screen.dart';
@@ -12,8 +12,6 @@ import '../../features/finance/screens/finance_screen.dart';
 import '../../features/habits/screens/habits_screen.dart';
 import '../../features/goals/screens/goals_screen.dart';
 import '../../features/focus/screens/focus_screen.dart';
-// ForgotPasswordScreen is in signup_screen.dart (exported via forgot_password_screen.dart)
-import '../../features/auth/screens/signup_screen.dart' show ForgotPasswordScreen;
 
 class Routes {
   static const login          = '/login';
@@ -33,6 +31,8 @@ final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: Routes.overview,
     redirect: (context, state) {
+      // While auth state is loading, send to login (will show loading)
+      if (authState.isLoading) return Routes.login;
       final isLoggedIn = authState.value != null;
       final isAuthRoute = state.matchedLocation.startsWith('/login') ||
           state.matchedLocation.startsWith('/signup') ||
