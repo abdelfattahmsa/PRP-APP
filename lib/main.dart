@@ -33,11 +33,11 @@ void main() async {
   // Timezones (for notifications)
   tz.initializeTimeZones();
 
-  runApp(const ProviderScope(child: LifePlanApp()));
+  runApp(const ProviderScope(child: PRPApp()));
 }
 
-class LifePlanApp extends ConsumerWidget {
-  const LifePlanApp({super.key});
+class PRPApp extends ConsumerWidget {
+  const PRPApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

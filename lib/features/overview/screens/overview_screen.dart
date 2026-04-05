@@ -32,6 +32,7 @@ class _OverviewScreenState extends ConsumerState<OverviewScreen> {
     final goals = ref.watch(goalsProvider).value ?? [];
     final sessions = ref.watch(focusSessionsProvider).value ?? [];
     final calEvents = ref.watch(calendarProvider).value ?? [];
+    final scores = ref.watch(resourceScoresProvider);
 
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
@@ -136,6 +137,11 @@ class _OverviewScreenState extends ConsumerState<OverviewScreen> {
                       .animate().fadeIn(duration: 300.ms).slideY(begin: 0.03),
                   const Gap(Spacing.md),
                 ],
+
+                // ── RESOURCE PULSE ──
+                _ResourcePulse(scores: scores)
+                    .animate(delay: 60.ms).fadeIn(duration: 300.ms),
+                const Gap(Spacing.md),
 
                 // ── STATS GRID ──
                 _StatsGrid(
@@ -608,6 +614,145 @@ class _MilestoneChip extends StatelessWidget {
               Text(label, style: TextStyle(fontFamily: 'IBMPlexMono', fontSize: 10, fontWeight: FontWeight.w600, color: color)),
               Text(date, style: const TextStyle(fontFamily: 'IBMPlexMono', fontSize: 8, color: AppColors.textSecondary)),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── RESOURCE PULSE ─────────────────────────────────────────────
+
+class _ResourcePulse extends StatelessWidget {
+  const _ResourcePulse({required this.scores});
+  final ResourceScores scores;
+
+  @override
+  Widget build(BuildContext context) {
+    final items = [
+      ('Money', scores.money, AppColors.gold, Icons.account_balance_wallet_outlined),
+      ('Time', scores.time, AppColors.cfi, Icons.schedule_outlined),
+      ('Energy', scores.energy, AppColors.fasting, Icons.bolt_outlined),
+      ('Health', scores.health, AppColors.deen, Icons.favorite_outline),
+    ];
+
+    return Container(
+      padding: const EdgeInsets.all(Spacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(
+                'Resource Pulse',
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      color: AppColors.gold,
+                      letterSpacing: 1.5,
+                    ),
+              ),
+              const Spacer(),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: _overallColor(scores.overall).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  '${scores.overall}%',
+                  style: TextStyle(
+                    fontFamily: 'IBMPlexMono',
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: _overallColor(scores.overall),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const Gap(Spacing.md),
+          Row(
+            children: items.map((item) {
+              return Expanded(
+                child: _PulseBar(
+                  label: item.$1,
+                  value: item.$2,
+                  color: item.$3,
+                  icon: item.$4,
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Color _overallColor(int score) {
+    if (score >= 70) return AppColors.success;
+    if (score >= 40) return AppColors.gold;
+    return AppColors.error;
+  }
+}
+
+class _PulseBar extends StatelessWidget {
+  const _PulseBar({
+    required this.label,
+    required this.value,
+    required this.color,
+    required this.icon,
+  });
+  final String label;
+  final int value;
+  final Color color;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: Column(
+        children: [
+          Icon(icon, size: 16, color: color.withValues(alpha: 0.7)),
+          const Gap(6),
+          SizedBox(
+            height: 48,
+            width: 8,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: RotatedBox(
+                quarterTurns: -1,
+                child: LinearProgressIndicator(
+                  value: value / 100,
+                  backgroundColor: AppColors.border,
+                  valueColor: AlwaysStoppedAnimation(color),
+                ),
+              ),
+            ),
+          ),
+          const Gap(6),
+          Text(
+            '$value',
+            style: TextStyle(
+              fontFamily: 'IBMPlexMono',
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
+          ),
+          const Gap(2),
+          Text(
+            label,
+            style: const TextStyle(
+              fontFamily: 'IBMPlexMono',
+              fontSize: 7,
+              color: AppColors.textSecondary,
+              letterSpacing: 0.5,
+            ),
           ),
         ],
       ),

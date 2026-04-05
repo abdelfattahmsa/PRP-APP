@@ -298,11 +298,11 @@ class _RailBrand extends StatelessWidget {
               ),
               child: const Center(
                 child: Text(
-                  'LP',
+                  'PRP',
                   style: TextStyle(
                     color: AppColors.bg,
                     fontFamily: 'PlayfairDisplay',
-                    fontSize: 12,
+                    fontSize: 10,
                     fontWeight: FontWeight.w900,
                     letterSpacing: -0.5,
                   ),

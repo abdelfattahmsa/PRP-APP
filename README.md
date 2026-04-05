@@ -1,114 +1,173 @@
-# Life Plan 🚀
+# PRP System — Personal Resource Planner
 
-<div align="center">
-  <p>A comprehensive, cross-platform life dashboard built with Flutter & Supabase.</p>
-  <p>
-    <b>Windows • macOS • iOS • Android</b>
-  </p>
-</div>
+A cross-platform life management app built with Flutter. PRP organizes your life around four core resources: **Money**, **Time**, **Energy**, and **Health**, unified by a **Goals** orchestrator.
 
----
+## Architecture
 
-## 📖 Overview
+```
+lib/
+├── core/                    # App-wide infrastructure
+│   ├── constants/           # AppConstants, categories, event types
+│   ├── providers/           # Cross-engine providers (resource scores)
+│   ├── router/              # GoRouter with auth guards
+│   └── theme/               # Design system (dark + gold)
+│
+├── engines/                 # Resource-based engine modules
+│   ├── money/               # Finance OS — accounts, debts, transactions
+│   │   ├── data/models/     # BankAccount, ExternalDebt, Investment, Transaction
+│   │   ├── data/repositories/ # MoneyRepository
+│   │   ├── providers/       # Riverpod providers + computed summary
+│   │   ├── screens/         # (Finance screen in features/ for now)
+│   │   └── widgets/
+│   ├── time/                # Schedule + Calendar
+│   │   ├── data/models/     # ScheduleBlock, CalendarEvent
+│   │   ├── data/repositories/ # TimeRepository
+│   │   ├── providers/       # Schedule, Calendar notifiers
+│   │   ├── screens/
+│   │   └── widgets/
+│   ├── energy/              # Focus sessions + timer
+│   │   ├── data/models/     # FocusSession, FocusTimerState
+│   │   ├── data/repositories/ # EnergyRepository
+│   │   ├── providers/       # Sessions notifier, timer notifier
+│   │   ├── screens/
+│   │   └── widgets/
+│   ├── health/              # Habits tracking
+│   │   ├── data/models/     # Habit
+│   │   ├── data/repositories/ # HealthRepository
+│   │   ├── providers/       # Habits notifier, today's completion
+│   │   ├── screens/
+│   │   └── widgets/
+│   └── goals/               # Goals orchestrator
+│       ├── data/models/     # Goal
+│       ├── data/repositories/ # GoalsRepository
+│       ├── providers/       # Goals notifier
+│       ├── screens/
+│       └── widgets/
+│
+├── features/                # UI screens (being migrated to engines/)
+│   ├── auth/                # Login, signup, forgot password
+│   ├── overview/            # Command Center dashboard
+│   ├── schedule/            # Schedule + edit block
+│   ├── calendar/            # Calendar + event detail
+│   ├── finance/             # Finance OS screen
+│   ├── focus/               # Focus timer + log + analytics
+│   ├── habits/              # Habit tracker
+│   ├── goals/               # Goals screen
+│   └── settings/            # App settings
+│
+├── services/                # External services
+│   ├── supabase_service.dart # All Supabase operations
+│   └── notification_service.dart
+│
+├── shared/                  # Cross-cutting concerns
+│   ├── models/              # Barrel re-exports for backward compat
+│   ├── screens/             # ShellScreen (responsive nav)
+│   └── widgets/             # Shared UI components
+│
+└── main.dart                # App entry point
+```
 
-**Life Plan** is a meticulously crafted cross-platform application designed to serve as your ultimate life dashboard. Developed by Abdelfattah M. Aboulfoutoh in 2026, it seamlessly integrates schedule management, financial tracking, habit formation, goal setting, and focused work sessions into a single, unified interface wrapped in an elegant dark theme.
+## Tech Stack
 
-## ✨ Features
+| Layer | Technology |
+|-------|-----------|
+| Framework | Flutter ≥3.19.0, Dart ≥3.3.0 |
+| State | Riverpod 3.x (AsyncNotifier pattern) |
+| Navigation | GoRouter 17.x with auth guards |
+| Backend | Supabase (Auth + Postgres + RLS) |
+| UI | Material 3, dark theme, PlayfairDisplay + IBMPlexMono |
+| Charts | fl_chart |
+| Calendar | table_calendar |
+| Animations | flutter_animate |
 
-### Phase 1: Core Foundation (✅ Completed)
-- **Robust Authentication**: Full Supabase authentication flow (Sign Up, Sign In, Forgot Password, Sign Out).
-- **Adaptive Navigation**: Intelligent routing via `go_router` featuring auth guards, a desktop sidebar, and a mobile bottom navigation bar.
-- **Premium UI/UX**: Exclusively designed dark theme with typography powered by *Playfair Display* and *IBM Plex Mono*, enriched with custom shared widgets (`AppTextField`, `AppButton`, `AppCard`).
-- **Data Architecture**: Comprehensive data modeling, full Supabase service layer, custom database schema with Row Level Security (RLS) policies, and default automated data seeding on new sign-ups.
+## Design System
 
-### Phase 2: Feature Modules (🔜 Upcoming)
-- 📊 **Overview Dashboard**: High-level insights at a glance.
-- ⏱️ **Schedule**: Daily planner with intuitive drag-to-reorder time blocks.
-- 📅 **Calendar**: Advanced event and appointment management.
-- 💰 **Finance**: Complete financial oversight including banks, debts, and transactions.
-- 📈 **Habits**: Comprehensive habit tracking with streak maintenance.
-- 🎯 **Goals**: A structured goal and milestone pool.
-- 🍅 **Focus**: Built-in Pomodoro timer integrated with session analytics.
+- **Background**: `#08070C` (near-black)
+- **Surface**: `#0D0B13`
+- **Card**: `#12101E`
+- **Gold accent**: `#C8A050`
+- **Spacing**: 4px grid system
+- **Typography**: PlayfairDisplay (headings), IBMPlexMono (data/labels)
+- **Breakpoints**: Mobile (<480), Tablet (480-768), Desktop (768-1200)
 
-## 🛠️ Tech Stack
+## Features
 
-- **Framework**: [Flutter](https://flutter.dev/) (>=3.19.0)
-- **Backend & Auth**: [Supabase](https://supabase.com/)
-- **State Management**: [Riverpod](https://riverpod.dev/) (`flutter_riverpod`, `riverpod_annotation`)
-- **Navigation**: [GoRouter](https://pub.dev/packages/go_router)
-- **Local Storage**: [Hive](https://docs.hivedb.dev/) & [Shared Preferences](https://pub.dev/packages/shared_preferences)
-- **Key UI/UX Libraries**: `fl_chart`, `table_calendar`, `flutter_animate`
+### Command Center (Overview)
+- Resource Pulse — live 0-100 scores for Money, Time, Energy, Health
+- Current schedule block with NOW indicator
+- Stats grid (habits, focus, goals, finance)
+- Upcoming events + active goals
+- Milestone timeline
 
----
+### Money Engine (Finance)
+- Multi-bank account management (current, savings, credit card)
+- External debt tracking
+- Investment portfolio
+- Transaction ledger with category filters
+- Financial summary with computed metrics
 
-## 🚀 Quick Setup Guide
+### Time Engine (Schedule + Calendar)
+- Multiple schedule modes (normal, fasting, friday, cairo)
+- Drag-to-reorder blocks with notifications
+- Full calendar with event types (personal, milestone, islamic, etc.)
+- Event detail with links and attachments
 
-Follow these 5 simple steps to get the project running locally:
+### Energy Engine (Focus)
+- Pomodoro-style timer (focus/break modes)
+- Session logging with category tracking
+- 7-day analytics with bar charts
+- Time-by-category breakdown
 
-### 1. Install Dependencies
+### Health Engine (Habits)
+- Daily habit tracker with streak counting
+- History tracking (per-day toggle)
+- Completion percentage dashboard
+
+### Goals
+- Goal tracking with progress bars
+- Priority levels (high/medium/low)
+- Status management (active/done/paused)
+- Target date with days-remaining countdown
+- Linked calendar events
+
+## Getting Started
+
+### Prerequisites
+- Flutter SDK ≥3.19.0
+- A Supabase project (URL + anon key configured in `app_constants.dart`)
+
+### Run locally
 ```bash
 flutter pub get
+flutter run
 ```
 
-### 2. Configure Typography
-This app uses custom typography. Download the following fonts from Google Fonts and place them in the `assets/fonts/` directory:
-- [Playfair Display](https://fonts.google.com/specimen/Playfair+Display) (`PlayfairDisplay-Regular.ttf`, `PlayfairDisplay-Bold.ttf`, `PlayfairDisplay-Black.ttf`)
-- [IBM Plex Mono](https://fonts.google.com/specimen/IBM+Plex+Mono) (`IBMPlexMono-Regular.ttf`, `IBMPlexMono-Medium.ttf`, `IBMPlexMono-SemiBold.ttf`)
-
-### 3. Setup Supabase Backend
-1. Create a new project at [Supabase](https://supabase.com/).
-2. Navigate to the **SQL Editor**, paste the contents of `supabase/schema.sql`, and hit **Run** to generate your tables and RLS policies.
-3. Navigate to **Project Settings > API** and copy your **Project URL** and **anon public key**.
-4. Inside your local project, open `lib/core/constants/app_constants.dart` and update the constants:
-```dart
-static const supabaseUrl = 'https://YOUR_PROJECT_ID.supabase.co';
-static const supabaseAnonKey = 'eyJ...';
-```
-
-### 4. Run Locally (Desktop)
+### Build for release
 ```bash
-flutter run -d windows
-# or macOS: flutter run -d macos
+# Android
+flutter build apk --release
+flutter build appbundle --release
+
+# iOS (requires macOS + Xcode)
+flutter build ios --release
+
+# Web
+flutter build web --release
+
+# Windows
+flutter build windows --release
+
+# macOS
+flutter build macos --release
 ```
 
-### 5. Run Locally (Mobile)
-```bash
-flutter run -d android
-# or iOS: flutter run -d ios
-```
+## Deployment Guide
 
----
+See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed platform-specific deployment instructions and publishing costs.
 
-## 📁 Project Architecture
+## Version History
 
-The codebase follows a feature-centric, highly modular architecture to ensure scalability:
-
-```text
-lib/
-├── main.dart                 # Application entry point
-├── core/                     # Foundational configurations
-│   ├── theme/                # Dark theme definition, colors, and typography 
-│   ├── router/               # GoRouter configuration and auth guards
-│   └── constants/            # Application-wide constants 
-├── services/
-│   └── supabase_service.dart # Centralized backend and DB operations
-├── shared/                   # Cross-feature reusables
-│   ├── models/               # Universal data models
-│   ├── widgets/              # Reusable UI components (buttons, text fields, cards)
-│   └── screens/              # Shell navigation structural screens
-└── features/                 # Modular feature domains
-    ├── auth/                 # Authentication workflows
-    ├── overview/             # Central dashboard (Part 2) 
-    ├── schedule/             # Daily schedule editor (Part 2)
-    ├── calendar/             # Calendar and event integration (Part 2)
-    ├── finance/              # Wealth tracking (Part 2)
-    ├── habits/               # Habit monitoring (Part 2)
-    ├── goals/                # Goal tracking (Part 2)
-    └── focus/                # Pomodoro timer (Part 2)
-```
-
----
-
-<div align="center">
-  <p>© 2026 Abdelfattah M. Aboulfoutoh</p>
-</div>
+| Version | Date | Changes |
+|---------|------|---------|
+| 2.0.0 | 2026-04-05 | PRP System restructure — engine-based architecture, resource scores, Command Center |
+| 1.0.0 | 2026-03-01 | Initial Life Plan release |
