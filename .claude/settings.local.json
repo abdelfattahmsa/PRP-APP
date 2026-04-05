@@ -25,7 +25,11 @@
       "Bash(./build/windows/x64/runner/Debug/life_plan.exe)",
       "Bash(flutter build:*)",
       "Bash(start \"\" \"./build/windows/x64/runner/Debug/life_plan.exe\")",
-      "Bash(del \"C:\\\\Users\\\\abdel\\\\Documents\\\\LP\\\\fix_opacity.ps1\")"
+      "Bash(del \"C:\\\\Users\\\\abdel\\\\Documents\\\\LP\\\\fix_opacity.ps1\")",
+      "Bash(xargs wc:*)",
+      "Bash(flutter devices:*)",
+      "Bash(taskkill /F /IM \"dart.exe\")",
+      "Bash(taskkill /F /IM \"chrome.exe\")"
     ]
   }
 }
