@@ -2,7 +2,7 @@
 
 A cross-platform life management app built with Flutter. PRP organizes life around four core resources: **Money**, **Time**, **Energy**, and **Health** — with a unified **Overview** dashboard and **Profile** hub.
 
-> **Live demo:** [prp-app.vercel.app](https://prp-app.vercel.app)
+> **Live demo:** [web.prp-app.website](https://web.prp-app.website)
 
 ---
 
