@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 // ══════════════════════════════════════════════════════════════
-// DESIGN SYSTEM v2.0 — Life Plan
+// DESIGN SYSTEM v3.0 — PRP System
 // ══════════════════════════════════════════════════════════════
 
 /// Spacing system based on 4px grid
@@ -15,16 +15,15 @@ class Spacing {
   static const double xl = 28;
   static const double xxl = 40;
 
-  /// Standard page padding (responsive)
   static EdgeInsets pagePadding(BuildContext context) {
     final w = MediaQuery.of(context).size.width;
     final h = w >= 768 ? 24.0 : 16.0;
     return EdgeInsets.symmetric(horizontal: h, vertical: lg);
   }
 
-  /// Standard card padding
   static const cardPadding = EdgeInsets.all(md);
-  static const cardPaddingCompact = EdgeInsets.symmetric(horizontal: md, vertical: sm);
+  static const cardPaddingCompact =
+      EdgeInsets.symmetric(horizontal: md, vertical: sm);
 }
 
 /// Responsive breakpoints
@@ -50,7 +49,7 @@ class Breakpoints {
 class AppColors {
   AppColors._();
 
-  // Core backgrounds
+  // ── DARK BACKGROUNDS ─────────────────────────────────────────
   static const bg = Color(0xFF08070C);
   static const surface = Color(0xFF0D0B13);
   static const card = Color(0xFF12101E);
@@ -59,13 +58,30 @@ class AppColors {
   static const border = Color(0xFF1E1B2C);
   static const borderLight = Color(0xFF2A2640);
 
-  // Brand
+  // ── ACCENT — GREEN (primary) ──────────────────────────────────
+  static const accent = Color(0xFF22C55E);
+  static const accentLight = Color(0xFF4ADE80);
+  static const accentDim = Color(0xFF166534);
+  static const accentFaint = Color(0xFF052E16);
+
+  // ── BRAND GOLD (logo / category highlights only) ──────────────
   static const gold = Color(0xFFC8A050);
   static const goldLight = Color(0xFFE8C97A);
   static const goldDim = Color(0xFF5A4418);
   static const goldFaint = Color(0xFF2A2010);
 
-  // Category colors
+  // ── LIGHT MODE ────────────────────────────────────────────────
+  static const lightBg = Color(0xFFF8FAFC);
+  static const lightSurface = Color(0xFFFFFFFF);
+  static const lightCard = Color(0xFFF1F5F9);
+  static const lightCardHover = Color(0xFFE8EEF6);
+  static const lightBorder = Color(0xFFE2E8F0);
+  static const lightBorderStrong = Color(0xFFCBD5E1);
+  static const lightTextPrimary = Color(0xFF0F172A);
+  static const lightTextSecondary = Color(0xFF64748B);
+  static const lightTextMuted = Color(0xFFCBD5E1);
+
+  // ── CATEGORY COLORS ───────────────────────────────────────────
   static const deen = Color(0xFF54C478);
   static const pmp = Color(0xFF6A8EF0);
   static const cfi = Color(0xFF4AAAE0);
@@ -76,13 +92,13 @@ class AppColors {
   static const commute = Color(0xFF3AB8A8);
   static const rest = Color(0xFF6B6080);
 
-  // Semantic
+  // ── SEMANTIC ─────────────────────────────────────────────────
   static const success = Color(0xFF54C478);
   static const error = Color(0xFFE05050);
   static const warning = Color(0xFFE08840);
   static const info = Color(0xFF6A8EF0);
 
-  // Event types
+  // ── EVENT TYPES ──────────────────────────────────────────────
   static const personal = Color(0xFFE879A0);
   static const islamic = Color(0xFF54C478);
   static const finance = Color(0xFF3AB8A8);
@@ -91,7 +107,7 @@ class AppColors {
   static const family = Color(0xFFF06870);
   static const done = Color(0xFF405040);
 
-  // Text
+  // ── DARK TEXT ─────────────────────────────────────────────────
   static const textPrimary = Color(0xFFE0DAF0);
   static const textSecondary = Color(0xFF7A7090);
   static const textMuted = Color(0xFF3A3450);
@@ -119,30 +135,32 @@ class AppColors {
     };
   }
 
-  static Color categoryBg(String key) {
-    return categoryColor(key).withValues(alpha: 0.08);
-  }
+  static Color categoryBg(String key) =>
+      categoryColor(key).withValues(alpha: 0.08);
 }
 
 class AppTheme {
   AppTheme._();
 
+  // ── DARK THEME ────────────────────────────────────────────────
   static ThemeData get dark {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
       scaffoldBackgroundColor: AppColors.bg,
       colorScheme: const ColorScheme.dark(
-        primary: AppColors.gold,
-        secondary: AppColors.kyberia,
+        primary: AppColors.accent,
+        secondary: AppColors.accentLight,
         surface: AppColors.surface,
         error: AppColors.error,
-        onPrimary: AppColors.bg,
-        onSecondary: AppColors.bg,
+        onPrimary: Colors.white,
+        onSecondary: Colors.white,
         onSurface: AppColors.textPrimary,
+        outline: AppColors.border,
+        outlineVariant: AppColors.borderLight,
       ),
       fontFamily: 'IBMPlexMono',
-      textTheme: _textTheme,
+      textTheme: _darkTextTheme,
       cardTheme: CardThemeData(
         color: AppColors.card,
         elevation: 0,
@@ -165,7 +183,7 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: AppColors.gold, width: 1.5),
+          borderSide: const BorderSide(color: AppColors.accent, width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
@@ -175,16 +193,18 @@ class AppTheme {
           borderRadius: BorderRadius.circular(8),
           borderSide: const BorderSide(color: AppColors.error, width: 1.5),
         ),
-        labelStyle: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+        labelStyle:
+            const TextStyle(color: AppColors.textSecondary, fontSize: 12),
         hintStyle: const TextStyle(color: AppColors.textMuted, fontSize: 12),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.gold,
-          foregroundColor: AppColors.bg,
+          backgroundColor: AppColors.accent,
+          foregroundColor: Colors.white,
           elevation: 0,
-          minimumSize: const Size(0, 44), // 44px min tap target
+          minimumSize: const Size(0, 44),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 13),
           textStyle: const TextStyle(
@@ -211,7 +231,7 @@ class AppTheme {
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: AppColors.gold,
+          foregroundColor: AppColors.accent,
           minimumSize: const Size(0, 44),
           textStyle: const TextStyle(
             fontFamily: 'IBMPlexMono',
@@ -227,26 +247,26 @@ class AppTheme {
       ),
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: AppColors.surface,
-        indicatorColor: AppColors.gold.withValues(alpha: 0.15),
+        indicatorColor: AppColors.accent.withValues(alpha: 0.15),
         elevation: 0,
         iconTheme: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
-            return const IconThemeData(color: AppColors.gold, size: 22);
+            return const IconThemeData(color: AppColors.accent, size: 20);
           }
-          return const IconThemeData(color: AppColors.textSecondary, size: 22);
+          return const IconThemeData(color: AppColors.textSecondary, size: 20);
         }),
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
             return const TextStyle(
-              color: AppColors.gold,
-              fontSize: 10,
+              color: AppColors.accent,
+              fontSize: 9,
               fontFamily: 'IBMPlexMono',
               fontWeight: FontWeight.w600,
             );
           }
           return const TextStyle(
             color: AppColors.textSecondary,
-            fontSize: 10,
+            fontSize: 9,
             fontFamily: 'IBMPlexMono',
           );
         }),
@@ -285,7 +305,8 @@ class AppTheme {
       ),
       snackBarTheme: SnackBarThemeData(
         backgroundColor: AppColors.cardAlt,
-        contentTextStyle: const TextStyle(color: AppColors.textPrimary, fontSize: 13),
+        contentTextStyle:
+            const TextStyle(color: AppColors.textPrimary, fontSize: 13),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         behavior: SnackBarBehavior.floating,
         elevation: 0,
@@ -303,17 +324,19 @@ class AppTheme {
       ),
       switchTheme: SwitchThemeData(
         thumbColor: WidgetStateProperty.resolveWith((s) =>
-            s.contains(WidgetState.selected) ? AppColors.gold : AppColors.textSecondary),
+            s.contains(WidgetState.selected)
+                ? AppColors.accent
+                : AppColors.textSecondary),
         trackColor: WidgetStateProperty.resolveWith((s) =>
             s.contains(WidgetState.selected)
-                ? AppColors.gold.withValues(alpha: 0.3)
+                ? AppColors.accent.withValues(alpha: 0.3)
                 : AppColors.border),
       ),
       sliderTheme: const SliderThemeData(
-        activeTrackColor: AppColors.gold,
+        activeTrackColor: AppColors.accent,
         inactiveTrackColor: AppColors.border,
-        thumbColor: AppColors.gold,
-        overlayColor: Color(0x22C8A050),
+        thumbColor: AppColors.accent,
+        overlayColor: Color(0x2222C55E),
       ),
       tooltipTheme: TooltipThemeData(
         decoration: BoxDecoration(
@@ -330,7 +353,222 @@ class AppTheme {
     );
   }
 
-  static const _textTheme = TextTheme(
+  // ── LIGHT THEME ───────────────────────────────────────────────
+  static ThemeData get light {
+    return ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.light,
+      scaffoldBackgroundColor: AppColors.lightBg,
+      colorScheme: const ColorScheme.light(
+        primary: AppColors.accent,
+        secondary: AppColors.accentLight,
+        surface: AppColors.lightSurface,
+        error: AppColors.error,
+        onPrimary: Colors.white,
+        onSecondary: Colors.white,
+        onSurface: AppColors.lightTextPrimary,
+        outline: AppColors.lightBorder,
+        outlineVariant: AppColors.lightBorderStrong,
+      ),
+      fontFamily: 'IBMPlexMono',
+      textTheme: _lightTextTheme,
+      cardTheme: CardThemeData(
+        color: AppColors.lightCard,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: const BorderSide(color: AppColors.lightBorder, width: 1),
+        ),
+        margin: EdgeInsets.zero,
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: AppColors.lightCard,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: AppColors.lightBorder),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: AppColors.lightBorder),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: AppColors.accent, width: 1.5),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: AppColors.error),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: AppColors.error, width: 1.5),
+        ),
+        labelStyle: const TextStyle(
+            color: AppColors.lightTextSecondary, fontSize: 12),
+        hintStyle:
+            const TextStyle(color: AppColors.lightTextMuted, fontSize: 12),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.accent,
+          foregroundColor: Colors.white,
+          elevation: 0,
+          minimumSize: const Size(0, 44),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 13),
+          textStyle: const TextStyle(
+            fontFamily: 'IBMPlexMono',
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.5,
+          ),
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: AppColors.lightTextSecondary,
+          side: const BorderSide(color: AppColors.lightBorder),
+          minimumSize: const Size(0, 44),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 13),
+          textStyle: const TextStyle(
+            fontFamily: 'IBMPlexMono',
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: AppColors.accent,
+          minimumSize: const Size(0, 44),
+          textStyle: const TextStyle(
+            fontFamily: 'IBMPlexMono',
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ),
+      dividerTheme: const DividerThemeData(
+        color: AppColors.lightBorder,
+        thickness: 1,
+        space: 0,
+      ),
+      navigationBarTheme: NavigationBarThemeData(
+        backgroundColor: AppColors.lightSurface,
+        indicatorColor: AppColors.accent.withValues(alpha: 0.12),
+        elevation: 0,
+        iconTheme: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return const IconThemeData(color: AppColors.accent, size: 20);
+          }
+          return const IconThemeData(
+              color: AppColors.lightTextSecondary, size: 20);
+        }),
+        labelTextStyle: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return const TextStyle(
+              color: AppColors.accent,
+              fontSize: 9,
+              fontFamily: 'IBMPlexMono',
+              fontWeight: FontWeight.w600,
+            );
+          }
+          return const TextStyle(
+            color: AppColors.lightTextSecondary,
+            fontSize: 9,
+            fontFamily: 'IBMPlexMono',
+          );
+        }),
+        surfaceTintColor: Colors.transparent,
+        shadowColor: Colors.transparent,
+        height: 64,
+      ),
+      appBarTheme: const AppBarTheme(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        centerTitle: false,
+        titleTextStyle: TextStyle(
+          fontFamily: 'PlayfairDisplay',
+          fontSize: 18,
+          fontWeight: FontWeight.w700,
+          color: AppColors.lightTextPrimary,
+        ),
+        iconTheme: IconThemeData(color: AppColors.lightTextSecondary),
+      ),
+      bottomSheetTheme: const BottomSheetThemeData(
+        backgroundColor: AppColors.lightSurface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+      ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: AppColors.lightSurface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        titleTextStyle: const TextStyle(
+          fontFamily: 'PlayfairDisplay',
+          fontSize: 18,
+          fontWeight: FontWeight.w700,
+          color: AppColors.lightTextPrimary,
+        ),
+      ),
+      snackBarTheme: SnackBarThemeData(
+        backgroundColor: AppColors.lightCard,
+        contentTextStyle:
+            const TextStyle(color: AppColors.lightTextPrimary, fontSize: 13),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        behavior: SnackBarBehavior.floating,
+        elevation: 0,
+      ),
+      chipTheme: ChipThemeData(
+        backgroundColor: AppColors.lightCard,
+        side: const BorderSide(color: AppColors.lightBorder),
+        labelStyle: const TextStyle(
+          fontFamily: 'IBMPlexMono',
+          fontSize: 10,
+          color: AppColors.lightTextSecondary,
+        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      ),
+      switchTheme: SwitchThemeData(
+        thumbColor: WidgetStateProperty.resolveWith((s) =>
+            s.contains(WidgetState.selected)
+                ? AppColors.accent
+                : AppColors.lightTextSecondary),
+        trackColor: WidgetStateProperty.resolveWith((s) =>
+            s.contains(WidgetState.selected)
+                ? AppColors.accent.withValues(alpha: 0.3)
+                : AppColors.lightBorder),
+      ),
+      sliderTheme: const SliderThemeData(
+        activeTrackColor: AppColors.accent,
+        inactiveTrackColor: AppColors.lightBorder,
+        thumbColor: AppColors.accent,
+        overlayColor: Color(0x2222C55E),
+      ),
+      tooltipTheme: TooltipThemeData(
+        decoration: BoxDecoration(
+          color: AppColors.lightCard,
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: AppColors.lightBorder),
+        ),
+        textStyle: const TextStyle(
+          color: AppColors.lightTextPrimary,
+          fontSize: 11,
+          fontFamily: 'IBMPlexMono',
+        ),
+      ),
+    );
+  }
+
+  // ── TEXT THEMES ───────────────────────────────────────────────
+
+  static const _darkTextTheme = TextTheme(
     displayLarge: TextStyle(
       fontFamily: 'PlayfairDisplay',
       fontSize: 40,
@@ -414,6 +652,95 @@ class AppTheme {
       fontWeight: FontWeight.w400,
       letterSpacing: 1.5,
       color: AppColors.textSecondary,
+    ),
+  );
+
+  static const _lightTextTheme = TextTheme(
+    displayLarge: TextStyle(
+      fontFamily: 'PlayfairDisplay',
+      fontSize: 40,
+      fontWeight: FontWeight.w900,
+      color: AppColors.lightTextPrimary,
+      letterSpacing: -1,
+    ),
+    displayMedium: TextStyle(
+      fontFamily: 'PlayfairDisplay',
+      fontSize: 32,
+      fontWeight: FontWeight.w700,
+      color: AppColors.lightTextPrimary,
+    ),
+    headlineLarge: TextStyle(
+      fontFamily: 'PlayfairDisplay',
+      fontSize: 24,
+      fontWeight: FontWeight.w700,
+      color: AppColors.lightTextPrimary,
+    ),
+    headlineMedium: TextStyle(
+      fontFamily: 'PlayfairDisplay',
+      fontSize: 20,
+      fontWeight: FontWeight.w700,
+      color: AppColors.lightTextPrimary,
+    ),
+    headlineSmall: TextStyle(
+      fontFamily: 'PlayfairDisplay',
+      fontSize: 18,
+      fontWeight: FontWeight.w700,
+      color: AppColors.lightTextPrimary,
+    ),
+    titleLarge: TextStyle(
+      fontFamily: 'PlayfairDisplay',
+      fontSize: 16,
+      fontWeight: FontWeight.w700,
+      color: AppColors.lightTextPrimary,
+    ),
+    titleMedium: TextStyle(
+      fontFamily: 'IBMPlexMono',
+      fontSize: 13,
+      fontWeight: FontWeight.w600,
+      color: AppColors.lightTextPrimary,
+    ),
+    titleSmall: TextStyle(
+      fontFamily: 'IBMPlexMono',
+      fontSize: 11,
+      fontWeight: FontWeight.w600,
+      color: AppColors.lightTextSecondary,
+      letterSpacing: 0.5,
+    ),
+    bodyLarge: TextStyle(
+      fontSize: 14,
+      color: AppColors.lightTextPrimary,
+      height: 1.6,
+    ),
+    bodyMedium: TextStyle(
+      fontSize: 12,
+      color: AppColors.lightTextPrimary,
+      height: 1.5,
+    ),
+    bodySmall: TextStyle(
+      fontSize: 11,
+      color: AppColors.lightTextSecondary,
+      height: 1.4,
+    ),
+    labelLarge: TextStyle(
+      fontFamily: 'IBMPlexMono',
+      fontSize: 12,
+      fontWeight: FontWeight.w600,
+      letterSpacing: 0.5,
+      color: AppColors.lightTextPrimary,
+    ),
+    labelMedium: TextStyle(
+      fontFamily: 'IBMPlexMono',
+      fontSize: 10,
+      fontWeight: FontWeight.w500,
+      letterSpacing: 0.8,
+      color: AppColors.lightTextPrimary,
+    ),
+    labelSmall: TextStyle(
+      fontFamily: 'IBMPlexMono',
+      fontSize: 9,
+      fontWeight: FontWeight.w400,
+      letterSpacing: 1.5,
+      color: AppColors.lightTextSecondary,
     ),
   );
 }

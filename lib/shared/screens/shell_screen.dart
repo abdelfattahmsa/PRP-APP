@@ -8,9 +8,170 @@ import '../../core/constants/app_constants.dart';
 import '../../features/auth/providers/auth_provider.dart';
 
 // ══════════════════════════════════════════════════════════════
-// SHELL SCREEN — Responsive navigation container
-// Mobile: Bottom nav (5 primary + More sheet)
-// Desktop: Collapsible side rail
+// NAVIGATION MODEL
+// ══════════════════════════════════════════════════════════════
+
+class AppSubTab {
+  const AppSubTab({
+    required this.label,
+    required this.icon,
+    required this.route,
+  });
+  final String label;
+  final IconData icon;
+  final String route;
+}
+
+class AppTab {
+  const AppTab({
+    required this.id,
+    required this.label,
+    required this.icon,
+    required this.activeIcon,
+    required this.route,
+    this.subTabs = const [],
+  });
+  final String id;
+  final String label;
+  final IconData icon;
+  final IconData activeIcon;
+  /// The route navigated to when this tab is tapped.
+  /// For tabs with sub-tabs this points to the first sub-tab.
+  final String route;
+  final List<AppSubTab> subTabs;
+  bool get hasSubTabs => subTabs.isNotEmpty;
+}
+
+// ── 6 MAIN TABS ──────────────────────────────────────────────
+const kAppTabs = <AppTab>[
+  AppTab(
+    id: 'overview',
+    label: 'Overview',
+    icon: Icons.dashboard_outlined,
+    activeIcon: Icons.dashboard_rounded,
+    route: Routes.overview,
+  ),
+  AppTab(
+    id: 'time',
+    label: 'Time',
+    icon: Icons.schedule_outlined,
+    activeIcon: Icons.schedule_rounded,
+    route: Routes.timeOverview,
+    subTabs: [
+      AppSubTab(
+          label: 'Overview',
+          icon: Icons.bar_chart_outlined,
+          route: Routes.timeOverview),
+      AppSubTab(
+          label: 'Calendar',
+          icon: Icons.event_outlined,
+          route: Routes.timeCalendar),
+      AppSubTab(
+          label: 'Schedule',
+          icon: Icons.view_timeline_outlined,
+          route: Routes.timeSchedule),
+    ],
+  ),
+  AppTab(
+    id: 'finance',
+    label: 'Finance',
+    icon: Icons.account_balance_wallet_outlined,
+    activeIcon: Icons.account_balance_wallet_rounded,
+    route: Routes.financeOverview,
+    subTabs: [
+      AppSubTab(
+          label: 'Overview',
+          icon: Icons.bar_chart_outlined,
+          route: Routes.financeOverview),
+      AppSubTab(
+          label: 'Accounts',
+          icon: Icons.account_balance_outlined,
+          route: Routes.financeAccounts),
+      AppSubTab(
+          label: 'Invest',
+          icon: Icons.trending_up_outlined,
+          route: Routes.financeInvestments),
+      AppSubTab(
+          label: 'Debts',
+          icon: Icons.trending_down_outlined,
+          route: Routes.financeLiabilities),
+      AppSubTab(
+          label: 'Txns',
+          icon: Icons.receipt_long_outlined,
+          route: Routes.financeTransactions),
+    ],
+  ),
+  AppTab(
+    id: 'energy',
+    label: 'Energy',
+    icon: Icons.bolt_outlined,
+    activeIcon: Icons.bolt_rounded,
+    route: Routes.energyOverview,
+    subTabs: [
+      AppSubTab(
+          label: 'Overview',
+          icon: Icons.bar_chart_outlined,
+          route: Routes.energyOverview),
+      AppSubTab(
+          label: 'Focus',
+          icon: Icons.timer_outlined,
+          route: Routes.energyFocus),
+      AppSubTab(
+          label: 'Goals',
+          icon: Icons.flag_outlined,
+          route: Routes.energyGoals),
+    ],
+  ),
+  AppTab(
+    id: 'health',
+    label: 'Health',
+    icon: Icons.favorite_outline,
+    activeIcon: Icons.favorite_rounded,
+    route: Routes.healthOverview,
+    subTabs: [
+      AppSubTab(
+          label: 'Overview',
+          icon: Icons.bar_chart_outlined,
+          route: Routes.healthOverview),
+      AppSubTab(
+          label: 'Progress',
+          icon: Icons.trending_up_outlined,
+          route: Routes.healthDailyProgress),
+      AppSubTab(
+          label: 'Fasting',
+          icon: Icons.hourglass_empty,
+          route: Routes.healthFasting),
+      AppSubTab(
+          label: 'Habits',
+          icon: Icons.check_circle_outline,
+          route: Routes.healthHabits),
+    ],
+  ),
+  AppTab(
+    id: 'profile',
+    label: 'Profile',
+    icon: Icons.person_outline,
+    activeIcon: Icons.person_rounded,
+    route: Routes.profileSettings,
+    subTabs: [
+      AppSubTab(
+          label: 'Profile',
+          icon: Icons.person_outline,
+          route: Routes.profileSettings),
+      AppSubTab(
+          label: 'Account',
+          icon: Icons.manage_accounts_outlined,
+          route: Routes.profileAccount),
+      AppSubTab(
+          label: 'App',
+          icon: Icons.tune_outlined,
+          route: Routes.profileApp),
+    ],
+  ),
+];
+
+// ══════════════════════════════════════════════════════════════
+// SHELL SCREEN
 // ══════════════════════════════════════════════════════════════
 
 class ShellScreen extends ConsumerWidget {
@@ -18,64 +179,50 @@ class ShellScreen extends ConsumerWidget {
   final Widget child;
   final String location;
 
-  // Primary destinations (shown on bottom nav)
-  static const _primary = [
-    _NavDest(route: Routes.overview, icon: Icons.dashboard_outlined, activeIcon: Icons.dashboard, label: 'Overview'),
-    _NavDest(route: Routes.schedule, icon: Icons.view_timeline_outlined, activeIcon: Icons.view_timeline, label: 'Schedule'),
-    _NavDest(route: Routes.calendar, icon: Icons.event_outlined, activeIcon: Icons.event, label: 'Calendar'),
-    _NavDest(route: Routes.finance, icon: Icons.account_balance_wallet_outlined, activeIcon: Icons.account_balance_wallet, label: 'Finance'),
-  ];
-
-  // Secondary destinations (shown in More sheet on mobile)
-  static const _secondary = [
-    _NavDest(route: Routes.habits, icon: Icons.check_circle_outline, activeIcon: Icons.check_circle, label: 'Habits'),
-    _NavDest(route: Routes.goals, icon: Icons.flag_outlined, activeIcon: Icons.flag, label: 'Goals'),
-    _NavDest(route: Routes.focus, icon: Icons.timer_outlined, activeIcon: Icons.timer, label: 'Focus'),
-    _NavDest(route: Routes.settings, icon: Icons.tune_outlined, activeIcon: Icons.tune, label: 'Settings'),
-  ];
-
-  static List<_NavDest> get _all => [..._primary, ..._secondary];
-
-  int _indexOf(List<_NavDest> dests) {
-    for (var i = 0; i < dests.length; i++) {
-      if (location.startsWith(dests[i].route)) return i;
+  int get _activeTabIndex {
+    for (var i = 0; i < kAppTabs.length; i++) {
+      final tab = kAppTabs[i];
+      for (final sub in tab.subTabs) {
+        if (location.startsWith(sub.route)) return i;
+      }
+      if (!tab.hasSubTabs && location.startsWith(tab.route)) return i;
     }
-    return -1;
+    return 0;
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final tabIndex = _activeTabIndex;
+    final activeTab = kAppTabs[tabIndex];
+
     if (Breakpoints.isWide(context)) {
       return _DesktopShell(
         location: location,
-        destinations: _all,
-        selectedIndex: _indexOf(_all),
+        tabIndex: tabIndex,
         child: child,
       );
     }
     return _MobileShell(
       location: location,
-      primary: _primary,
-      secondary: _secondary,
-      selectedPrimary: _indexOf(_primary),
-      isSecondaryActive: _indexOf(_secondary) >= 0,
+      activeTab: activeTab,
+      tabIndex: tabIndex,
       child: child,
     );
   }
 }
 
-// ── DESKTOP LAYOUT ───────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════
+// DESKTOP SHELL
+// ══════════════════════════════════════════════════════════════
 
 class _DesktopShell extends ConsumerStatefulWidget {
   const _DesktopShell({
     required this.location,
-    required this.destinations,
-    required this.selectedIndex,
+    required this.tabIndex,
     required this.child,
   });
   final String location;
-  final List<_NavDest> destinations;
-  final int selectedIndex;
+  final int tabIndex;
   final Widget child;
 
   @override
@@ -83,167 +230,146 @@ class _DesktopShell extends ConsumerStatefulWidget {
 }
 
 class _DesktopShellState extends ConsumerState<_DesktopShell> {
-  late bool _expanded = Breakpoints.isDesktop(context);
+  late bool _expanded;
+
+  @override
+  void initState() {
+    super.initState();
+    _expanded = true;
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _expanded = Breakpoints.isDesktop(context);
+  }
 
   @override
   Widget build(BuildContext context) {
-    final userAsync = ref.watch(currentUserProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final sidebarBg = isDark ? AppColors.surface : AppColors.lightSurface;
+    final borderColor = isDark ? AppColors.border : AppColors.lightBorder;
     final railWidth = _expanded ? 200.0 : 64.0;
 
     return Scaffold(
-      backgroundColor: AppColors.bg,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Row(
         children: [
-          // ── Navigation rail ──
+          // ── Sidebar ──
           AnimatedContainer(
             duration: const Duration(milliseconds: 200),
             curve: Curves.easeOutCubic,
             width: railWidth,
-            decoration: const BoxDecoration(
-              color: AppColors.surface,
-              border: Border(right: BorderSide(color: AppColors.border, width: 0.5)),
+            decoration: BoxDecoration(
+              color: sidebarBg,
+              border: Border(
+                  right: BorderSide(color: borderColor, width: 0.5)),
             ),
             child: Column(
               children: [
-                // Brand
-                _RailBrand(expanded: _expanded, onToggle: () => setState(() => _expanded = !_expanded)),
-                const Divider(height: 1),
-                // Nav items
+                _SidebarBrand(
+                  expanded: _expanded,
+                  onToggle: () =>
+                      setState(() => _expanded = !_expanded),
+                ),
+                Divider(height: 1, color: borderColor),
                 Expanded(
                   child: ListView(
-                    padding: const EdgeInsets.symmetric(vertical: Spacing.sm),
+                    padding:
+                        const EdgeInsets.symmetric(vertical: Spacing.sm),
                     children: [
-                      for (var i = 0; i < widget.destinations.length; i++) ...[
-                        if (i == 4) // divider between primary & secondary
-                          Padding(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: _expanded ? 16.0 : 12.0,
-                              vertical: Spacing.xs,
-                            ),
-                            child: const Divider(height: 1),
-                          ),
-                        _RailItem(
-                          dest: widget.destinations[i],
-                          active: i == widget.selectedIndex,
+                      for (var i = 0; i < kAppTabs.length; i++) ...[
+                        _SidebarTabItem(
+                          tab: kAppTabs[i],
+                          active: i == widget.tabIndex,
                           expanded: _expanded,
-                          onTap: () => context.go(widget.destinations[i].route),
+                          onTap: () => context.go(kAppTabs[i].route),
                         ),
+                        // Sub-tabs shown when this tab is active
+                        if (i == widget.tabIndex &&
+                            kAppTabs[i].hasSubTabs &&
+                            _expanded)
+                          for (final sub in kAppTabs[i].subTabs)
+                            _SidebarSubTabItem(
+                              sub: sub,
+                              active: widget.location.startsWith(sub.route),
+                              onTap: () => context.go(sub.route),
+                            ),
+                        // Collapsed: show active sub-tab indicator dot
+                        if (i == widget.tabIndex &&
+                            kAppTabs[i].hasSubTabs &&
+                            !_expanded)
+                          for (final sub in kAppTabs[i].subTabs)
+                            _SidebarSubTabItemCollapsed(
+                              sub: sub,
+                              active: widget.location.startsWith(sub.route),
+                              onTap: () => context.go(sub.route),
+                            ),
                       ],
                     ],
                   ),
                 ),
-                // User footer
-                const Divider(height: 1),
-                _UserFooter(userAsync: userAsync, ref: ref, expanded: _expanded),
+                Divider(height: 1, color: borderColor),
+                _SidebarUserFooter(ref: ref, expanded: _expanded),
               ],
             ),
           ),
-          // ── Main content ──
-          Expanded(
-            child: ClipRect(child: widget.child),
-          ),
+          // ── Content ──
+          Expanded(child: ClipRect(child: widget.child)),
         ],
       ),
     );
   }
 }
 
-// ── MOBILE LAYOUT ────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════
+// MOBILE SHELL
+// ══════════════════════════════════════════════════════════════
 
 class _MobileShell extends StatelessWidget {
   const _MobileShell({
     required this.location,
-    required this.primary,
-    required this.secondary,
-    required this.selectedPrimary,
-    required this.isSecondaryActive,
+    required this.activeTab,
+    required this.tabIndex,
     required this.child,
   });
   final String location;
-  final List<_NavDest> primary;
-  final List<_NavDest> secondary;
-  final int selectedPrimary;
-  final bool isSecondaryActive;
+  final AppTab activeTab;
+  final int tabIndex;
   final Widget child;
-
-  void _showMoreSheet(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppColors.card,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Gap(Spacing.sm),
-            Container(
-              width: 32,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppColors.border,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const Gap(Spacing.base),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: Spacing.base),
-              child: Text('More', style: Theme.of(ctx).textTheme.headlineMedium),
-            ),
-            const Gap(Spacing.md),
-            for (final dest in secondary)
-              _MoreSheetItem(
-                dest: dest,
-                active: location.startsWith(dest.route),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  context.go(dest.route);
-                },
-              ),
-            const Gap(Spacing.lg),
-          ],
-        ),
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
-    // Compute bottom nav index: 0-3 for primary, 4 for More
-    final navIndex = selectedPrimary >= 0 ? selectedPrimary : 4;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final borderColor = isDark ? AppColors.border : AppColors.lightBorder;
 
     return Scaffold(
-      backgroundColor: AppColors.bg,
-      body: child,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      body: Column(
+        children: [
+          // Sub-tab bar sits at top of body when tab has sub-tabs
+          if (activeTab.hasSubTabs)
+            _MobileSubTabBar(
+              subTabs: activeTab.subTabs,
+              location: location,
+            ),
+          Expanded(child: child),
+        ],
+      ),
       bottomNavigationBar: Container(
-        decoration: const BoxDecoration(
-          border: Border(top: BorderSide(color: AppColors.border, width: 0.5)),
+        decoration: BoxDecoration(
+          border: Border(top: BorderSide(color: borderColor, width: 0.5)),
         ),
         child: NavigationBar(
-          selectedIndex: navIndex.clamp(0, 4),
-          onDestinationSelected: (i) {
-            if (i < primary.length) {
-              context.go(primary[i].route);
-            } else {
-              _showMoreSheet(context);
-            }
-          },
+          selectedIndex: tabIndex,
+          onDestinationSelected: (i) => context.go(kAppTabs[i].route),
           destinations: [
-            for (final d in primary)
+            for (final tab in kAppTabs)
               NavigationDestination(
-                icon: Icon(d.icon),
-                selectedIcon: Icon(d.activeIcon),
-                label: d.label,
+                icon: Icon(tab.icon),
+                selectedIcon: Icon(tab.activeIcon),
+                label: tab.label,
               ),
-            NavigationDestination(
-              icon: Icon(
-                isSecondaryActive ? Icons.more_horiz : Icons.more_horiz_outlined,
-                color: isSecondaryActive ? AppColors.gold : null,
-              ),
-              selectedIcon: const Icon(Icons.more_horiz, color: AppColors.gold),
-              label: 'More',
-            ),
           ],
         ),
       ),
@@ -251,28 +377,127 @@ class _MobileShell extends StatelessWidget {
   }
 }
 
-// ── SHARED COMPONENTS ────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════
+// MOBILE SUB-TAB BAR
+// ══════════════════════════════════════════════════════════════
 
-class _NavDest {
-  const _NavDest({
-    required this.route,
-    required this.icon,
-    required this.activeIcon,
-    required this.label,
+class _MobileSubTabBar extends StatelessWidget {
+  const _MobileSubTabBar({
+    required this.subTabs,
+    required this.location,
   });
-  final String route;
-  final IconData icon;
-  final IconData activeIcon;
-  final String label;
+  final List<AppSubTab> subTabs;
+  final String location;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = isDark ? AppColors.surface : AppColors.lightSurface;
+    final borderColor = isDark ? AppColors.border : AppColors.lightBorder;
+    final textSecondary =
+        isDark ? AppColors.textSecondary : AppColors.lightTextSecondary;
+
+    return Container(
+      height: 40,
+      decoration: BoxDecoration(
+        color: bgColor,
+        border: Border(bottom: BorderSide(color: borderColor, width: 0.5)),
+      ),
+      // Horizontally scrollable so Finance (5 sub-tabs) fits on small screens
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            for (final sub in subTabs)
+              _MobileSubTabItem(
+                sub: sub,
+                active: location.startsWith(sub.route),
+                textSecondary: textSecondary,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
-class _RailBrand extends StatelessWidget {
-  const _RailBrand({required this.expanded, required this.onToggle});
+class _MobileSubTabItem extends StatelessWidget {
+  const _MobileSubTabItem({
+    required this.sub,
+    required this.active,
+    required this.textSecondary,
+  });
+  final AppSubTab sub;
+  final bool active;
+  final Color textSecondary;
+
+  @override
+  Widget build(BuildContext context) {
+    final accent = Theme.of(context).colorScheme.primary;
+
+    return GestureDetector(
+      onTap: () => context.go(sub.route),
+      behavior: HitTestBehavior.opaque,
+      child: SizedBox(
+        // Minimum width per tab; enough for icon + short label
+        width: 80,
+        height: 40,
+        child: Stack(
+          alignment: Alignment.bottomCenter,
+          children: [
+            Center(
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    sub.icon,
+                    size: 14,
+                    color: active ? accent : textSecondary,
+                  ),
+                  const Gap(4),
+                  Text(
+                    sub.label,
+                    style: TextStyle(
+                      fontFamily: 'IBMPlexMono',
+                      fontSize: 11,
+                      fontWeight:
+                          active ? FontWeight.w600 : FontWeight.w400,
+                      color: active ? accent : textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (active)
+              Container(
+                height: 2,
+                decoration: BoxDecoration(
+                  color: accent,
+                  borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(2)),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+// SIDEBAR COMPONENTS
+// ══════════════════════════════════════════════════════════════
+
+class _SidebarBrand extends StatelessWidget {
+  const _SidebarBrand({required this.expanded, required this.onToggle});
   final bool expanded;
   final VoidCallback onToggle;
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textMuted = isDark ? AppColors.textMuted : AppColors.lightTextMuted;
+
     return InkWell(
       onTap: onToggle,
       child: Padding(
@@ -284,13 +509,13 @@ class _RailBrand extends StatelessWidget {
         ),
         child: Row(
           children: [
-            // Diamond mark
+            // Logo mark
             Container(
               width: 32,
               height: 32,
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [AppColors.gold, AppColors.goldDim],
+                  colors: [AppColors.accent, AppColors.accentDim],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -300,7 +525,7 @@ class _RailBrand extends StatelessWidget {
                 child: Text(
                   'PRP',
                   style: TextStyle(
-                    color: AppColors.bg,
+                    color: Colors.white,
                     fontFamily: 'PlayfairDisplay',
                     fontSize: 10,
                     fontWeight: FontWeight.w900,
@@ -325,17 +550,19 @@ class _RailBrand extends StatelessWidget {
                     Text(
                       'v${AppConstants.appVersion}',
                       style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            color: AppColors.goldDim,
+                            color: textMuted,
                           ),
                     ),
                   ],
                 ),
               ),
               Icon(
-                expanded ? Icons.chevron_left : Icons.chevron_right,
+                Icons.chevron_left_rounded,
                 size: 16,
-                color: AppColors.textMuted,
+                color: textMuted,
               ),
+            ] else ...[
+              const Spacer(),
             ],
           ],
         ),
@@ -344,65 +571,86 @@ class _RailBrand extends StatelessWidget {
   }
 }
 
-class _RailItem extends StatelessWidget {
-  const _RailItem({
-    required this.dest,
+class _SidebarTabItem extends StatelessWidget {
+  const _SidebarTabItem({
+    required this.tab,
     required this.active,
     required this.expanded,
     required this.onTap,
   });
-  final _NavDest dest;
+  final AppTab tab;
   final bool active;
   final bool expanded;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final color = active ? AppColors.gold : AppColors.textSecondary;
+    final accent = Theme.of(context).colorScheme.primary;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textSecondary =
+        isDark ? AppColors.textSecondary : AppColors.lightTextSecondary;
+    final color = active ? accent : textSecondary;
+
     return Padding(
       padding: EdgeInsets.symmetric(
         horizontal: expanded ? 8.0 : 6.0,
         vertical: 1,
       ),
       child: Material(
-        color: active ? AppColors.gold.withValues(alpha: 0.1) : Colors.transparent,
+        color: active ? accent.withValues(alpha: 0.1) : Colors.transparent,
         borderRadius: BorderRadius.circular(10),
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(10),
-          hoverColor: AppColors.gold.withValues(alpha: 0.05),
+          hoverColor: accent.withValues(alpha: 0.06),
           child: Tooltip(
-            message: expanded ? '' : dest.label,
+            message: expanded ? '' : tab.label,
             child: Padding(
               padding: EdgeInsets.symmetric(
                 horizontal: expanded ? 12.0 : 0,
-                vertical: expanded ? 10.0 : 12.0,
+                vertical: expanded ? 9.0 : 12.0,
               ),
               child: expanded
                   ? Row(
                       children: [
-                        Icon(active ? dest.activeIcon : dest.icon, color: color, size: 18),
-                        const Gap(12),
+                        Icon(active ? tab.activeIcon : tab.icon,
+                            color: color, size: 18),
+                        const Gap(10),
                         Expanded(
                           child: Text(
-                            dest.label,
-                            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                            tab.label,
+                            style: Theme.of(context)
+                                .textTheme
+                                .labelMedium
+                                ?.copyWith(
                                   color: color,
-                                  fontWeight: active ? FontWeight.w600 : FontWeight.w400,
+                                  fontWeight: active
+                                      ? FontWeight.w600
+                                      : FontWeight.w400,
                                   fontSize: 11,
                                 ),
                           ),
                         ),
-                        if (active)
+                        if (active && !tab.hasSubTabs)
                           Container(
                             width: 4,
                             height: 4,
-                            decoration: const BoxDecoration(color: AppColors.gold, shape: BoxShape.circle),
+                            decoration: BoxDecoration(
+                                color: accent, shape: BoxShape.circle),
+                          ),
+                        if (tab.hasSubTabs)
+                          Icon(
+                            active
+                                ? Icons.expand_less_rounded
+                                : Icons.expand_more_rounded,
+                            size: 14,
+                            color: textSecondary,
                           ),
                       ],
                     )
                   : Center(
-                      child: Icon(active ? dest.activeIcon : dest.icon, color: color, size: 20),
+                      child: Icon(active ? tab.activeIcon : tab.icon,
+                          color: color, size: 20),
                     ),
             ),
           ),
@@ -412,51 +660,124 @@ class _RailItem extends StatelessWidget {
   }
 }
 
-class _MoreSheetItem extends StatelessWidget {
-  const _MoreSheetItem({
-    required this.dest,
+class _SidebarSubTabItem extends StatelessWidget {
+  const _SidebarSubTabItem({
+    required this.sub,
     required this.active,
     required this.onTap,
   });
-  final _NavDest dest;
+  final AppSubTab sub;
   final bool active;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final color = active ? AppColors.gold : AppColors.textPrimary;
-    return ListTile(
-      leading: Icon(active ? dest.activeIcon : dest.icon, color: color, size: 22),
-      title: Text(
-        dest.label,
-        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: color,
-              fontWeight: active ? FontWeight.w600 : FontWeight.w400,
+    final accent = Theme.of(context).colorScheme.primary;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textSecondary =
+        isDark ? AppColors.textSecondary : AppColors.lightTextSecondary;
+    final color = active ? accent : textSecondary;
+
+    return Padding(
+      padding: const EdgeInsets.only(left: 20, right: 8, top: 1, bottom: 1),
+      child: Material(
+        color: active ? accent.withValues(alpha: 0.08) : Colors.transparent,
+        borderRadius: BorderRadius.circular(8),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(8),
+          hoverColor: accent.withValues(alpha: 0.05),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+            child: Row(
+              children: [
+                // Connector line
+                Container(
+                  width: 1,
+                  height: 14,
+                  color: active
+                      ? accent.withValues(alpha: 0.5)
+                      : (isDark
+                          ? AppColors.border
+                          : AppColors.lightBorder),
+                  margin: const EdgeInsets.only(right: 10),
+                ),
+                Icon(sub.icon, color: color, size: 14),
+                const Gap(8),
+                Text(
+                  sub.label,
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                        color: color,
+                        fontWeight:
+                            active ? FontWeight.w600 : FontWeight.w400,
+                        fontSize: 10,
+                      ),
+                ),
+              ],
             ),
+          ),
+        ),
       ),
-      trailing: active
-          ? Container(
-              width: 6,
-              height: 6,
-              decoration: const BoxDecoration(color: AppColors.gold, shape: BoxShape.circle),
-            )
-          : null,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      tileColor: active ? AppColors.gold.withValues(alpha: 0.08) : null,
-      onTap: onTap,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 2),
     );
   }
 }
 
-class _UserFooter extends StatelessWidget {
-  const _UserFooter({required this.userAsync, required this.ref, required this.expanded});
-  final AsyncValue userAsync;
+class _SidebarSubTabItemCollapsed extends StatelessWidget {
+  const _SidebarSubTabItemCollapsed({
+    required this.sub,
+    required this.active,
+    required this.onTap,
+  });
+  final AppSubTab sub;
+  final bool active;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final accent = Theme.of(context).colorScheme.primary;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textSecondary =
+        isDark ? AppColors.textSecondary : AppColors.lightTextSecondary;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+      child: Tooltip(
+        message: sub.label,
+        child: Material(
+          color: active ? accent.withValues(alpha: 0.1) : Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(8),
+            child: SizedBox(
+              height: 36,
+              child: Center(
+                child: Icon(
+                  sub.icon,
+                  size: 15,
+                  color: active ? accent : textSecondary,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SidebarUserFooter extends StatelessWidget {
+  const _SidebarUserFooter({required this.ref, required this.expanded});
   final WidgetRef ref;
   final bool expanded;
 
   @override
   Widget build(BuildContext context) {
+    final userAsync = ref.watch(currentUserProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final accent = Theme.of(context).colorScheme.primary;
+    final textMuted = isDark ? AppColors.textMuted : AppColors.lightTextMuted;
+
     return Padding(
       padding: const EdgeInsets.all(Spacing.sm),
       child: userAsync.when(
@@ -464,41 +785,33 @@ class _UserFooter extends StatelessWidget {
           final initial = user?.fullName?.isNotEmpty == true
               ? user!.fullName![0].toUpperCase()
               : '?';
+
+          final avatar = CircleAvatar(
+            radius: 16,
+            backgroundColor: accent.withValues(alpha: 0.15),
+            child: Text(
+              initial,
+              style: TextStyle(
+                color: accent,
+                fontFamily: 'IBMPlexMono',
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          );
+
           if (!expanded) {
             return Center(
               child: Tooltip(
                 message: user?.fullName ?? 'User',
-                child: CircleAvatar(
-                  radius: 16,
-                  backgroundColor: AppColors.goldDim,
-                  child: Text(
-                    initial,
-                    style: const TextStyle(
-                      color: AppColors.gold,
-                      fontFamily: 'IBMPlexMono',
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
+                child: avatar,
               ),
             );
           }
+
           return Row(
             children: [
-              CircleAvatar(
-                radius: 16,
-                backgroundColor: AppColors.goldDim,
-                child: Text(
-                  initial,
-                  style: const TextStyle(
-                    color: AppColors.gold,
-                    fontFamily: 'IBMPlexMono',
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
+              avatar,
               const Gap(10),
               Expanded(
                 child: Column(
@@ -507,27 +820,32 @@ class _UserFooter extends StatelessWidget {
                   children: [
                     Text(
                       user?.fullName ?? 'User',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: AppColors.textPrimary,
-                            fontWeight: FontWeight.w500,
-                          ),
+                      style:
+                          Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w500,
+                              ),
                       overflow: TextOverflow.ellipsis,
                     ),
                     Text(
                       user?.email ?? '',
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(fontSize: 8),
+                      style: Theme.of(context)
+                          .textTheme
+                          .labelSmall
+                          ?.copyWith(fontSize: 8),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
               ),
               IconButton(
-                icon: const Icon(Icons.logout, size: 14),
-                color: AppColors.textMuted,
+                icon: const Icon(Icons.logout_rounded, size: 14),
+                color: textMuted,
                 tooltip: 'Sign out',
                 padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                onPressed: () => ref.read(authNotifierProvider.notifier).signOut(),
+                constraints:
+                    const BoxConstraints(minWidth: 32, minHeight: 32),
+                onPressed: () =>
+                    ref.read(authNotifierProvider.notifier).signOut(),
               ),
             ],
           );

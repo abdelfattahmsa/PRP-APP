@@ -6,31 +6,28 @@ import 'package:timezone/data/latest.dart' as tz;
 import 'core/theme/app_theme.dart';
 import 'core/router/app_router.dart';
 import 'core/constants/app_constants.dart';
+import 'core/providers/theme_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Catch all Flutter framework errors
   FlutterError.onError = (details) {
     FlutterError.presentError(details);
     debugPrint('FLUTTER ERROR: ${details.exception}');
     debugPrint('${details.stack}');
   };
 
-  // Catch async errors not caught by Flutter
   PlatformDispatcher.instance.onError = (error, stack) {
     debugPrint('PLATFORM ERROR: $error');
     debugPrint('$stack');
     return true;
   };
 
-  // Supabase
   await Supabase.initialize(
     url: AppConstants.supabaseUrl,
     anonKey: AppConstants.supabaseAnonKey,
   );
 
-  // Timezones (for notifications)
   tz.initializeTimeZones();
 
   runApp(const ProviderScope(child: PRPApp()));
@@ -42,11 +39,14 @@ class PRPApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
+    final themeMode = ref.watch(themeModeProvider);
 
     return MaterialApp.router(
       title: AppConstants.appName,
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.dark,
+      themeMode: themeMode,
+      theme: AppTheme.light,
+      darkTheme: AppTheme.dark,
       routerConfig: router,
       builder: (context, child) {
         return MediaQuery(
