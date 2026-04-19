@@ -1,17 +1,54 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
+import 'package:intl/intl.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../shared/widgets/placeholders.dart';
+import '../../../shared/models/all_providers.dart';
+import '../../../shared/widgets/app_card.dart';
+import '../../../shared/widgets/app_chart.dart';
+import '../../../shared/widgets/app_states.dart';
+import '../../../shared/widgets/bottom_sheets.dart';
+import '../../../shared/widgets/placeholders.dart' show ScreenHeader;
 
-class FinanceAccountsScreen extends StatelessWidget {
+class FinanceAccountsScreen extends ConsumerWidget {
   const FinanceAccountsScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textSecondary =
+        isDark ? AppColors.textSecondary : AppColors.lightTextSecondary;
+    final accent = Theme.of(context).colorScheme.primary;
+
+    final banksAsync = ref.watch(bankAccountsProvider);
+    final txAsync = ref.watch(transactionsProvider);
+    final summary = ref.watch(financeSummaryProvider);
+    final fmt = NumberFormat('#,##0', 'en_US');
+
+    // 30-day balance trend (running sum from transactions)
+    final balanceTrend = txAsync.value == null
+        ? List.filled(30, 0.0)
+        : () {
+            final data = List.filled(30, 0.0);
+            final now = DateTime.now();
+            double running = summary.totalCurrent + summary.totalSavings;
+            for (var i = 29; i >= 0; i--) {
+              data[i] = running;
+              final dayTx = txAsync.value!.where((t) {
+                final diff = now.difference(t.date).inDays;
+                return diff == i;
+              });
+              for (final tx in dayTx) {
+                running -= tx.isIncome ? tx.amount : -tx.amount;
+              }
+            }
+            return data;
+          }();
+
     return Scaffold(
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 20, 16, 32),
+          padding: const EdgeInsets.fromLTRB(16, 20, 16, 100),
           children: [
             const ScreenHeader(
               title: 'Accounts',
@@ -19,61 +56,334 @@ class FinanceAccountsScreen extends StatelessWidget {
             ),
             const Gap(24),
 
-            const SectionHeader('Balance'),
-            const Gap(12),
-            StatsGrid(children: [
-              StatCard(
-                label: 'Total Balance',
-                value: '\$28,400',
-                icon: Icons.account_balance_rounded,
-                trend: '+\$420 this month',
-                trendUp: true,
-              ),
-              StatCard(
-                label: 'Cash on Hand',
-                value: '\$4,200',
-                subtitle: 'Checking account',
-                icon: Icons.wallet_rounded,
-              ),
-            ]),
-            const Gap(24),
-
-            const SectionHeader('Accounts', action: '+ Add'),
-            const Gap(12),
-            PlaceholderList(items: const [
-              PlaceholderListItem(
-                title: 'Main Checking',
-                subtitle: 'Bank · •••• 4521',
-                value: '\$4,200',
-                icon: Icons.account_balance_rounded,
-                iconColor: AppColors.cfi,
-              ),
-              PlaceholderListItem(
-                title: 'Savings Account',
-                subtitle: 'Bank · •••• 7832',
-                value: '\$22,800',
-                icon: Icons.savings_rounded,
-                iconColor: AppColors.success,
-              ),
-              PlaceholderListItem(
-                title: 'Emergency Fund',
-                subtitle: 'High-yield · •••• 1105',
-                value: '\$1,400',
-                icon: Icons.shield_rounded,
-                iconColor: AppColors.warning,
-              ),
-            ]),
-            const Gap(24),
-
-            const SectionHeader('Balance History', action: '6 months'),
-            const Gap(12),
-            PlaceholderChart(
-              height: 160,
-              label: 'Total balance (\$)',
-              data: const [22000, 23500, 24200, 25800, 26400, 27100, 28400],
+            // ── KPI Grid ──────────────────────────────────────────
+            BentoGrid(
+              children: [
+                BentoCell(
+                  span: 2,
+                  child: KpiCard(
+                    label: 'Net Cash',
+                    value: 'EGP ${fmt.format(summary.totalCurrent + summary.totalSavings)}',
+                    icon: Icons.account_balance_rounded,
+                    iconColor: AppColors.success,
+                    subtitle:
+                        'Savings: ${fmt.format(summary.totalSavings)} · Current: ${fmt.format(summary.totalCurrent)}',
+                  ),
+                ),
+                BentoCell(
+                  child: KpiCard(
+                    label: 'CC Debt',
+                    value: 'EGP ${fmt.format(summary.totalCC)}',
+                    icon: Icons.credit_card_rounded,
+                    iconColor: AppColors.error,
+                  ),
+                ),
+                BentoCell(
+                  child: KpiCard(
+                    label: 'Accounts',
+                    value: '${banksAsync.value?.length ?? 0}',
+                    icon: Icons.account_balance_wallet_rounded,
+                    iconColor: AppColors.info,
+                  ),
+                ),
+              ],
             ),
+            const Gap(20),
+
+            // ── Balance Trend ─────────────────────────────────────
+            ChartCard(
+              title: '30-Day Balance Trend',
+              height: 140,
+              child: txAsync.isLoading
+                  ? const Center(
+                      child: CircularProgressIndicator(strokeWidth: 2))
+                  : AppLineChart(
+                      data: balanceTrend,
+                      color: AppColors.success,
+                      showGradient: true,
+                    ),
+            ),
+            const Gap(20),
+
+            // ── Account List ──────────────────────────────────────
+            BentoSectionHeader('Accounts'),
+            const Gap(12),
+            banksAsync.when(
+              loading: () => const LoadingCard(height: 80),
+              error: (e, _) =>
+                  const ErrorState(message: 'Could not load accounts'),
+              data: (banks) {
+                if (banks.isEmpty) {
+                  return EmptyState(
+                    message: 'No accounts added yet',
+                    icon: Icons.account_balance_outlined,
+                    compact: true,
+                    action: TextButton(
+                      onPressed: () => showAddTransaction(context),
+                      child: const Text('Add a transaction'),
+                    ),
+                  );
+                }
+                return AppCard(
+                  padding: EdgeInsets.zero,
+                  child: Column(
+                    children: [
+                      for (int i = 0; i < banks.length; i++) ...[
+                        if (i > 0)
+                          Divider(
+                              height: 1,
+                              color: isDark
+                                  ? AppColors.border
+                                  : AppColors.lightBorder),
+                        _AccountDetailTile(
+                          bank: banks[i],
+                          textSecondary: textSecondary,
+                        ),
+                      ],
+                    ],
+                  ),
+                );
+              },
+            ),
+            const Gap(20),
+
+            // ── Per-account transaction breakdown ─────────────────
+            if (txAsync.value != null && banksAsync.value != null)
+              ...(banksAsync.value ?? []).map((bank) {
+                final bankTxs = txAsync.value!
+                    .where((t) => t.accountName == bank.name)
+                    .toList()
+                  ..sort((a, b) => b.date.compareTo(a.date));
+                if (bankTxs.isEmpty) return const SizedBox.shrink();
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    BentoSectionHeader('${bank.name} — Recent'),
+                    const Gap(12),
+                    AppCard(
+                      padding: EdgeInsets.zero,
+                      child: Column(
+                        children: [
+                          for (int i = 0;
+                              i < bankTxs.take(3).length;
+                              i++) ...[
+                            if (i > 0)
+                              Divider(
+                                  height: 1,
+                                  color: isDark
+                                      ? AppColors.border
+                                      : AppColors.lightBorder),
+                            _MiniTxTile(
+                                tx: bankTxs[i],
+                                textSecondary: textSecondary),
+                          ],
+                        ],
+                      ),
+                    ),
+                    const Gap(20),
+                  ],
+                );
+              }),
           ],
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => showAddTransaction(context),
+        backgroundColor: accent,
+        foregroundColor: Colors.white,
+        child: const Icon(Icons.add_rounded),
+      ),
+    );
+  }
+}
+
+class _AccountDetailTile extends StatelessWidget {
+  const _AccountDetailTile(
+      {required this.bank, required this.textSecondary});
+  final dynamic bank;
+  final Color textSecondary;
+
+  @override
+  Widget build(BuildContext context) {
+    final fmt = NumberFormat('#,##0', 'en_US');
+    final total = (bank.currentBalance as double) +
+        (bank.savingsBalance as double) -
+        (bank.creditCardBalance as double);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+          horizontal: Spacing.base, vertical: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: AppColors.success.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.account_balance_rounded,
+                    size: 18, color: AppColors.success),
+              ),
+              const Gap(12),
+              Expanded(
+                child: Text(
+                  bank.name as String,
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyMedium
+                      ?.copyWith(fontWeight: FontWeight.w600),
+                ),
+              ),
+              Text(
+                'EGP ${fmt.format(total)}',
+                style: TextStyle(
+                  fontFamily: 'IBMPlexMono',
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: total >= 0
+                      ? AppColors.success
+                      : AppColors.error,
+                ),
+              ),
+            ],
+          ),
+          // Balance breakdown
+          const Gap(10),
+          Row(
+            children: [
+              const Gap(52),
+              _BalancePill(
+                label: 'Current',
+                value: 'EGP ${fmt.format(bank.currentBalance)}',
+                color: AppColors.info,
+              ),
+              const Gap(8),
+              _BalancePill(
+                label: 'Savings',
+                value: 'EGP ${fmt.format(bank.savingsBalance)}',
+                color: AppColors.success,
+              ),
+              if ((bank.creditCardLimit as double) > 0) ...[
+                const Gap(8),
+                _BalancePill(
+                  label: 'CC',
+                  value: 'EGP ${fmt.format(bank.creditCardBalance)}',
+                  color: AppColors.error,
+                ),
+              ],
+            ],
+          ),
+          if ((bank.creditCardLimit as double) > 0) ...[
+            const Gap(8),
+            Padding(
+              padding: const EdgeInsets.only(left: 52),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(3),
+                      child: LinearProgressIndicator(
+                        value: (bank.creditCardBalance as double) /
+                            (bank.creditCardLimit as double),
+                        minHeight: 4,
+                        backgroundColor:
+                            AppColors.error.withValues(alpha: 0.1),
+                        valueColor: const AlwaysStoppedAnimation(
+                            AppColors.error),
+                      ),
+                    ),
+                  ),
+                  const Gap(8),
+                  Text(
+                    'EGP ${fmt.format(bank.creditCardBalance)} / ${fmt.format(bank.creditCardLimit)}',
+                    style: TextStyle(
+                        fontSize: 10,
+                        color: textSecondary,
+                        fontFamily: 'IBMPlexMono'),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _BalancePill extends StatelessWidget {
+  const _BalancePill(
+      {required this.label, required this.value, required this.color});
+  final String label;
+  final String value;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(
+        '$label: $value',
+        style: TextStyle(
+            fontFamily: 'IBMPlexMono',
+            fontSize: 9,
+            color: color,
+            fontWeight: FontWeight.w600),
+      ),
+    );
+  }
+}
+
+class _MiniTxTile extends StatelessWidget {
+  const _MiniTxTile({required this.tx, required this.textSecondary});
+  final dynamic tx;
+  final Color textSecondary;
+
+  @override
+  Widget build(BuildContext context) {
+    final fmt = NumberFormat('#,##0.##', 'en_US');
+    final isIncome = tx.isIncome as bool;
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+          horizontal: Spacing.base, vertical: 8),
+      child: Row(
+        children: [
+          Icon(
+            isIncome
+                ? Icons.arrow_downward_rounded
+                : Icons.arrow_upward_rounded,
+            size: 14,
+            color: isIncome ? AppColors.success : AppColors.error,
+          ),
+          const Gap(10),
+          Expanded(
+            child: Text(
+              tx.description as String,
+              style: Theme.of(context)
+                  .textTheme
+                  .bodySmall
+                  ?.copyWith(fontWeight: FontWeight.w500),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          Text(
+            '${isIncome ? '+' : '−'}${fmt.format(tx.amount)}',
+            style: TextStyle(
+              fontFamily: 'IBMPlexMono',
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: isIncome ? AppColors.success : AppColors.error,
+            ),
+          ),
+        ],
       ),
     );
   }

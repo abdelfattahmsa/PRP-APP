@@ -1,16 +1,61 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
+import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../shared/widgets/placeholders.dart';
+import '../../../core/router/app_router.dart';
+import '../../../shared/models/all_providers.dart';
+import '../../../shared/widgets/app_card.dart';
+import '../../../shared/widgets/app_chart.dart';
+import '../../../shared/widgets/app_states.dart';
+import '../../../shared/widgets/placeholders.dart' show ScreenHeader;
 
-class TimeOverviewScreen extends StatelessWidget {
+class TimeOverviewScreen extends ConsumerWidget {
   const TimeOverviewScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textSecondary =
         isDark ? AppColors.textSecondary : AppColors.lightTextSecondary;
+
+    final scheduleAsync = ref.watch(scheduleProvider('normal'));
+    final sessAsync = ref.watch(focusSessionsProvider);
+    final calAsync = ref.watch(calendarProvider);
+
+    final todayStr = DateFormat('yyyy-MM-dd').format(DateTime.now());
+
+    // 7-day focus data
+    final days7 = List.generate(
+        7, (i) => DateTime.now().subtract(Duration(days: 6 - i)));
+    final dayLabels = days7
+        .map((d) => DateFormat('EEE').format(d).substring(0, 1))
+        .toList();
+    final focusData = sessAsync.value == null
+        ? List.filled(7, 0.0)
+        : days7.map((day) {
+            final key = DateFormat('yyyy-MM-dd').format(day);
+            return sessAsync.value!
+                .where((s) =>
+                    s.completed &&
+                    DateFormat('yyyy-MM-dd').format(s.date) == key)
+                .fold(0.0, (s, sess) => s + sess.actualMinutes);
+          }).toList();
+
+    final todayFocusMins = sessAsync.value == null
+        ? 0
+        : sessAsync.value!
+            .where((s) =>
+                s.completed &&
+                DateFormat('yyyy-MM-dd').format(s.date) == todayStr)
+            .fold(0, (s, sess) => s + sess.actualMinutes);
+
+    final todayEvents = calAsync.value
+            ?.where((e) =>
+                DateFormat('yyyy-MM-dd').format(e.date) == todayStr)
+            .toList() ??
+        [];
 
     return Scaffold(
       body: SafeArea(
@@ -23,86 +68,173 @@ class TimeOverviewScreen extends StatelessWidget {
             ),
             const Gap(24),
 
-            const SectionHeader('Today'),
-            const Gap(12),
-            StatsGrid(children: [
-              StatCard(
-                label: 'Scheduled',
-                value: '6.5h',
-                subtitle: 'of 12h available',
-                icon: Icons.schedule_rounded,
-                trend: '+1h vs yesterday',
-                trendUp: true,
-              ),
-              StatCard(
-                label: 'Free Time',
-                value: '5.5h',
-                subtitle: 'unscheduled',
-                icon: Icons.hourglass_empty_rounded,
-              ),
-              StatCard(
-                label: 'Productivity',
-                value: '78%',
-                subtitle: 'on-track blocks',
-                icon: Icons.trending_up_rounded,
-                trend: '+6% vs avg',
-                trendUp: true,
-              ),
-              StatCard(
-                label: 'Deep Work',
-                value: '2.5h',
-                subtitle: 'focused sessions',
-                icon: Icons.psychology_rounded,
-              ),
-            ]),
-            const Gap(24),
-
-            const SectionHeader('Time Allocation', action: 'This week'),
-            const Gap(12),
-            PlaceholderChart(
-              height: 160,
-              label: 'Hours per day',
-              data: const [5.5, 7.0, 6.5, 8.0, 6.0, 9.0, 7.5],
+            // ── KPI Grid ──────────────────────────────────────────
+            BentoGrid(
+              children: [
+                BentoCell(
+                  child: KpiCard(
+                    label: 'Focus Today',
+                    value: '${todayFocusMins}m',
+                    icon: Icons.psychology_rounded,
+                    iconColor: AppColors.accent,
+                    subtitle:
+                        '${sessAsync.value?.where((s) => s.completed && DateFormat('yyyy-MM-dd').format(s.date) == todayStr).length ?? 0} sessions',
+                    onTap: () => context.go(Routes.energyFocus),
+                  ),
+                ),
+                BentoCell(
+                  child: scheduleAsync.when(
+                    loading: () => const KpiCard(
+                      label: 'Blocks',
+                      value: '—',
+                      icon: Icons.view_timeline_outlined,
+                      iconColor: AppColors.gold,
+                    ),
+                    error: (_, __) => const KpiCard(
+                      label: 'Blocks',
+                      value: '—',
+                      icon: Icons.view_timeline_outlined,
+                      iconColor: AppColors.gold,
+                    ),
+                    data: (blocks) => KpiCard(
+                      label: 'Blocks',
+                      value: '${blocks.length}',
+                      icon: Icons.view_timeline_outlined,
+                      iconColor: AppColors.gold,
+                      subtitle: 'in schedule',
+                      onTap: () => context.go(Routes.timeSchedule),
+                    ),
+                  ),
+                ),
+                BentoCell(
+                  child: KpiCard(
+                    label: 'Events Today',
+                    value: '${todayEvents.length}',
+                    icon: Icons.event_rounded,
+                    iconColor: AppColors.info,
+                    onTap: () => context.go(Routes.timeCalendar),
+                  ),
+                ),
+                BentoCell(
+                  child: KpiCard(
+                    label: 'Focus 7d',
+                    value: '${focusData.fold(0.0, (a, b) => a + b).round()}m',
+                    icon: Icons.bar_chart_rounded,
+                    iconColor: AppColors.pmp,
+                  ),
+                ),
+              ],
             ),
-            const Gap(24),
+            const Gap(20),
 
-            const SectionHeader("Today's Blocks", action: 'See all'),
-            const Gap(12),
-            PlaceholderList(items: const [
-              PlaceholderListItem(
-                title: 'Morning Deep Work',
-                subtitle: '06:00 — 08:00 · Deen',
-                value: '2h',
-                icon: Icons.self_improvement_rounded,
-                iconColor: AppColors.deen,
+            // ── 7-day Focus Chart ─────────────────────────────────
+            ChartCard(
+              title: '7-Day Focus (min)',
+              height: 130,
+              action: TextButton(
+                onPressed: () => context.go(Routes.energyFocus),
+                child: const Text('Timer', style: TextStyle(fontSize: 12)),
               ),
-              PlaceholderListItem(
-                title: 'PMP Study Session',
-                subtitle: '09:00 — 11:00 · Study',
-                value: '2h',
-                icon: Icons.menu_book_rounded,
-                iconColor: AppColors.pmp,
-              ),
-              PlaceholderListItem(
-                title: 'Work Block',
-                subtitle: '12:00 — 17:00 · Work',
-                value: '5h',
-                icon: Icons.work_rounded,
-                iconColor: AppColors.work,
-              ),
-              PlaceholderListItem(
-                title: 'Health & Fitness',
-                subtitle: '18:00 — 19:00 · Health',
-                value: '1h',
-                icon: Icons.fitness_center_rounded,
-                iconColor: AppColors.health,
-              ),
-            ]),
-            const Gap(24),
+              child: sessAsync.isLoading
+                  ? const Center(
+                      child: CircularProgressIndicator(strokeWidth: 2))
+                  : AppBarChart(data: focusData, labels: dayLabels),
+            ),
+            const Gap(20),
 
-            const SectionHeader('Category Breakdown'),
+            // ── Today's Schedule ──────────────────────────────────
+            BentoSectionHeader(
+              "Today's Schedule",
+              action: TextButton(
+                onPressed: () => context.go(Routes.timeSchedule),
+                child: const Text('Edit', style: TextStyle(fontSize: 12)),
+              ),
+            ),
             const Gap(12),
-            _CategoryBreakdown(isDark: isDark, textSecondary: textSecondary),
+            scheduleAsync.when(
+              loading: () => const LoadingCard(height: 80),
+              error: (e, _) =>
+                  const ErrorState(message: 'Could not load schedule'),
+              data: (blocks) {
+                if (blocks.isEmpty) {
+                  return EmptyState(
+                    message: 'No schedule blocks yet',
+                    icon: Icons.view_timeline_outlined,
+                    compact: true,
+                    action: TextButton(
+                      onPressed: () => context.go(Routes.timeSchedule),
+                      child: const Text('Set up schedule'),
+                    ),
+                  );
+                }
+                final sorted = [...blocks]
+                  ..sort((a, b) => a.time.compareTo(b.time));
+                return AppCard(
+                  padding: EdgeInsets.zero,
+                  child: Column(
+                    children: [
+                      for (int i = 0; i < sorted.length; i++) ...[
+                        if (i > 0)
+                          Divider(
+                              height: 1,
+                              color: isDark
+                                  ? AppColors.border
+                                  : AppColors.lightBorder),
+                        _BlockTile(
+                            block: sorted[i],
+                            textSecondary: textSecondary),
+                      ],
+                    ],
+                  ),
+                );
+              },
+            ),
+            const Gap(20),
+
+            // ── Today's Events ────────────────────────────────────
+            BentoSectionHeader(
+              "Today's Events",
+              action: TextButton(
+                onPressed: () => context.go(Routes.timeCalendar),
+                child:
+                    const Text('Calendar', style: TextStyle(fontSize: 12)),
+              ),
+            ),
+            const Gap(12),
+            calAsync.when(
+              loading: () => const LoadingCard(height: 60),
+              error: (_, __) =>
+                  const ErrorState(message: 'Could not load events'),
+              data: (_) {
+                if (todayEvents.isEmpty) {
+                  return const EmptyState(
+                    message: 'No events today',
+                    icon: Icons.event_outlined,
+                    compact: true,
+                  );
+                }
+                return AppCard(
+                  padding: EdgeInsets.zero,
+                  child: Column(
+                    children: [
+                      for (int i = 0;
+                          i < todayEvents.length;
+                          i++) ...[
+                        if (i > 0)
+                          Divider(
+                              height: 1,
+                              color: isDark
+                                  ? AppColors.border
+                                  : AppColors.lightBorder),
+                        _EventTile(
+                            event: todayEvents[i],
+                            textSecondary: textSecondary),
+                      ],
+                    ],
+                  ),
+                );
+              },
+            ),
           ],
         ),
       ),
@@ -110,87 +242,106 @@ class TimeOverviewScreen extends StatelessWidget {
   }
 }
 
-class _CategoryBreakdown extends StatelessWidget {
-  const _CategoryBreakdown(
-      {required this.isDark, required this.textSecondary});
-  final bool isDark;
+class _BlockTile extends StatelessWidget {
+  const _BlockTile({required this.block, required this.textSecondary});
+  final dynamic block;
   final Color textSecondary;
 
   @override
   Widget build(BuildContext context) {
-    final cardColor = isDark ? AppColors.card : AppColors.lightCard;
-    final borderColor = isDark ? AppColors.border : AppColors.lightBorder;
-
-    const cats = [
-      ('Work', AppColors.work, 0.35),
-      ('Deen', AppColors.deen, 0.18),
-      ('Study', AppColors.pmp, 0.15),
-      ('Health', AppColors.health, 0.12),
-      ('Rest', AppColors.rest, 0.10),
-      ('Other', AppColors.commute, 0.10),
-    ];
-
-    return Container(
-      padding: const EdgeInsets.all(Spacing.base),
-      decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: borderColor),
-      ),
-      child: Column(
-        children: cats.map((cat) {
-          return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 5),
-            child: Row(
+    final color = AppColors.categoryColor(block.categoryKey as String);
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+          horizontal: Spacing.base, vertical: 10),
+      child: Row(
+        children: [
+          Container(
+            width: 3,
+            height: 36,
+            decoration: BoxDecoration(
+                color: color, borderRadius: BorderRadius.circular(2)),
+          ),
+          const Gap(12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: cat.$2,
-                    shape: BoxShape.circle,
-                  ),
+                Text(
+                  block.label as String,
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyMedium
+                      ?.copyWith(fontWeight: FontWeight.w500),
                 ),
-                const Gap(10),
-                SizedBox(
-                  width: 56,
-                  child: Text(
-                    cat.$1,
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodySmall
-                        ?.copyWith(fontWeight: FontWeight.w500),
-                  ),
-                ),
-                Expanded(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(2),
-                    child: LinearProgressIndicator(
-                      value: cat.$3,
-                      backgroundColor:
-                          cat.$2.withValues(alpha: 0.1),
-                      valueColor:
-                          AlwaysStoppedAnimation<Color>(cat.$2),
-                      minHeight: 6,
-                    ),
-                  ),
-                ),
-                const Gap(10),
-                SizedBox(
-                  width: 36,
-                  child: Text(
-                    '${(cat.$3 * 100).round()}%',
-                    textAlign: TextAlign.end,
-                    style: Theme.of(context)
-                        .textTheme
-                        .labelSmall
-                        ?.copyWith(color: textSecondary),
-                  ),
+                Text(
+                  block.time as String,
+                  style: TextStyle(
+                      fontSize: 11,
+                      color: textSecondary,
+                      fontFamily: 'IBMPlexMono'),
                 ),
               ],
             ),
-          );
-        }).toList(),
+          ),
+          if ((block.duration as String?) != null)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(
+                block.duration as String,
+                style: TextStyle(
+                    fontFamily: 'IBMPlexMono',
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: color),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _EventTile extends StatelessWidget {
+  const _EventTile({required this.event, required this.textSecondary});
+  final dynamic event;
+  final Color textSecondary;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = AppColors.categoryColor(
+        (event.typeKey as String?) ?? 'personal');
+    final isDone = (event.isDone as bool?) ?? false;
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+          horizontal: Spacing.base, vertical: 10),
+      child: Row(
+        children: [
+          Container(
+            width: 8,
+            height: 8,
+            margin: const EdgeInsets.only(top: 2),
+            decoration: BoxDecoration(
+              color: isDone ? AppColors.textMuted : color,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const Gap(12),
+          Expanded(
+            child: Text(
+              event.title as String,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    decoration:
+                        isDone ? TextDecoration.lineThrough : null,
+                    color: isDone ? textSecondary : null,
+                    fontWeight: FontWeight.w500,
+                  ),
+            ),
+          ),
+        ],
       ),
     );
   }
