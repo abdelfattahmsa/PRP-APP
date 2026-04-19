@@ -9,6 +9,31 @@ import '../../../features/auth/providers/auth_provider.dart';
 class ProfileAccountScreen extends ConsumerWidget {
   const ProfileAccountScreen({super.key});
 
+  Future<void> _sendPasswordReset(BuildContext context, WidgetRef ref) async {
+    final user = ref.read(currentUserProvider);
+    if (user == null) return;
+    try {
+      await ref.read(authNotifierProvider.notifier).resetPassword(user.email);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Password reset email sent to ${user.email}'),
+            backgroundColor: AppColors.success,
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -35,9 +60,9 @@ class ProfileAccountScreen extends ConsumerWidget {
             SectionCard(children: [
               SettingsTile(
                 title: 'Change Password',
-                subtitle: 'Last changed 30 days ago',
+                subtitle: 'Send a reset link to your email',
                 leading: const Icon(Icons.lock_outline, size: 20),
-                onTap: () {},
+                onTap: () => _sendPasswordReset(context, ref),
               ),
               Divider(height: 1, color: borderColor),
               SettingsTile(
