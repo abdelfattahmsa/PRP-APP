@@ -1,6 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 import '../shared/models/models.dart';
+import '../engines/ideas/data/models/idea_models.dart';
 
 const _uuidGen = Uuid();
 
@@ -351,4 +352,26 @@ class SupabaseService {
     ];
     await _db.from('calendar_events').insert(events);
   }
+
+  // ── IDEAS ──────────────────────────────────────────────────────
+  Future<List<Idea>> getIdeas() async {
+    final res = await _db
+        .from('ideas')
+        .select()
+        .eq('user_id', _uid)
+        .order('created_at', ascending: false);
+    return res.map((j) => Idea.fromJson(j)).toList();
+  }
+
+  Future<Idea> upsertIdea(Idea idea) async {
+    final row = await _db
+        .from('ideas')
+        .upsert({...idea.toJson(), 'user_id': _uid})
+        .select()
+        .single();
+    return Idea.fromJson(row);
+  }
+
+  Future<void> deleteIdea(String id) =>
+      _db.from('ideas').delete().eq('id', id).eq('user_id', _uid);
 }

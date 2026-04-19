@@ -121,6 +121,10 @@ const kAppTabs = <AppTab>[
           label: 'Goals',
           icon: Icons.flag_outlined,
           route: Routes.energyGoals),
+      AppSubTab(
+          label: 'Ideas',
+          icon: Icons.lightbulb_outline,
+          route: Routes.energyIdeas),
     ],
   ),
   AppTab(

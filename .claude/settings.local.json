@@ -34,7 +34,18 @@
       "Bash(npm install *)",
       "Bash(vercel --prod --yes)",
       "Read(//c/Users/abdel/.local/share/com.vercel.cli/**)",
-      "Bash(vercel project *)"
+      "Bash(vercel project *)",
+      "Bash(npx vercel *)",
+      "Bash(gh secret *)",
+      "Bash(git config *)",
+      "Bash(curl -s -X PUT \"https://api.github.com/repos/abdelfattahmsa/PRP-APP/actions/secrets/VERCEL_TOKEN\" -H \"Authorization: Bearer $\\(git config --global github.token || echo ''\\)\" -H \"Accept: application/vnd.github+json\")",
+      "Bash(where git *)",
+      "Bash(where gh *)",
+      "Bash(dart pub *)",
+      "Read(//c/Users/abdel/AppData/Local/Pub/Cache/hosted/pub.dev/clerk_flutter-0.0.14-beta/lib/**)",
+      "Read(//c/Users/abdel/**)",
+      "Bash(xargs cat *)",
+      "Bash(flutter pub *)"
     ]
   }
 }

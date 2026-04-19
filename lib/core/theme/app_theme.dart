@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 // ══════════════════════════════════════════════════════════════
 // DESIGN SYSTEM v3.0 — PRP System
@@ -583,27 +584,27 @@ class AppTheme {
       color: AppColors.textPrimary,
     ),
     headlineLarge: TextStyle(
-      fontFamily: 'PlayfairDisplay',
+      fontFamily: 'Poppins',
       fontSize: 24,
       fontWeight: FontWeight.w700,
       color: AppColors.textPrimary,
     ),
     headlineMedium: TextStyle(
-      fontFamily: 'PlayfairDisplay',
+      fontFamily: 'Poppins',
       fontSize: 20,
       fontWeight: FontWeight.w700,
       color: AppColors.textPrimary,
     ),
     headlineSmall: TextStyle(
-      fontFamily: 'PlayfairDisplay',
+      fontFamily: 'Poppins',
       fontSize: 18,
-      fontWeight: FontWeight.w700,
+      fontWeight: FontWeight.w600,
       color: AppColors.textPrimary,
     ),
     titleLarge: TextStyle(
-      fontFamily: 'PlayfairDisplay',
+      fontFamily: 'Poppins',
       fontSize: 16,
-      fontWeight: FontWeight.w700,
+      fontWeight: FontWeight.w600,
       color: AppColors.textPrimary,
     ),
     titleMedium: TextStyle(
@@ -620,16 +621,19 @@ class AppTheme {
       letterSpacing: 0.5,
     ),
     bodyLarge: TextStyle(
+      fontFamily: 'Roboto',
       fontSize: 14,
       color: AppColors.textPrimary,
       height: 1.6,
     ),
     bodyMedium: TextStyle(
+      fontFamily: 'Roboto',
       fontSize: 12,
       color: AppColors.textPrimary,
       height: 1.5,
     ),
     bodySmall: TextStyle(
+      fontFamily: 'Roboto',
       fontSize: 11,
       color: AppColors.textSecondary,
       height: 1.4,
@@ -670,27 +674,27 @@ class AppTheme {
       color: AppColors.lightTextPrimary,
     ),
     headlineLarge: TextStyle(
-      fontFamily: 'PlayfairDisplay',
+      fontFamily: 'Poppins',
       fontSize: 24,
       fontWeight: FontWeight.w700,
       color: AppColors.lightTextPrimary,
     ),
     headlineMedium: TextStyle(
-      fontFamily: 'PlayfairDisplay',
+      fontFamily: 'Poppins',
       fontSize: 20,
       fontWeight: FontWeight.w700,
       color: AppColors.lightTextPrimary,
     ),
     headlineSmall: TextStyle(
-      fontFamily: 'PlayfairDisplay',
+      fontFamily: 'Poppins',
       fontSize: 18,
-      fontWeight: FontWeight.w700,
+      fontWeight: FontWeight.w600,
       color: AppColors.lightTextPrimary,
     ),
     titleLarge: TextStyle(
-      fontFamily: 'PlayfairDisplay',
+      fontFamily: 'Poppins',
       fontSize: 16,
-      fontWeight: FontWeight.w700,
+      fontWeight: FontWeight.w600,
       color: AppColors.lightTextPrimary,
     ),
     titleMedium: TextStyle(
@@ -707,16 +711,19 @@ class AppTheme {
       letterSpacing: 0.5,
     ),
     bodyLarge: TextStyle(
+      fontFamily: 'Roboto',
       fontSize: 14,
       color: AppColors.lightTextPrimary,
       height: 1.6,
     ),
     bodyMedium: TextStyle(
+      fontFamily: 'Roboto',
       fontSize: 12,
       color: AppColors.lightTextPrimary,
       height: 1.5,
     ),
     bodySmall: TextStyle(
+      fontFamily: 'Roboto',
       fontSize: 11,
       color: AppColors.lightTextSecondary,
       height: 1.4,

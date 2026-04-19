@@ -221,7 +221,20 @@ class _BankCardState extends ConsumerState<_BankCard> {
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
           _editing
-              ? Expanded(child: TextField(controller: _name, style: const TextStyle(fontFamily: 'PlayfairDisplay', fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textPrimary), decoration: const InputDecoration(border: InputBorder.none, isDense: true, contentPadding: EdgeInsets.zero)))
+              ? Expanded(child: Autocomplete<String>(
+                  initialValue: TextEditingValue(text: _name.text),
+                  optionsBuilder: (v) => AppConstants.egyptBanks.where(
+                      (b) => b.toLowerCase().contains(v.text.toLowerCase())),
+                  onSelected: (v) => _name.text = v,
+                  fieldViewBuilder: (_, ctrl, focus, onSubmit) => TextField(
+                    controller: ctrl,
+                    focusNode: focus,
+                    onEditingComplete: onSubmit,
+                    style: const TextStyle(fontFamily: 'PlayfairDisplay', fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+                    decoration: const InputDecoration(border: InputBorder.none, isDense: true, contentPadding: EdgeInsets.zero),
+                    onChanged: (v) => _name.text = v,
+                  ),
+                ))
               : Expanded(child: Text(widget.bank.name, style: Theme.of(context).textTheme.titleLarge)),
           IconButton(
             icon: Icon(_editing ? Icons.check : Icons.edit_outlined, size: 16, color: _editing ? AppColors.deen : AppColors.textSecondary),

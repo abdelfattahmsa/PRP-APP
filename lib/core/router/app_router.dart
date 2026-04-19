@@ -25,6 +25,7 @@ import '../../features/finance/screens/finance_transactions_screen.dart';
 import '../../features/energy/screens/energy_overview_screen.dart';
 import '../../features/focus/screens/focus_screen.dart';
 import '../../features/goals/screens/goals_screen.dart';
+import '../../features/ideas/screens/ideas_screen.dart';
 
 // ── Tab 5: Health ──
 import '../../features/health/screens/health_overview_screen.dart';
@@ -65,6 +66,7 @@ class Routes {
   static const energyOverview = '/energy/overview';
   static const energyFocus = '/energy/focus';
   static const energyGoals = '/energy/goals';
+  static const energyIdeas = '/energy/ideas';
 
   // ── Tab 5: Health ──
   static const healthOverview = '/health/overview';
@@ -199,6 +201,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: Routes.energyGoals,
             builder: (_, __) => const GoalsScreen(),
+          ),
+          GoRoute(
+            path: Routes.energyIdeas,
+            builder: (_, __) => const IdeasScreen(),
           ),
           // Legacy redirect: habits moved to Health
           GoRoute(

@@ -42,6 +42,46 @@ class AppConstants {
   // Priority levels
   static const priorities = ['high', 'medium', 'low'];
 
+  // Egypt banks
+  static const egyptBanks = [
+    'National Bank of Egypt (NBE)',
+    'Banque Misr',
+    'Banque du Caire',
+    'Commercial International Bank (CIB)',
+    'QNB Al Ahli',
+    'HSBC Egypt',
+    'Arab African International Bank (AAIB)',
+    'Arab Bank',
+    'Emirates NBD Egypt',
+    'Faisal Islamic Bank of Egypt',
+    'Agricultural Bank of Egypt (ABE)',
+    'Abu Dhabi Islamic Bank (ADIB)',
+    'Al Baraka Bank Egypt',
+    'Bank Audi Egypt',
+    'Bank of Alexandria',
+    'Crédit Agricole Egypt',
+    'Egyptian Arab Land Bank',
+    'Egyptian Gulf Bank (EGB)',
+    'Export Development Bank of Egypt (EBE)',
+    'First Abu Dhabi Bank (FAB) Egypt',
+    'Housing and Development Bank (HDB)',
+    'Industrial Development Bank',
+    'Mashreq Bank Egypt',
+    'Misr Iran Development Bank',
+    'Principal Bank for Development & Agricultural Credit',
+    'Société Arabe Internationale de Banque (SAIB)',
+    'Suez Canal Bank',
+    'United Bank',
+    'Ahly United Bank',
+    'Alex Bank',
+    'Inbank (formerly Enppi Bank)',
+    'Nasser Social Bank',
+    'Egypt Post (Savings)',
+    'Vodafone Cash',
+    'Fawry',
+    'Other',
+  ];
+
   // Transaction categories
   static const txCategories = [
     'General', 'Food', 'Transport', 'Bills',
