@@ -25,6 +25,7 @@ dependencies:
   shared_preferences: ^2.5.5
   path_provider: ^2.1.5
 
+
   # Notifications
   flutter_local_notifications: ^21.0.0
   timezone: ^0.11.0
@@ -49,6 +50,7 @@ dependencies:
   json_annotation: ^4.11.0
   equatable: ^2.0.8
   clerk_flutter: ^0.0.14-beta
+  clerk_auth: ^0.0.14-beta
 
 dev_dependencies:
   flutter_test:

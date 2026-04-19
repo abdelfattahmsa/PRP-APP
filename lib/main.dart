@@ -1,7 +1,15 @@
+import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
+
+import 'package:clerk_auth/clerk_auth.dart' as clerk;
 import 'package:clerk_flutter/clerk_flutter.dart';
+// ignore: implementation_imports
+import 'package:clerk_flutter/src/utils/clerk_file_cache.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'core/theme/app_theme.dart';
@@ -34,6 +42,17 @@ void main() async {
 
   tz.initializeTimeZones();
 
+  // On web: use SharedPreferences-backed persistor + no-op file cache so
+  // clerk_flutter never touches path_provider (which has no web implementation).
+  final clerk.Persistor? webPersistor =
+      kIsWeb ? _WebClerkPersistor() : null;
+  final ClerkFileCache? webFileCache =
+      kIsWeb ? const _WebNoOpFileCache() : null;
+
+  if (webPersistor != null) {
+    await webPersistor.initialize();
+  }
+
   // Initialise Clerk — wrap in try/catch so a domain/network error
   // doesn't crash the whole app before the widget tree is built.
   ClerkAuthState? clerkState;
@@ -42,6 +61,8 @@ void main() async {
     clerkState = await ClerkAuthState.create(
       config: ClerkAuthConfig(
         publishableKey: AppConstants.clerkPublishableKey,
+        persistor: webPersistor,
+        fileCache: webFileCache,
       ),
     );
     // Bridge Clerk user ID → SupabaseService so RLS queries use Clerk UID
@@ -146,4 +167,63 @@ class _ClerkErrorApp extends StatelessWidget {
       ),
     );
   }
+}
+
+// ---------------------------------------------------------------------------
+// Web-only Clerk helpers — bypass path_provider / dart:io on Flutter web
+// ---------------------------------------------------------------------------
+
+/// Persists Clerk session tokens in localStorage via shared_preferences.
+/// Replaces the default file-based persistor which uses path_provider + dart:io.
+class _WebClerkPersistor implements clerk.Persistor {
+  SharedPreferences? _prefs;
+  static const _prefix = '_clerk_';
+
+  @override
+  Future<void> initialize() async {
+    _prefs = await SharedPreferences.getInstance();
+  }
+
+  @override
+  void terminate() {}
+
+  @override
+  FutureOr<T?> read<T>(String key) {
+    final raw = _prefs?.getString('$_prefix$key');
+    if (raw == null) return null;
+    try {
+      return jsonDecode(raw) as T?;
+    } catch (_) {
+      return raw as T?;
+    }
+  }
+
+  @override
+  FutureOr<void> write<T>(String key, T value) {
+    _prefs?.setString('$_prefix$key', jsonEncode(value));
+  }
+
+  @override
+  FutureOr<void> delete(String key) {
+    _prefs?.remove('$_prefix$key');
+  }
+}
+
+/// No-op file cache — skips remote asset caching on web.
+/// The default implementation uses dart:io File, which is unsupported on web.
+class _WebNoOpFileCache implements ClerkFileCache {
+  const _WebNoOpFileCache();
+
+  @override
+  Future<void> initialize() async {}
+
+  @override
+  void terminate() {}
+
+  @override
+  Stream<File> stream(
+    Uri uri, {
+    Duration ttl = ClerkFileCache.defaultTTL,
+    Map<String, String>? headers,
+  }) async* {}
 }
