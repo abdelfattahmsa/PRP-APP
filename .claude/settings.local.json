@@ -51,7 +51,20 @@
       "Bash(cat vercel.json)",
       "Bash(vercel deploy *)",
       "Bash(find . -name \"generated_plugin_registrant.dart\")",
-      "Bash(cat lib/generated_plugin_registrant.dart)"
+      "Bash(cat lib/generated_plugin_registrant.dart)",
+      "Bash(claude mcp *)",
+      "Bash(npx skills *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"https://qjqkmvlqrrkowvisvcmc.supabase.co/rest/v1/\" -H \"apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFqcWttdmxxcnJrb3d2aXN2Y21jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ3Njg4MjQsImV4cCI6MjA5MDM0NDgyNH0.aB1h2odqDdyAIFWq1_-61wz6_AMJHIQSR0aZl4BKhNQ\")",
+      "Bash(curl -s \"https://qjqkmvlqrrkowvisvcmc.supabase.co/rest/v1/profiles?select=id&limit=1\" -H \"apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFqcWttdmxxcnJrb3d2aXN2Y21jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ3Njg4MjQsImV4cCI6MjA5MDM0NDgyNH0.aB1h2odqDdyAIFWq1_-61wz6_AMJHIQSR0aZl4BKhNQ\" -H \"Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFqcWttdmxxcnJrb3d2aXN2Y21jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ3Njg4MjQsImV4cCI6MjA5MDM0NDgyNH0.aB1h2odqDdyAIFWq1_-61wz6_AMJHIQSR0aZl4BKhNQ\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"https://qjqkmvlqrrkowvisvcmc.supabase.co/auth/v1/settings\" -H \"apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFqcWttdmxxcnJrb3d2aXN2Y21jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ3Njg4MjQsImV4cCI6MjA5MDM0NDgyNH0.aB1h2odqDdyAIFWq1_-61wz6_AMJHIQSR0aZl4BKhNQ\")",
+      "Bash(find \"C:\\\\Users\\\\abdel\\\\Documents\\\\PRP APP\\\\lib\" -name \"app_user.dart\" -exec cat {} \\\\;)",
+      "Bash(grep -v \"^.*//.*energy\")",
+      "Bash(grep -rl \"PlaceholderList\\\\|PlaceholderChart\\\\|StatCard\\\\|hardcoded\\\\|'\\\\\\\\\\\\$\" lib/features --include=\"*.dart\")",
+      "Bash(ls .github/workflows/)",
+      "Bash(cat .github/workflows/*.yml)",
+      "Bash(ls -la build/web/main.dart.js)",
+      "Bash(stat -c \"%y\" build/web/main.dart.js)",
+      "Bash(gh run *)"
     ]
   }
 }

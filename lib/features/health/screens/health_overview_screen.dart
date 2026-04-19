@@ -22,7 +22,7 @@ class HealthOverviewScreen extends ConsumerWidget {
     final habitsAsync = ref.watch(habitsProvider);
     final todayStats = ref.watch(habitsTodayProvider);
     final fasting = ref.watch(fastingProvider);
-    final tick = ref.watch(fastingTickProvider);
+    ref.watch(fastingTickProvider);
 
     final habits = habitsAsync.value ?? [];
     final activeHabits = habits.where((h) => !h.isArchived).toList();
