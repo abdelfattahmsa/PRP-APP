@@ -26,35 +26,46 @@ void main() async {
     return true;
   };
 
-  // Initialise Clerk auth state before building the widget tree
-  final clerkState = await ClerkAuthState.create(
-    config: ClerkAuthConfig(
-      publishableKey: AppConstants.clerkPublishableKey,
-    ),
-  );
-
   // Initialise Supabase for DATA only (auth handled by Clerk)
   await Supabase.initialize(
     url: AppConstants.supabaseUrl,
     anonKey: AppConstants.supabaseAnonKey,
   );
 
-  // Bridge Clerk user ID → SupabaseService so RLS queries use Clerk UID
-  SupabaseService.instance.setClerkUserId(clerkState.user?.id);
-  clerkState.addListener(() {
-    SupabaseService.instance.setClerkUserId(clerkState.user?.id);
-  });
-
   tz.initializeTimeZones();
+
+  // Initialise Clerk — wrap in try/catch so a domain/network error
+  // doesn't crash the whole app before the widget tree is built.
+  ClerkAuthState? clerkState;
+  Object? clerkInitError;
+  try {
+    clerkState = await ClerkAuthState.create(
+      config: ClerkAuthConfig(
+        publishableKey: AppConstants.clerkPublishableKey,
+      ),
+    );
+    // Bridge Clerk user ID → SupabaseService so RLS queries use Clerk UID
+    SupabaseService.instance.setClerkUserId(clerkState.user?.id);
+    clerkState.addListener(() {
+      SupabaseService.instance.setClerkUserId(clerkState?.user?.id);
+    });
+  } catch (e, st) {
+    clerkInitError = e;
+    debugPrint('CLERK INIT ERROR: $e\n$st');
+  }
+
+  if (clerkState == null) {
+    // Clerk failed to initialise — show a minimal error screen
+    runApp(_ClerkErrorApp(error: clerkInitError));
+    return;
+  }
 
   runApp(
     ProviderScope(
       overrides: [
-        // Inject the pre-created ClerkAuthState into Riverpod
-        clerkAuthProvider.overrideWith((_) => clerkState),
+        clerkAuthProvider.overrideWith((_) => clerkState!),
       ],
       child: ClerkAuth(
-        // Share the same ClerkAuthState instance with the widget tree
         authState: clerkState,
         child: const PRPApp(),
       ),
@@ -87,6 +98,52 @@ class PRPApp extends ConsumerWidget {
           child: child!,
         );
       },
+    );
+  }
+}
+
+// Shown only when Clerk fails to initialise (domain mismatch, network, etc.)
+class _ClerkErrorApp extends StatelessWidget {
+  const _ClerkErrorApp({this.error});
+  final Object? error;
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      darkTheme: AppTheme.dark,
+      themeMode: ThemeMode.dark,
+      home: Scaffold(
+        backgroundColor: const Color(0xFF0A0A0A),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.lock_outline, color: Color(0xFF22C55E), size: 48),
+                const SizedBox(height: 24),
+                const Text(
+                  'Authentication unavailable',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Could not connect to the authentication service.\n'
+                  'Check your internet connection and try again.\n\n'
+                  '${error ?? ''}',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.white54, fontSize: 13),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
