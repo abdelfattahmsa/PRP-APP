@@ -71,6 +71,10 @@ const kAppTabs = <AppTab>[
           label: 'Schedule',
           icon: Icons.view_timeline_outlined,
           route: Routes.timeSchedule),
+      AppSubTab(
+          label: 'Tasks',
+          icon: Icons.task_alt_outlined,
+          route: Routes.timeTasks),
     ],
   ),
   AppTab(

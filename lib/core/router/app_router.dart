@@ -11,6 +11,7 @@ import '../../features/overview/screens/overview_screen.dart';
 
 // ── Tab 2: Time ──
 import '../../features/time/screens/time_overview_screen.dart';
+import '../../features/time/screens/time_tasks_screen.dart';
 import '../../features/schedule/screens/schedule_screen.dart';
 import '../../features/calendar/screens/calendar_screen.dart';
 
@@ -54,6 +55,7 @@ class Routes {
   static const timeOverview = '/time/overview';
   static const timeSchedule = '/time/schedule';
   static const timeCalendar = '/time/calendar';
+  static const timeTasks = '/time/tasks';
 
   // ── Tab 3: Finance ──
   static const financeOverview = '/finance/overview';
@@ -160,6 +162,11 @@ final routerProvider = Provider<GoRouter>((ref) {
                 ),
               ),
             ],
+          ),
+
+          GoRoute(
+            path: Routes.timeTasks,
+            builder: (_, __) => const TimeTasksScreen(),
           ),
 
           // ── Tab 3: Finance ────────────────────────────────

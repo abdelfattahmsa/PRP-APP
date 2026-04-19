@@ -17,6 +17,21 @@ class SupabaseService {
 
   String get _uid => _db.auth.currentUser!.id;
 
+  // Ensures profile row exists before any user-data insert (FK guard)
+  Future<void> _ensureProfile() async {
+    final user = _db.auth.currentUser;
+    if (user == null) return;
+    await _db.from('profiles').upsert(
+      {
+        'id': user.id,
+        'email': user.email ?? '',
+        'full_name': user.userMetadata?['full_name'] ?? '',
+      },
+      onConflict: 'id',
+      ignoreDuplicates: true,
+    );
+  }
+
   // ── AUTH ──────────────────────────────────────────────────────
   Stream<AuthState> get authStateStream => _db.auth.onAuthStateChange;
 
@@ -44,8 +59,23 @@ class SupabaseService {
   Future<AuthResponse> signIn({
     required String email,
     required String password,
-  }) =>
-      _db.auth.signInWithPassword(email: email, password: password);
+  }) async {
+    final res =
+        await _db.auth.signInWithPassword(email: email, password: password);
+    if (res.user != null) {
+      // Ensure profile row exists (handles users created before profile seeding)
+      await _db.from('profiles').upsert(
+        {
+          'id': res.user!.id,
+          'email': res.user!.email ?? email,
+          'full_name': res.user!.userMetadata?['full_name'] ?? '',
+        },
+        onConflict: 'id',
+        ignoreDuplicates: true,
+      );
+    }
+    return res;
+  }
 
   Future<void> signOut() => _db.auth.signOut();
 
@@ -161,8 +191,10 @@ class SupabaseService {
     return res.map((j) => ExternalDebt.fromJson(j)).toList();
   }
 
-  Future<void> upsertDebt(ExternalDebt debt) =>
-      _db.from('debts').upsert({...debt.toJson(), 'user_id': _uid});
+  Future<void> upsertDebt(ExternalDebt debt) async {
+    await _ensureProfile();
+    await _db.from('debts').upsert({...debt.toJson(), 'user_id': _uid});
+  }
 
   Future<void> deleteDebt(String id) =>
       _db.from('debts').delete().eq('id', id).eq('user_id', _uid);
@@ -172,8 +204,10 @@ class SupabaseService {
     return res.map((j) => Investment.fromJson(j)).toList();
   }
 
-  Future<void> upsertInvestment(Investment inv) =>
-      _db.from('investments').upsert({...inv.toJson(), 'user_id': _uid});
+  Future<void> upsertInvestment(Investment inv) async {
+    await _ensureProfile();
+    await _db.from('investments').upsert({...inv.toJson(), 'user_id': _uid});
+  }
 
   Future<void> deleteInvestment(String id) =>
       _db.from('investments').delete().eq('id', id).eq('user_id', _uid);
@@ -188,8 +222,10 @@ class SupabaseService {
     return res.map((j) => Transaction.fromJson(j)).toList();
   }
 
-  Future<void> addTransaction(Transaction tx) =>
-      _db.from('transactions').insert({...tx.toJson(), 'user_id': _uid});
+  Future<void> addTransaction(Transaction tx) async {
+    await _ensureProfile();
+    await _db.from('transactions').insert({...tx.toJson(), 'user_id': _uid});
+  }
 
   Future<void> deleteTransaction(String id) =>
       _db.from('transactions').delete().eq('id', id).eq('user_id', _uid);
@@ -205,8 +241,10 @@ class SupabaseService {
     return res.map((j) => Habit.fromJson(j)).toList();
   }
 
-  Future<void> upsertHabit(Habit habit) =>
-      _db.from('habits').upsert({...habit.toJson(), 'user_id': _uid});
+  Future<void> upsertHabit(Habit habit) async {
+    await _ensureProfile();
+    await _db.from('habits').upsert({...habit.toJson(), 'user_id': _uid});
+  }
 
   Future<void> deleteHabit(String id) =>
       _db.from('habits').delete().eq('id', id).eq('user_id', _uid);
