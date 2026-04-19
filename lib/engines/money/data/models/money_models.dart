@@ -7,6 +7,7 @@ class BankAccount extends Equatable {
     required this.name,
     this.creditCardBalance = 0,
     this.creditCardLimit = 0,
+    this.minimumPayment = 0,
     this.savingsBalance = 0,
     this.currentBalance = 0,
     this.order = 0,
@@ -16,18 +17,21 @@ class BankAccount extends Equatable {
   final String name;
   final double creditCardBalance;
   final double creditCardLimit;
+  final double minimumPayment;
   final double savingsBalance;
   final double currentBalance;
   final int order;
 
   double get remainingCreditLimit => creditCardLimit - creditCardBalance;
   bool get isOverLimit => remainingCreditLimit < 0;
+  bool get hasCard => creditCardLimit > 0;
 
   factory BankAccount.fromJson(Map<String, dynamic> json) => BankAccount(
         id: json['id'] as String,
         name: json['name'] as String,
         creditCardBalance: (json['cc_balance'] as num?)?.toDouble() ?? 0,
         creditCardLimit: (json['cc_limit'] as num?)?.toDouble() ?? 0,
+        minimumPayment: (json['minimum_payment'] as num?)?.toDouble() ?? 0,
         savingsBalance: (json['savings_balance'] as num?)?.toDouble() ?? 0,
         currentBalance: (json['current_balance'] as num?)?.toDouble() ?? 0,
         order: json['order'] as int? ?? 0,
@@ -38,6 +42,7 @@ class BankAccount extends Equatable {
         'name': name,
         'cc_balance': creditCardBalance,
         'cc_limit': creditCardLimit,
+        'minimum_payment': minimumPayment,
         'savings_balance': savingsBalance,
         'current_balance': currentBalance,
         'order': order,
@@ -47,6 +52,7 @@ class BankAccount extends Equatable {
     String? name,
     double? creditCardBalance,
     double? creditCardLimit,
+    double? minimumPayment,
     double? savingsBalance,
     double? currentBalance,
   }) =>
@@ -55,6 +61,7 @@ class BankAccount extends Equatable {
         name: name ?? this.name,
         creditCardBalance: creditCardBalance ?? this.creditCardBalance,
         creditCardLimit: creditCardLimit ?? this.creditCardLimit,
+        minimumPayment: minimumPayment ?? this.minimumPayment,
         savingsBalance: savingsBalance ?? this.savingsBalance,
         currentBalance: currentBalance ?? this.currentBalance,
         order: order,
