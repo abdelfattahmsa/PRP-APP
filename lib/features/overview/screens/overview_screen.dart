@@ -9,7 +9,6 @@ import '../../../features/auth/providers/auth_provider.dart';
 import '../../../shared/models/all_providers.dart';
 import '../../../shared/widgets/app_card.dart';
 import '../../../shared/widgets/app_states.dart';
-import '../../../shared/widgets/placeholders.dart' show ScreenHeader;
 
 // Ticks every second for the live clock
 final _clockProvider = StreamProvider<DateTime>((ref) {

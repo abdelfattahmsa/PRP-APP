@@ -338,17 +338,17 @@ class SupabaseService {
   // ── SEED CALENDAR EVENTS ───────────────────────────────────
   Future<void> _seedDefaultCalendarEvents(String uid) async {
     final events = <Map<String, dynamic>>[
-      {'id': _uuid(), 'user_id': uid, 'title': 'Engagement', 'date': '2026-05-30', 'type': 'milestone', 'is_done': false, 'notes': 'إن شاء الله 🤍'},
-      {'id': _uuid(), 'user_id': uid, 'title': 'Wedding', 'date': '2027-03-01', 'type': 'milestone', 'is_done': false, 'notes': 'March 2027 إن شاء الله'},
-      {'id': _uuid(), 'user_id': uid, 'title': 'PMP Exam Deadline', 'date': '2026-06-30', 'type': 'deadline', 'is_done': false},
-      {'id': _uuid(), 'user_id': uid, 'title': 'Product #1 MVP', 'date': '2026-04-10', 'type': 'deadline', 'is_done': false},
-      {'id': _uuid(), 'user_id': uid, 'title': 'First Kyberia Client', 'date': '2026-05-01', 'type': 'deadline', 'is_done': false},
-      {'id': _uuid(), 'user_id': uid, 'title': 'Ramadan Start', 'date': '2026-02-18', 'type': 'islamic', 'is_done': false},
-      {'id': _uuid(), 'user_id': uid, 'title': 'Eid Al-Fitr', 'date': '2026-03-20', 'type': 'islamic', 'is_done': false},
-      {'id': _uuid(), 'user_id': uid, 'title': 'Eid Al-Adha', 'date': '2026-05-27', 'type': 'islamic', 'is_done': false},
-      {'id': _uuid(), 'user_id': uid, 'title': 'Islamic New Year', 'date': '2026-06-17', 'type': 'islamic', 'is_done': false},
-      {'id': _uuid(), 'user_id': uid, 'title': 'Mawlid Al-Nabi', 'date': '2026-08-26', 'type': 'islamic', 'is_done': false},
-      {'id': _uuid(), 'user_id': uid, 'title': 'Debt ≤ 100K Target', 'date': '2026-09-15', 'type': 'deadline', 'is_done': false},
+      {'id': _uuid(), 'user_id': uid, 'title': 'Engagement', 'date': '2026-05-30', 'type_key': 'milestone', 'is_done': false, 'notes': 'إن شاء الله 🤍'},
+      {'id': _uuid(), 'user_id': uid, 'title': 'Wedding', 'date': '2027-03-01', 'type_key': 'milestone', 'is_done': false, 'notes': 'March 2027 إن شاء الله'},
+      {'id': _uuid(), 'user_id': uid, 'title': 'PMP Exam Deadline', 'date': '2026-06-30', 'type_key': 'milestone', 'is_done': false},
+      {'id': _uuid(), 'user_id': uid, 'title': 'Product #1 MVP', 'date': '2026-04-10', 'type_key': 'milestone', 'is_done': false},
+      {'id': _uuid(), 'user_id': uid, 'title': 'First Kyberia Client', 'date': '2026-05-01', 'type_key': 'milestone', 'is_done': false},
+      {'id': _uuid(), 'user_id': uid, 'title': 'Ramadan Start', 'date': '2026-02-18', 'type_key': 'islamic', 'is_done': false},
+      {'id': _uuid(), 'user_id': uid, 'title': 'Eid Al-Fitr', 'date': '2026-03-20', 'type_key': 'islamic', 'is_done': false},
+      {'id': _uuid(), 'user_id': uid, 'title': 'Eid Al-Adha', 'date': '2026-05-27', 'type_key': 'islamic', 'is_done': false},
+      {'id': _uuid(), 'user_id': uid, 'title': 'Islamic New Year', 'date': '2026-06-17', 'type_key': 'islamic', 'is_done': false},
+      {'id': _uuid(), 'user_id': uid, 'title': 'Mawlid Al-Nabi', 'date': '2026-08-26', 'type_key': 'islamic', 'is_done': false},
+      {'id': _uuid(), 'user_id': uid, 'title': 'Debt ≤ 100K Target', 'date': '2026-09-15', 'type_key': 'milestone', 'is_done': false},
     ];
     await _db.from('calendar_events').insert(events);
   }

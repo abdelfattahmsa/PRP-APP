@@ -7,7 +7,7 @@ import '../../../engines/ideas/data/models/idea_models.dart';
 import '../../../engines/ideas/providers/ideas_providers.dart';
 import '../../../shared/widgets/app_card.dart' show AppCard;
 import '../../../shared/widgets/app_states.dart' show EmptyState, ErrorState;
-import '../../../shared/widgets/app_text_field.dart' show AppTextField, AppButton;
+import '../../../shared/widgets/app_text_field.dart' show AppTextField;
 
 const _uuid = Uuid();
 
@@ -149,7 +149,6 @@ class _IdeaCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final statusColor = _statusColors[idea.status] ?? AppColors.textSecondary;
-    final borderColor = isDark ? AppColors.border : AppColors.lightBorder;
 
     return AppCard(
       padding: const EdgeInsets.all(Spacing.base),
