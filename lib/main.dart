@@ -9,6 +9,7 @@ import 'core/router/app_router.dart';
 import 'core/constants/app_constants.dart';
 import 'core/providers/theme_provider.dart';
 import 'features/auth/providers/auth_provider.dart';
+import 'services/supabase_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -37,6 +38,12 @@ void main() async {
     url: AppConstants.supabaseUrl,
     anonKey: AppConstants.supabaseAnonKey,
   );
+
+  // Bridge Clerk user ID → SupabaseService so RLS queries use Clerk UID
+  SupabaseService.instance.setClerkUserId(clerkState.user?.id);
+  clerkState.addListener(() {
+    SupabaseService.instance.setClerkUserId(clerkState.user?.id);
+  });
 
   tz.initializeTimeZones();
 

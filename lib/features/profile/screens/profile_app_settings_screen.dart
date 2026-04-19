@@ -165,13 +165,87 @@ class _ProfileAppSettingsScreenState
             ]),
             const Gap(24),
 
+            // ── Finance settings ────────────────────────────────
+            const SectionHeader('Finance'),
+            const Gap(12),
+            SectionCard(children: [
+              SettingsTile(
+                title: 'Default Currency',
+                subtitle: 'EGP — Egyptian Pound',
+                leading: const Icon(Icons.attach_money_outlined, size: 20),
+                onTap: () {},
+              ),
+              Divider(height: 1, color: borderColor),
+              SettingsTile(
+                title: 'Transaction Categories',
+                subtitle: 'Manage your spending categories',
+                leading: const Icon(Icons.category_outlined, size: 20),
+                onTap: () {},
+              ),
+              Divider(height: 1, color: borderColor),
+              SettingsTile(
+                title: 'Show Stock Prices',
+                subtitle: 'Live portfolio value in Investments tab',
+                leading: const Icon(Icons.show_chart_rounded, size: 20),
+                onTap: () {},
+              ),
+            ]),
+            const Gap(24),
+
+            // ── Energy settings ─────────────────────────────────
+            const SectionHeader('Energy'),
+            const Gap(12),
+            SectionCard(children: [
+              SettingsTile(
+                title: 'Focus Duration',
+                subtitle: '25 minutes',
+                leading: const Icon(Icons.timer_outlined, size: 20),
+                onTap: () {},
+              ),
+              Divider(height: 1, color: borderColor),
+              SettingsTile(
+                title: 'Short Break',
+                subtitle: '5 minutes',
+                leading: const Icon(Icons.coffee_outlined, size: 20),
+                onTap: () {},
+              ),
+              Divider(height: 1, color: borderColor),
+              SettingsTile(
+                title: 'Long Break',
+                subtitle: '15 minutes after 4 sessions',
+                leading: const Icon(Icons.self_improvement_outlined, size: 20),
+                onTap: () {},
+              ),
+            ]),
+            const Gap(24),
+
+            // ── Health settings ─────────────────────────────────
+            const SectionHeader('Health'),
+            const Gap(12),
+            SectionCard(children: [
+              SettingsTile(
+                title: 'Default Fasting Protocol',
+                subtitle: '16:8 Intermittent Fasting',
+                leading: const Icon(Icons.hourglass_empty_rounded, size: 20),
+                onTap: () {},
+              ),
+              Divider(height: 1, color: borderColor),
+              SettingsTile(
+                title: 'Habit Categories',
+                subtitle: 'Manage habit groups',
+                leading: const Icon(Icons.favorite_outline, size: 20),
+                onTap: () {},
+              ),
+            ]),
+            const Gap(24),
+
             // ── About ───────────────────────────────────────────
             const SectionHeader('About'),
             const Gap(12),
             SectionCard(children: [
               SettingsTile(
                 title: 'App Version',
-                subtitle: 'PRP System v3.0.0',
+                subtitle: 'PRP System v4.2.0',
                 leading:
                     Icon(Icons.info_outline, color: accent, size: 20),
               ),

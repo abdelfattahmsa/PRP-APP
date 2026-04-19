@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/placeholders.dart';
 import '../../../features/auth/providers/auth_provider.dart';
@@ -135,7 +136,10 @@ class _PlanCard extends StatelessWidget {
             ),
           ),
           ElevatedButton(
-            onPressed: () {},
+            onPressed: () => launchUrl(
+              Uri.parse('https://prp-app.website/pricing'),
+              mode: LaunchMode.externalApplication,
+            ),
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               minimumSize: Size.zero,

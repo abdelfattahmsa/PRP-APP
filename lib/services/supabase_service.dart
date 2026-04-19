@@ -12,8 +12,18 @@ class SupabaseService {
   static final instance = SupabaseService._();
 
   SupabaseClient get _db => Supabase.instance.client;
-  User? get currentUser => _db.auth.currentUser;
-  String get _uid => currentUser!.id;
+
+  // Clerk user ID — set after Clerk auth initialises
+  String? _clerkUserId;
+  void setClerkUserId(String? id) => _clerkUserId = id;
+
+  // Uses Clerk user ID when available, falls back to Supabase Auth (dev/legacy)
+  String get _uid {
+    if (_clerkUserId != null) return _clerkUserId!;
+    final uid = _db.auth.currentUser?.id;
+    if (uid != null) return uid;
+    throw StateError('No authenticated user. Ensure Clerk auth is initialised.');
+  }
 
   // ── AUTH ──────────────────────────────────────────────────────
   Stream<AuthState> get authStateStream => _db.auth.onAuthStateChange;

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/placeholders.dart';
 import '../../../features/auth/providers/auth_provider.dart';
@@ -160,7 +161,67 @@ class ProfileSettingsScreen extends ConsumerWidget {
                 onTap: () {},
               ),
             ]),
+            const Gap(24),
+
+            const SectionHeader('Help & Support'),
+            const Gap(12),
+            SectionCard(children: [
+              SettingsTile(
+                title: 'Documentation',
+                subtitle: 'Guides and how-to articles',
+                leading: const Icon(Icons.menu_book_outlined, size: 20),
+                onTap: () => launchUrl(
+                  Uri.parse('https://prp-app.website/docs'),
+                  mode: LaunchMode.externalApplication,
+                ),
+                trailing: const Icon(Icons.open_in_new, size: 16),
+              ),
+              Divider(height: 1, color: borderColor),
+              SettingsTile(
+                title: 'Download for Windows',
+                subtitle: 'Coming soon',
+                leading: const Icon(Icons.computer_outlined, size: 20),
+                onTap: () {},
+                trailing: _ComingSoonBadge(),
+              ),
+              Divider(height: 1, color: borderColor),
+              SettingsTile(
+                title: 'Android & iOS',
+                subtitle: 'Mobile apps — coming soon',
+                leading: const Icon(Icons.phone_android_outlined, size: 20),
+                onTap: () {},
+                trailing: _ComingSoonBadge(),
+              ),
+              Divider(height: 1, color: borderColor),
+              SettingsTile(
+                title: 'App Version',
+                subtitle: 'PRP v4.2.0',
+                leading: const Icon(Icons.info_outline, size: 20),
+                onTap: () {},
+              ),
+            ]),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ComingSoonBadge extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: AppColors.warning.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(
+        'Soon',
+        style: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w600,
+          color: AppColors.warning,
         ),
       ),
     );
