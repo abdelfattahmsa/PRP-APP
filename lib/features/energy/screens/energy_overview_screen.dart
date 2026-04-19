@@ -1,16 +1,61 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
+import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../shared/widgets/placeholders.dart';
+import '../../../core/router/app_router.dart';
+import '../../../shared/models/all_providers.dart';
+import '../../../shared/widgets/app_card.dart';
+import '../../../shared/widgets/app_chart.dart';
+import '../../../shared/widgets/app_states.dart';
+import '../../../shared/widgets/placeholders.dart' show ScreenHeader;
 
-class EnergyOverviewScreen extends StatelessWidget {
+class EnergyOverviewScreen extends ConsumerWidget {
   const EnergyOverviewScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textSecondary =
         isDark ? AppColors.textSecondary : AppColors.lightTextSecondary;
+
+    final sessAsync = ref.watch(focusSessionsProvider);
+    final goalsAsync = ref.watch(goalsProvider);
+    final todayStr = DateFormat('yyyy-MM-dd').format(DateTime.now());
+
+    // 7-day focus minutes
+    final days7 = List.generate(
+        7, (i) => DateTime.now().subtract(Duration(days: 6 - i)));
+    final dayLabels = days7
+        .map((d) => DateFormat('EEE').format(d).substring(0, 1))
+        .toList();
+
+    final focusData = sessAsync.value == null
+        ? List.filled(7, 0.0)
+        : days7.map((day) {
+            final key = DateFormat('yyyy-MM-dd').format(day);
+            return sessAsync.value!
+                .where((s) =>
+                    s.completed &&
+                    DateFormat('yyyy-MM-dd').format(s.date) == key)
+                .fold(0.0, (s, sess) => s + sess.actualMinutes);
+          }).toList();
+
+    final sessions = sessAsync.value ?? [];
+    final todayMins = sessions
+        .where((s) =>
+            s.completed &&
+            DateFormat('yyyy-MM-dd').format(s.date) == todayStr)
+        .fold(0, (s, sess) => s + sess.actualMinutes);
+    final totalMins =
+        sessions.where((s) => s.completed).fold(0, (s, sess) => s + sess.actualMinutes);
+    final todayCount = sessions
+        .where((s) => DateFormat('yyyy-MM-dd').format(s.date) == todayStr)
+        .length;
+
+    final goals = goalsAsync.value ?? [];
+    final activeGoals = goals.where((g) => g.status == 'active').toList();
 
     return Scaffold(
       body: SafeArea(
@@ -19,86 +64,204 @@ class EnergyOverviewScreen extends StatelessWidget {
           children: [
             const ScreenHeader(
               title: 'Energy',
-              subtitle: 'Focus, goals, and momentum',
+              subtitle: 'Focus, goals & productivity',
             ),
             const Gap(24),
 
-            const SectionHeader('Today'),
-            const Gap(12),
-            StatsGrid(children: [
-              StatCard(
-                label: 'Focus Time',
-                value: '2.5h',
-                subtitle: 'Deep work sessions',
-                icon: Icons.timer_rounded,
-                trend: '+30m vs yesterday',
-                trendUp: true,
-              ),
-              StatCard(
-                label: 'Energy Score',
-                value: '72',
-                subtitle: 'Out of 100',
-                icon: Icons.bolt_rounded,
-                iconColor: AppColors.warning,
-                trend: '+4 vs avg',
-                trendUp: true,
-              ),
-              StatCard(
-                label: 'Goals',
-                value: '3 / 8',
-                subtitle: 'Completed today',
-                icon: Icons.flag_rounded,
-                iconColor: AppColors.success,
-              ),
-              StatCard(
-                label: 'Streak',
-                value: '12 days',
-                subtitle: 'Focus streak',
-                icon: Icons.local_fire_department_rounded,
-                iconColor: AppColors.error,
-              ),
-            ]),
-            const Gap(24),
-
-            const SectionHeader('Energy Trend', action: '2 Weeks'),
-            const Gap(12),
-            PlaceholderChart(
-              height: 160,
-              label: 'Energy score',
-              data: const [65, 70, 68, 75, 72, 80, 78, 72, 74, 82, 76, 72, 78, 72],
+            // ── KPI Grid ─────────────────────────────────────────
+            BentoGrid(
+              children: [
+                BentoCell(
+                  child: KpiCard(
+                    label: 'Focus Today',
+                    value: '${todayMins}m',
+                    icon: Icons.timer_rounded,
+                    iconColor: AppColors.warning,
+                    subtitle: '$todayCount sessions',
+                    onTap: () => context.go(Routes.energyFocus),
+                  ),
+                ),
+                BentoCell(
+                  child: KpiCard(
+                    label: 'Total Focus',
+                    value: '${totalMins}m',
+                    icon: Icons.bolt_rounded,
+                    iconColor: AppColors.gold,
+                    subtitle: '${sessions.length} sessions',
+                  ),
+                ),
+                BentoCell(
+                  child: KpiCard(
+                    label: 'Active Goals',
+                    value: '${activeGoals.length}',
+                    icon: Icons.flag_rounded,
+                    iconColor: AppColors.pmp,
+                    onTap: () => context.go(Routes.energyGoals),
+                  ),
+                ),
+                BentoCell(
+                  child: KpiCard(
+                    label: 'Goals Done',
+                    value:
+                        '${goals.where((g) => g.status == 'done').length}',
+                    icon: Icons.check_circle_rounded,
+                    iconColor: AppColors.success,
+                  ),
+                ),
+              ],
             ),
-            const Gap(24),
+            const Gap(20),
 
-            const SectionHeader("Today's Focus Sessions", action: 'Start new'),
-            const Gap(12),
-            PlaceholderList(items: const [
-              PlaceholderListItem(
-                title: 'Morning Deep Work',
-                subtitle: '06:00 — 07:30 · Completed',
-                value: '90m',
-                icon: Icons.check_circle_rounded,
-                iconColor: AppColors.success,
+            // ── 7-day Focus Chart ─────────────────────────────────
+            ChartCard(
+              title: '7-Day Focus (min)',
+              height: 140,
+              action: TextButton(
+                onPressed: () => context.go(Routes.energyFocus),
+                child: const Text('Timer', style: TextStyle(fontSize: 12)),
               ),
-              PlaceholderListItem(
-                title: 'PMP Study',
-                subtitle: '09:00 — 09:45 · Completed',
-                value: '45m',
-                icon: Icons.check_circle_rounded,
-                iconColor: AppColors.success,
-              ),
-              PlaceholderListItem(
-                title: 'Afternoon Work',
-                subtitle: '14:00 · In progress',
-                value: '~35m',
-                icon: Icons.radio_button_on_rounded,
-                iconColor: AppColors.warning,
-              ),
-            ]),
-            const Gap(24),
+              child: sessAsync.isLoading
+                  ? const Center(
+                      child: CircularProgressIndicator(strokeWidth: 2))
+                  : AppBarChart(data: focusData, labels: dayLabels),
+            ),
+            const Gap(20),
 
-            const SectionHeader('Active Goals'),
+            // ── Recent Sessions ───────────────────────────────────
+            BentoSectionHeader(
+              'Recent Sessions',
+              action: TextButton(
+                onPressed: () => context.go(Routes.energyFocus),
+                child: const Text('All', style: TextStyle(fontSize: 12)),
+              ),
+            ),
             const Gap(12),
-            _GoalsList(textSecondary: textSecondary),
+            sessAsync.when(
+              loading: () => const LoadingCard(height: 80),
+              error: (e, _) =>
+                  const ErrorState(message: 'Could not load sessions'),
+              data: (sess) {
+                final recent = sess.take(5).toList();
+                if (recent.isEmpty) {
+                  return EmptyState(
+                    message: 'No focus sessions yet',
+                    icon: Icons.timer_outlined,
+                    compact: true,
+                    action: TextButton(
+                      onPressed: () => context.go(Routes.energyFocus),
+                      child: const Text('Start a session'),
+                    ),
+                  );
+                }
+                return AppCard(
+                  padding: EdgeInsets.zero,
+                  child: Column(
+                    children: [
+                      for (int i = 0; i < recent.length; i++) ...[
+                        if (i > 0)
+                          Divider(
+                              height: 1,
+                              color: isDark
+                                  ? AppColors.border
+                                  : AppColors.lightBorder),
+                        _SessionTile(
+                            session: recent[i],
+                            textSecondary: textSecondary),
+                      ],
+                    ],
+                  ),
+                );
+              },
+            ),
+            const Gap(20),
+
+            // ── Active Goals ──────────────────────────────────────
+            BentoSectionHeader(
+              'Goals',
+              action: TextButton(
+                onPressed: () => context.go(Routes.energyGoals),
+                child: const Text('All', style: TextStyle(fontSize: 12)),
+              ),
+            ),
+            const Gap(12),
+            goalsAsync.when(
+              loading: () => const LoadingCard(height: 80),
+              error: (e, _) =>
+                  const ErrorState(message: 'Could not load goals'),
+              data: (goals) {
+                if (activeGoals.isEmpty) {
+                  return const EmptyState(
+                    message: 'No active goals',
+                    icon: Icons.flag_outlined,
+                    compact: true,
+                  );
+                }
+                return AppCard(
+                  padding: EdgeInsets.zero,
+                  child: Column(
+                    children: [
+                      for (int i = 0;
+                          i < activeGoals.take(4).length;
+                          i++) ...[
+                        if (i > 0)
+                          Divider(
+                              height: 1,
+                              color: isDark
+                                  ? AppColors.border
+                                  : AppColors.lightBorder),
+                        Padding(
+                          padding: const EdgeInsets.all(Spacing.base),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  _PriorityDot(
+                                      priority: activeGoals[i].priority),
+                                  const Gap(8),
+                                  Expanded(
+                                    child: Text(
+                                      activeGoals[i].title,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyMedium
+                                          ?.copyWith(
+                                              fontWeight: FontWeight.w500),
+                                    ),
+                                  ),
+                                  Text(
+                                    '${activeGoals[i].progress}%',
+                                    style: TextStyle(
+                                      fontFamily: 'IBMPlexMono',
+                                      fontSize: 12,
+                                      color: AppColors.accent,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const Gap(8),
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(3),
+                                child: LinearProgressIndicator(
+                                  value: activeGoals[i].progress / 100,
+                                  minHeight: 4,
+                                  backgroundColor: isDark
+                                      ? AppColors.border
+                                      : AppColors.lightBorder,
+                                  valueColor: AlwaysStoppedAnimation(
+                                      AppColors.accent),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                );
+              },
+            ),
           ],
         ),
       ),
@@ -106,83 +269,76 @@ class EnergyOverviewScreen extends StatelessWidget {
   }
 }
 
-class _GoalsList extends StatelessWidget {
-  const _GoalsList({required this.textSecondary});
+class _SessionTile extends StatelessWidget {
+  const _SessionTile(
+      {required this.session, required this.textSecondary});
+  final dynamic session;
   final Color textSecondary;
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardColor = isDark ? AppColors.card : AppColors.lightCard;
-    final borderColor = isDark ? AppColors.border : AppColors.lightBorder;
-
-    const goals = [
-      ('Complete PMP Certification', 0.65, AppColors.pmp),
-      ('Read 20 Books', 0.40, AppColors.deen),
-      ('Build Emergency Fund', 0.84, AppColors.success),
-      ('30-Day Focus Streak', 0.40, AppColors.warning),
-    ];
-
-    return Container(
-      decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: borderColor),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Column(
-        children: goals.asMap().entries.map((e) {
-          final i = e.key;
-          final goal = e.value;
-          return Column(
-            children: [
-              if (i > 0) Divider(height: 1, color: borderColor),
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: Spacing.base, vertical: Spacing.md),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            goal.$1,
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodyMedium
-                                ?.copyWith(fontWeight: FontWeight.w500),
-                          ),
-                        ),
-                        Text(
-                          '${(goal.$2 * 100).round()}%',
-                          style: Theme.of(context)
-                              .textTheme
-                              .labelSmall
-                              ?.copyWith(
-                                  color: goal.$3,
-                                  fontWeight: FontWeight.w600),
-                        ),
-                      ],
-                    ),
-                    const Gap(8),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(3),
-                      child: LinearProgressIndicator(
-                        value: goal.$2,
-                        backgroundColor: goal.$3.withValues(alpha: 0.1),
-                        valueColor: AlwaysStoppedAnimation<Color>(goal.$3),
-                        minHeight: 6,
-                      ),
-                    ),
-                  ],
+    final color = AppColors.categoryColor(session.blockCategoryKey);
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+          horizontal: Spacing.base, vertical: 10),
+      child: Row(
+        children: [
+          Container(
+            width: 4,
+            height: 36,
+            decoration: BoxDecoration(
+                color: color, borderRadius: BorderRadius.circular(2)),
+          ),
+          const Gap(12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(session.blockLabel,
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodyMedium
+                        ?.copyWith(fontWeight: FontWeight.w500)),
+                Text(
+                  DateFormat('d MMM · HH:mm').format(session.date),
+                  style: TextStyle(
+                      fontSize: 11,
+                      color: textSecondary,
+                      fontFamily: 'IBMPlexMono'),
                 ),
-              ),
-            ],
-          );
-        }).toList(),
+              ],
+            ),
+          ),
+          Text(
+            '${session.actualMinutes}m',
+            style: TextStyle(
+              fontFamily: 'IBMPlexMono',
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: session.completed ? AppColors.success : textSecondary,
+            ),
+          ),
+        ],
       ),
+    );
+  }
+}
+
+class _PriorityDot extends StatelessWidget {
+  const _PriorityDot({required this.priority});
+  final String priority;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = priority == 'high'
+        ? AppColors.error
+        : priority == 'medium'
+            ? AppColors.warning
+            : AppColors.textMuted;
+    return Container(
+      width: 8,
+      height: 8,
+      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
     );
   }
 }

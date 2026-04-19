@@ -1,18 +1,45 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/router/app_router.dart';
-import '../../../shared/widgets/placeholders.dart';
+import '../../../shared/models/all_providers.dart';
+import '../../../shared/widgets/app_card.dart';
+import '../../../shared/widgets/app_states.dart';
+import '../../../shared/widgets/placeholders.dart' show ScreenHeader;
 
-class OverviewScreen extends StatelessWidget {
+class OverviewScreen extends ConsumerWidget {
   const OverviewScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textSecondary =
         isDark ? AppColors.textSecondary : AppColors.lightTextSecondary;
+
+    final summary = ref.watch(financeSummaryProvider);
+    final habitsToday = ref.watch(habitsTodayProvider);
+    final sessAsync = ref.watch(focusSessionsProvider);
+    final goalsAsync = ref.watch(goalsProvider);
+    final habitsAsync = ref.watch(habitsProvider);
+
+    // Computed today's focus minutes
+    final todayStr = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    final todayFocusMin = sessAsync.value
+            ?.where((s) =>
+                s.completed &&
+                DateFormat('yyyy-MM-dd').format(s.date) == todayStr)
+            .fold(0, (s, sess) => s + sess.actualMinutes) ??
+        0;
+
+    final activeGoals =
+        goalsAsync.value?.where((g) => g.status == 'active').length ?? 0;
+
+    final netWorth =
+        summary.totalSavings + summary.totalCurrent - summary.totalDebt;
+    final fmt = NumberFormat('#,##0', 'en_US');
 
     return Scaffold(
       body: SafeArea(
@@ -21,175 +48,247 @@ class OverviewScreen extends StatelessWidget {
           children: [
             const ScreenHeader(
               title: 'Overview',
-              subtitle: 'Your personal resource planner',
+              subtitle: 'Personal Resource Planner',
             ),
             const Gap(24),
 
-            const SectionHeader('Resources'),
-            const Gap(12),
-            StatsGrid(children: [
-              _ResourceCard(
-                label: 'Time',
-                value: '78%',
-                subtitle: '6.5h scheduled',
-                icon: Icons.schedule_rounded,
-                color: AppColors.pmp,
-                route: Routes.timeOverview,
-              ),
-              _ResourceCard(
-                label: 'Finance',
-                value: '\$45,200',
-                subtitle: 'Net worth',
-                icon: Icons.account_balance_wallet_rounded,
-                color: AppColors.success,
-                route: Routes.financeOverview,
-              ),
-              _ResourceCard(
-                label: 'Energy',
-                value: '72',
-                subtitle: 'Focus score',
-                icon: Icons.bolt_rounded,
-                color: AppColors.warning,
-                route: Routes.energyOverview,
-              ),
-              _ResourceCard(
-                label: 'Health',
-                value: '72%',
-                subtitle: '8 / 12 tasks',
-                icon: Icons.favorite_rounded,
-                color: AppColors.error,
-                route: Routes.healthOverview,
-              ),
-            ]),
-            const Gap(24),
-
-            const SectionHeader('Overall Trend', action: 'Details'),
-            const Gap(12),
-            PlaceholderChart(
-              height: 160,
-              label: 'Resource utilization score',
-              data: const [68.0, 72.0, 70.0, 75.0, 73.0, 78.0, 75.0],
-            ),
-            const Gap(24),
-
-            const SectionHeader("Today's Agenda", action: 'Full schedule'),
-            const Gap(12),
-            PlaceholderList(items: const [
-              PlaceholderListItem(
-                title: 'Morning Deep Work',
-                subtitle: '06:00 — 08:00 · Deen & Quran',
-                value: '2h',
-                icon: Icons.self_improvement_rounded,
-                iconColor: AppColors.deen,
-              ),
-              PlaceholderListItem(
-                title: 'PMP Study Session',
-                subtitle: '09:00 — 11:00 · Study',
-                value: '2h',
-                icon: Icons.menu_book_rounded,
-                iconColor: AppColors.pmp,
-              ),
-              PlaceholderListItem(
-                title: 'Work Block',
-                subtitle: '12:00 — 17:00 · Work',
-                value: '5h',
-                icon: Icons.work_rounded,
-                iconColor: AppColors.work,
-              ),
-              PlaceholderListItem(
-                title: 'Health & Fitness',
-                subtitle: '18:00 — 19:00 · Health',
-                value: '1h',
-                icon: Icons.fitness_center_rounded,
-                iconColor: AppColors.health,
-              ),
-            ]),
-            const Gap(24),
-
-            const SectionHeader('Quick Actions'),
-            const Gap(12),
-            _QuickActions(textSecondary: textSecondary),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _ResourceCard extends StatelessWidget {
-  const _ResourceCard({
-    required this.label,
-    required this.value,
-    required this.subtitle,
-    required this.icon,
-    required this.color,
-    required this.route,
-  });
-  final String label;
-  final String value;
-  final String subtitle;
-  final IconData icon;
-  final Color color;
-  final String route;
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardColor = isDark ? AppColors.card : AppColors.lightCard;
-    final borderColor = isDark ? AppColors.border : AppColors.lightBorder;
-    final textSecondary =
-        isDark ? AppColors.textSecondary : AppColors.lightTextSecondary;
-
-    return GestureDetector(
-      onTap: () => context.go(route),
-      child: Container(
-        padding: const EdgeInsets.all(Spacing.base),
-        decoration: BoxDecoration(
-          color: cardColor,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: borderColor),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            // ── KPI Grid ─────────────────────────────────────────
+            BentoGrid(
               children: [
-                Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(6),
+                BentoCell(
+                  child: KpiCard(
+                    label: 'Net Worth',
+                    value: 'EGP ${fmt.format(netWorth)}',
+                    icon: Icons.account_balance_wallet_rounded,
+                    iconColor: AppColors.success,
+                    subtitle: 'Today −${fmt.format(summary.todaySpend)}',
+                    onTap: () => context.go(Routes.financeOverview),
                   ),
-                  child: Icon(icon, size: 14, color: color),
                 ),
-                Icon(Icons.arrow_forward_ios_rounded,
-                    size: 10, color: textSecondary),
+                BentoCell(
+                  child: KpiCard(
+                    label: 'Habits Today',
+                    value: '${habitsToday.done} / ${habitsToday.total}',
+                    icon: Icons.check_circle_rounded,
+                    iconColor: AppColors.accent,
+                    subtitle:
+                        '${(habitsToday.pct * 100).toStringAsFixed(0)}% done',
+                    trend: habitsToday.done == habitsToday.total &&
+                            habitsToday.total > 0
+                        ? 'All done!'
+                        : null,
+                    trendUp: true,
+                    onTap: () => context.go(Routes.healthHabits),
+                  ),
+                ),
+                BentoCell(
+                  child: KpiCard(
+                    label: 'Focus Today',
+                    value: '${todayFocusMin}m',
+                    icon: Icons.timer_rounded,
+                    iconColor: AppColors.warning,
+                    subtitle: sessAsync.isLoading ? 'Loading...' : null,
+                    onTap: () => context.go(Routes.energyFocus),
+                  ),
+                ),
+                BentoCell(
+                  child: KpiCard(
+                    label: 'Active Goals',
+                    value: '$activeGoals',
+                    icon: Icons.flag_rounded,
+                    iconColor: AppColors.pmp,
+                    subtitle: goalsAsync.isLoading ? 'Loading...' : null,
+                    onTap: () => context.go(Routes.energyGoals),
+                  ),
+                ),
               ],
             ),
-            const Gap(Spacing.sm),
-            Text(
-              value,
-              style: Theme.of(context)
-                  .textTheme
-                  .headlineMedium
-                  ?.copyWith(fontSize: 20, fontWeight: FontWeight.w700),
+            const Gap(24),
+
+            // ── Today's Habits ────────────────────────────────────
+            BentoSectionHeader(
+              "Today's Habits",
+              action: TextButton(
+                onPressed: () => context.go(Routes.healthHabits),
+                child: const Text('All habits',
+                    style: TextStyle(fontSize: 12)),
+              ),
             ),
-            const Gap(2),
-            Text(
-              label,
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: color,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.5,
+            const Gap(12),
+            habitsAsync.when(
+              loading: () => const LoadingCard(height: 80),
+              error: (e, _) => const ErrorState(message: 'Could not load habits'),
+              data: (habits) {
+                if (habits.isEmpty) {
+                  return EmptyState(
+                    message: 'No habits yet — add your first habit',
+                    icon: Icons.star_outline_rounded,
+                    compact: true,
+                    action: TextButton(
+                      onPressed: () => context.go(Routes.healthHabits),
+                      child: const Text('Go to Habits'),
+                    ),
+                  );
+                }
+                final visible = habits.take(4).toList();
+                return AppCard(
+                  padding: EdgeInsets.zero,
+                  child: Column(
+                    children: [
+                      for (int i = 0; i < visible.length; i++) ...[
+                        if (i > 0)
+                          Divider(
+                              height: 1,
+                              color: isDark
+                                  ? AppColors.border
+                                  : AppColors.lightBorder),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: Spacing.base, vertical: 10),
+                          child: Row(children: [
+                            Text(visible[i].icon,
+                                style: const TextStyle(fontSize: 20)),
+                            const Gap(12),
+                            Expanded(
+                              child: Text(
+                                visible[i].name,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium
+                                    ?.copyWith(
+                                      decoration: visible[i].isDoneToday
+                                          ? TextDecoration.lineThrough
+                                          : null,
+                                      color: visible[i].isDoneToday
+                                          ? textSecondary
+                                          : null,
+                                    ),
+                              ),
+                            ),
+                            Icon(
+                              visible[i].isDoneToday
+                                  ? Icons.check_circle_rounded
+                                  : Icons.radio_button_unchecked_rounded,
+                              size: 20,
+                              color: visible[i].isDoneToday
+                                  ? AppColors.success
+                                  : textSecondary,
+                            ),
+                          ]),
+                        ),
+                      ],
+                      if (habits.length > 4) ...[
+                        Divider(
+                            height: 1,
+                            color: isDark
+                                ? AppColors.border
+                                : AppColors.lightBorder),
+                        TextButton(
+                          onPressed: () => context.go(Routes.healthHabits),
+                          child: Text(
+                            '+${habits.length - 4} more',
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
+                );
+              },
             ),
-            Text(
-              subtitle,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodySmall
-                  ?.copyWith(color: textSecondary),
+            const Gap(24),
+
+            // ── Quick Actions ─────────────────────────────────────
+            const BentoSectionHeader('Quick Actions'),
+            const Gap(12),
+            _QuickActions(textSecondary: textSecondary),
+            const Gap(24),
+
+            // ── Active Goals ──────────────────────────────────────
+            BentoSectionHeader(
+              'Active Goals',
+              action: TextButton(
+                onPressed: () => context.go(Routes.energyGoals),
+                child: const Text('All goals', style: TextStyle(fontSize: 12)),
+              ),
+            ),
+            const Gap(12),
+            goalsAsync.when(
+              loading: () => const LoadingCard(height: 100),
+              error: (e, _) =>
+                  const ErrorState(message: 'Could not load goals'),
+              data: (goals) {
+                final active =
+                    goals.where((g) => g.status == 'active').take(3).toList();
+                if (active.isEmpty) {
+                  return EmptyState(
+                    message: 'No active goals',
+                    icon: Icons.flag_outlined,
+                    compact: true,
+                  );
+                }
+                return AppCard(
+                  padding: EdgeInsets.zero,
+                  child: Column(
+                    children: [
+                      for (int i = 0; i < active.length; i++) ...[
+                        if (i > 0)
+                          Divider(
+                              height: 1,
+                              color: isDark
+                                  ? AppColors.border
+                                  : AppColors.lightBorder),
+                        Padding(
+                          padding: const EdgeInsets.all(Spacing.base),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      active[i].title,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyMedium
+                                          ?.copyWith(
+                                              fontWeight: FontWeight.w600),
+                                    ),
+                                  ),
+                                  Text(
+                                    '${active[i].progress}%',
+                                    style: TextStyle(
+                                      fontFamily: 'IBMPlexMono',
+                                      fontSize: 13,
+                                      color: AppColors.accent,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const Gap(8),
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(3),
+                                child: LinearProgressIndicator(
+                                  value: active[i].progress / 100,
+                                  minHeight: 4,
+                                  backgroundColor: isDark
+                                      ? AppColors.border
+                                      : AppColors.lightBorder,
+                                  valueColor: AlwaysStoppedAnimation(
+                                      AppColors.accent),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                );
+              },
             ),
           ],
         ),
@@ -205,14 +304,13 @@ class _QuickActions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const actions = [
-      ('Log Expense', Icons.add_circle_rounded, AppColors.success,
+      ('Log Expense', Icons.add_circle_rounded, AppColors.error,
           Routes.financeTransactions),
       ('Start Focus', Icons.timer_rounded, AppColors.warning,
           Routes.energyFocus),
-      ('Log Habit', Icons.check_circle_rounded, AppColors.pmp,
+      ('Log Habit', Icons.check_circle_rounded, AppColors.accent,
           Routes.healthHabits),
-      ('Add Event', Icons.event_rounded, AppColors.cfi,
-          Routes.timeCalendar),
+      ('Add Event', Icons.event_rounded, AppColors.pmp, Routes.timeCalendar),
     ];
 
     return GridView.count(
@@ -230,9 +328,8 @@ class _QuickActions extends StatelessWidget {
                 horizontal: Spacing.md, vertical: Spacing.sm),
             decoration: BoxDecoration(
               color: a.$3.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(10),
-              border:
-                  Border.all(color: a.$3.withValues(alpha: 0.2)),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: a.$3.withValues(alpha: 0.2)),
             ),
             child: Row(
               children: [
@@ -241,10 +338,7 @@ class _QuickActions extends StatelessWidget {
                 Expanded(
                   child: Text(
                     a.$1,
-                    style: Theme.of(context)
-                        .textTheme
-                        .labelMedium
-                        ?.copyWith(
+                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
                           color: a.$3,
                           fontWeight: FontWeight.w600,
                         ),

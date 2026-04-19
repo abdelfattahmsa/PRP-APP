@@ -1,216 +1,265 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
+import 'package:intl/intl.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../shared/widgets/placeholders.dart';
+import '../../../engines/health/data/models/health_models.dart';
+import '../../../shared/models/all_providers.dart';
+import '../../../shared/widgets/app_card.dart';
+import '../../../shared/widgets/app_chart.dart';
+import '../../../shared/widgets/app_states.dart';
+import '../../../shared/widgets/placeholders.dart' show ScreenHeader, SectionHeader;
 
-class HealthDailyProgressScreen extends StatelessWidget {
+class HealthDailyProgressScreen extends ConsumerWidget {
   const HealthDailyProgressScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardColor = isDark ? AppColors.card : AppColors.lightCard;
-    final borderColor = isDark ? AppColors.border : AppColors.lightBorder;
     final textSecondary =
         isDark ? AppColors.textSecondary : AppColors.lightTextSecondary;
 
+    final habitsAsync = ref.watch(habitsProvider);
+    final todayStats = ref.watch(habitsTodayProvider);
+    final todayStr = DateFormat('yyyy-MM-dd').format(DateTime.now());
+
+    // 7-day completion data
+    final days7 = List.generate(
+        7, (i) => DateTime.now().subtract(Duration(days: 6 - i)));
+    final dayLabels = days7
+        .map((d) => DateFormat('EEE').format(d).substring(0, 1))
+        .toList();
+
     return Scaffold(
       body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 20, 16, 32),
-          children: [
-            const ScreenHeader(
-              title: 'Daily Progress',
-              subtitle: "Track today's health milestones",
-            ),
-            const Gap(24),
+        child: habitsAsync.when(
+          loading: () => const Center(
+              child: CircularProgressIndicator(color: AppColors.accent)),
+          error: (e, _) => ErrorState(
+              message: 'Failed to load progress',
+              onRetry: () => ref.invalidate(habitsProvider)),
+          data: (habits) {
+            final active = habits.where((h) => !h.isArchived).toList();
 
-            const SectionHeader("Today's Score"),
-            const Gap(12),
-            StatsGrid(children: [
-              StatCard(
-                label: 'Completed',
-                value: '8 / 12',
-                subtitle: 'Tasks done',
-                icon: Icons.check_circle_rounded,
-                iconColor: AppColors.success,
-                trend: '+2 vs yesterday',
-                trendUp: true,
-              ),
-              StatCard(
-                label: 'Daily Score',
-                value: '72%',
-                icon: Icons.star_rounded,
-                iconColor: AppColors.gold,
-                trend: 'On track',
-                trendUp: true,
-              ),
-            ]),
-            const Gap(24),
+            final completionData = days7.map((day) {
+              if (active.isEmpty) return 0.0;
+              final done = active.where((h) => h.isDoneOn(day)).length;
+              return (done / active.length) * 100;
+            }).toList();
 
-            const SectionHeader('Streak'),
-            const Gap(12),
-            _StreakCard(cardColor: cardColor, borderColor: borderColor, textSecondary: textSecondary),
-            const Gap(24),
+            // Best current streak across all habits
+            final bestStreak = active.isEmpty
+                ? 0
+                : active
+                    .map((h) => h.calculateStreak())
+                    .reduce((a, b) => a > b ? a : b);
 
-            const SectionHeader("Today's Checklist"),
-            const Gap(12),
-            _ChecklistCard(cardColor: cardColor, borderColor: borderColor),
-            const Gap(24),
+            return ListView(
+              padding: const EdgeInsets.fromLTRB(16, 20, 16, 32),
+              children: [
+                const ScreenHeader(
+                  title: 'Daily Progress',
+                  subtitle: "Track today's health milestones",
+                ),
+                const Gap(24),
 
-            const SectionHeader('7-Day Progress', action: '30 Days'),
-            const Gap(12),
-            PlaceholderChart(
-              height: 140,
-              label: 'Daily completion %',
-              data: const [60, 75, 68, 80, 72, 85, 72],
-            ),
-          ],
+                // ── Stats ─────────────────────────────────────
+                BentoGrid(
+                  children: [
+                    BentoCell(
+                      child: KpiCard(
+                        label: 'Completed',
+                        value: '${todayStats.done} / ${todayStats.total}',
+                        icon: Icons.check_circle_rounded,
+                        iconColor: AppColors.success,
+                        subtitle: 'Tasks done',
+                        trend: todayStats.total > 0
+                            ? '+${todayStats.done}'
+                            : null,
+                        trendUp: true,
+                      ),
+                    ),
+                    BentoCell(
+                      child: KpiCard(
+                        label: 'Daily Score',
+                        value:
+                            '${(todayStats.pct * 100).toStringAsFixed(0)}%',
+                        icon: Icons.star_rounded,
+                        iconColor: AppColors.gold,
+                        subtitle: todayStats.pct >= 1.0
+                            ? 'Perfect day! 🎉'
+                            : todayStats.pct >= 0.5
+                                ? 'On track'
+                                : 'Keep going',
+                      ),
+                    ),
+                  ],
+                ),
+                const Gap(20),
+
+                // ── Streak Card ───────────────────────────────
+                if (active.isNotEmpty) ...[
+                  SectionHeader('Current Streak'),
+                  const Gap(12),
+                  AppCard(
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 56,
+                          height: 56,
+                          decoration: BoxDecoration(
+                            color: AppColors.error.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(
+                              Icons.local_fire_department_rounded,
+                              color: AppColors.error,
+                              size: 28),
+                        ),
+                        const Gap(Spacing.base),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '$bestStreak-Day Streak',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleMedium
+                                    ?.copyWith(fontWeight: FontWeight.w700),
+                              ),
+                              const Gap(4),
+                              Text(
+                                'Keep going! Best: ${active.map((h) => h.longestStreak).reduce((a, b) => a > b ? a : b)}d',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.copyWith(color: textSecondary),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Column(
+                          children: [
+                            Text(
+                              '$bestStreak',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .headlineLarge
+                                  ?.copyWith(
+                                    color: AppColors.error,
+                                    fontFamily: 'IBMPlexMono',
+                                  ),
+                            ),
+                            Text(
+                              'days',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .labelSmall
+                                  ?.copyWith(color: textSecondary),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Gap(20),
+                ],
+
+                // ── Today's Checklist ─────────────────────────
+                SectionHeader("Today's Checklist"),
+                const Gap(12),
+                if (active.isEmpty)
+                  EmptyState(
+                    message: 'No habits yet — add them in the Habits tab',
+                    icon: Icons.checklist_rounded,
+                    compact: true,
+                  )
+                else
+                  AppCard(
+                    padding: EdgeInsets.zero,
+                    child: Column(
+                      children: [
+                        for (int i = 0; i < active.length; i++) ...[
+                          if (i > 0)
+                            Divider(
+                                height: 1,
+                                color: isDark
+                                    ? AppColors.border
+                                    : AppColors.lightBorder),
+                          _ChecklistTile(
+                            habit: active[i],
+                            dateKey: todayStr,
+                            textSecondary: textSecondary,
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                const Gap(20),
+
+                // ── 7-Day chart ───────────────────────────────
+                ChartCard(
+                  title: '7-Day Progress',
+                  height: 130,
+                  child: AppBarChart(
+                    data: completionData,
+                    labels: dayLabels,
+                    maxY: 100,
+                    colors: completionData
+                        .map((v) =>
+                            v >= 80 ? AppColors.success : AppColors.accent)
+                        .toList(),
+                  ),
+                ),
+              ],
+            );
+          },
         ),
       ),
     );
   }
 }
 
-class _StreakCard extends StatelessWidget {
-  const _StreakCard({
-    required this.cardColor,
-    required this.borderColor,
+class _ChecklistTile extends ConsumerWidget {
+  const _ChecklistTile({
+    required this.habit,
+    required this.dateKey,
     required this.textSecondary,
   });
-  final Color cardColor;
-  final Color borderColor;
+
+  final Habit habit;
+  final String dateKey;
   final Color textSecondary;
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(Spacing.base),
-      decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: borderColor),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 56,
-            height: 56,
-            decoration: BoxDecoration(
-              color: AppColors.error.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(Icons.local_fire_department_rounded,
-                color: AppColors.error, size: 28),
-          ),
-          const Gap(Spacing.base),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '5-Day Streak',
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleMedium
-                      ?.copyWith(fontWeight: FontWeight.w700),
-                ),
-                const Gap(4),
-                Text(
-                  'Keep going! Best: 21 days',
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodySmall
-                      ?.copyWith(color: textSecondary),
-                ),
-              ],
-            ),
-          ),
-          Column(
-            children: [
-              Text(
-                '5',
-                style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                      color: AppColors.error,
-                      fontFamily: 'IBMPlexMono',
-                    ),
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isDone = habit.isDoneToday;
+    return InkWell(
+      onTap: () =>
+          ref.read(habitsProvider.notifier).toggle(habit.id, dateKey),
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(
+            horizontal: Spacing.base, vertical: 2),
+        leading: Text(habit.icon, style: const TextStyle(fontSize: 20)),
+        title: Text(
+          habit.name,
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                decoration: isDone ? TextDecoration.lineThrough : null,
+                color: isDone ? textSecondary : null,
               ),
-              Text(
-                'days',
-                style: Theme.of(context)
-                    .textTheme
-                    .labelSmall
-                    ?.copyWith(color: textSecondary),
-              ),
-            ],
+        ),
+        trailing: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 200),
+          child: Icon(
+            isDone
+                ? Icons.check_circle_rounded
+                : Icons.radio_button_unchecked_rounded,
+            key: ValueKey(isDone),
+            color: isDone ? AppColors.success : textSecondary,
+            size: 22,
           ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ChecklistCard extends StatelessWidget {
-  const _ChecklistCard(
-      {required this.cardColor, required this.borderColor});
-  final Color cardColor;
-  final Color borderColor;
-
-  @override
-  Widget build(BuildContext context) {
-    const tasks = [
-      ('Morning meditation (10 min)', true),
-      ('Drink 8 glasses of water', false),
-      ('30 min exercise', true),
-      ('No sugar before noon', true),
-      ('Take vitamins', true),
-      ('Read health content', false),
-      ('Evening walk', true),
-      ('Sleep by 23:00', false),
-    ];
-
-    return Container(
-      decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: borderColor),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Column(
-        children: tasks.asMap().entries.map((e) {
-          final i = e.key;
-          final task = e.value;
-          return Column(
-            children: [
-              if (i > 0) Divider(height: 1, color: borderColor),
-              ListTile(
-                contentPadding: const EdgeInsets.symmetric(
-                    horizontal: Spacing.base, vertical: 2),
-                leading: Icon(
-                  task.$2
-                      ? Icons.check_circle_rounded
-                      : Icons.radio_button_unchecked_rounded,
-                  color: task.$2 ? AppColors.success : AppColors.textMuted,
-                  size: 22,
-                ),
-                title: Text(
-                  task.$1,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        decoration: task.$2
-                            ? TextDecoration.lineThrough
-                            : null,
-                        color: task.$2
-                            ? Theme.of(context)
-                                .textTheme
-                                .bodySmall
-                                ?.color
-                            : null,
-                      ),
-                ),
-              ),
-            ],
-          );
-        }).toList(),
+        ),
       ),
     );
   }

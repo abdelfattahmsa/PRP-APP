@@ -1,153 +1,272 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
+import 'package:intl/intl.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../shared/widgets/placeholders.dart';
+import '../../../engines/money/data/models/money_models.dart';
+import '../../../shared/models/all_providers.dart';
+import '../../../shared/widgets/app_card.dart';
+import '../../../shared/widgets/app_states.dart';
+import '../../../shared/widgets/bottom_sheets.dart';
+import '../../../shared/widgets/placeholders.dart' show ScreenHeader;
 
-class FinanceTransactionsScreen extends StatelessWidget {
+class FinanceTransactionsScreen extends ConsumerStatefulWidget {
   const FinanceTransactionsScreen({super.key});
+
+  @override
+  ConsumerState<FinanceTransactionsScreen> createState() =>
+      _FinanceTransactionsScreenState();
+}
+
+class _FinanceTransactionsScreenState
+    extends ConsumerState<FinanceTransactionsScreen> {
+  final _searchCtrl = TextEditingController();
+  String _query = '';
+
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardColor = isDark ? AppColors.card : AppColors.lightCard;
-    final borderColor = isDark ? AppColors.border : AppColors.lightBorder;
+    final textSecondary =
+        isDark ? AppColors.textSecondary : AppColors.lightTextSecondary;
+    final txAsync = ref.watch(transactionsProvider);
 
     return Scaffold(
       body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 20, 16, 32),
-          children: [
-            const ScreenHeader(
-              title: 'Transactions',
-              subtitle: 'Your spending history',
-            ),
-            const Gap(24),
+        child: txAsync.when(
+          loading: () => const Center(
+              child: CircularProgressIndicator(color: AppColors.accent)),
+          error: (e, _) => ErrorState(
+              message: 'Failed to load transactions',
+              onRetry: () => ref.invalidate(transactionsProvider)),
+          data: (allTx) {
+            final fmt = NumberFormat('#,##0.##', 'en_US');
 
-            const SectionHeader('This Period'),
-            const Gap(12),
-            StatsGrid(children: [
-              StatCard(
-                label: 'This Week',
-                value: '−\$340',
-                icon: Icons.today_rounded,
-                trend: '+\$42 vs last week',
-                trendUp: false,
-              ),
-              StatCard(
-                label: 'This Month',
-                value: '−\$2,100',
-                subtitle: '44 transactions',
-                icon: Icons.date_range_rounded,
-              ),
-            ]),
-            const Gap(24),
+            var filtered = allTx.where((t) {
+              final q = _query.toLowerCase();
+              if (q.isEmpty) return true;
+              return t.description.toLowerCase().contains(q) ||
+                  t.category.toLowerCase().contains(q);
+            }).toList();
+            filtered.sort((a, b) => b.date.compareTo(a.date));
 
-            // Search bar
-            Container(
-              decoration: BoxDecoration(
-                color: cardColor,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: borderColor),
-              ),
-              child: TextField(
-                decoration: InputDecoration(
-                  hintText: 'Search transactions…',
-                  prefixIcon: Icon(Icons.search_rounded,
-                      size: 18,
-                      color: isDark
-                          ? AppColors.textSecondary
-                          : AppColors.lightTextSecondary),
-                  border: InputBorder.none,
-                  contentPadding:
-                      const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
-                  filled: false,
+            final totalIncome = allTx
+                .where((t) => t.isIncome)
+                .fold(0.0, (s, t) => s + t.amount);
+            final totalExpense = allTx
+                .where((t) => !t.isIncome)
+                .fold(0.0, (s, t) => s + t.amount);
+
+            final groups = <String, List<Transaction>>{};
+            for (final tx in filtered) {
+              final key = DateFormat('dd MMM yyyy').format(tx.date);
+              groups.putIfAbsent(key, () => []).add(tx);
+            }
+
+            return Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const ScreenHeader(
+                        title: 'Transactions',
+                        subtitle: 'Income & expenses log',
+                      ),
+                      const Gap(16),
+                      BentoGrid(
+                        children: [
+                          BentoCell(
+                            child: KpiCard(
+                              label: 'Income',
+                              value: 'EGP ${fmt.format(totalIncome)}',
+                              icon: Icons.arrow_downward_rounded,
+                              iconColor: AppColors.success,
+                            ),
+                          ),
+                          BentoCell(
+                            child: KpiCard(
+                              label: 'Expenses',
+                              value: 'EGP ${fmt.format(totalExpense)}',
+                              icon: Icons.arrow_upward_rounded,
+                              iconColor: AppColors.error,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const Gap(16),
+                      TextField(
+                        controller: _searchCtrl,
+                        onChanged: (v) => setState(() => _query = v),
+                        decoration: InputDecoration(
+                          hintText: 'Search transactions…',
+                          prefixIcon:
+                              const Icon(Icons.search_rounded, size: 20),
+                          suffixIcon: _query.isNotEmpty
+                              ? IconButton(
+                                  icon: const Icon(Icons.clear_rounded,
+                                      size: 18),
+                                  onPressed: () {
+                                    _searchCtrl.clear();
+                                    setState(() => _query = '');
+                                  },
+                                )
+                              : null,
+                          isDense: true,
+                          contentPadding:
+                              const EdgeInsets.symmetric(vertical: 10),
+                        ),
+                      ),
+                      const Gap(12),
+                    ],
+                  ),
                 ),
-              ),
-            ),
-            const Gap(20),
-
-            const SectionHeader('Today'),
-            const Gap(12),
-            PlaceholderList(items: const [
-              PlaceholderListItem(
-                title: 'Grocery Shopping',
-                subtitle: '14:32 · Food',
-                value: '−\$48.50',
-                valueColor: AppColors.error,
-                icon: Icons.shopping_basket_rounded,
-                iconColor: AppColors.warning,
-              ),
-              PlaceholderListItem(
-                title: 'Coffee Shop',
-                subtitle: '08:15 · Food & Drink',
-                value: '−\$6.40',
-                valueColor: AppColors.error,
-                icon: Icons.local_cafe_rounded,
-                iconColor: AppColors.cfi,
-              ),
-            ]),
-            const Gap(20),
-
-            const SectionHeader('Yesterday'),
-            const Gap(12),
-            PlaceholderList(items: const [
-              PlaceholderListItem(
-                title: 'Salary',
-                subtitle: '09:00 · Income',
-                value: '+\$3,800',
-                valueColor: AppColors.success,
-                icon: Icons.payments_rounded,
-                iconColor: AppColors.success,
-              ),
-              PlaceholderListItem(
-                title: 'Electricity Bill',
-                subtitle: '11:00 · Bills',
-                value: '−\$95.00',
-                valueColor: AppColors.error,
-                icon: Icons.bolt_rounded,
-                iconColor: AppColors.warning,
-              ),
-              PlaceholderListItem(
-                title: 'Online Transfer',
-                subtitle: '15:45 · Transfer',
-                value: '−\$500',
-                valueColor: AppColors.error,
-                icon: Icons.swap_horiz_rounded,
-                iconColor: AppColors.pmp,
-              ),
-            ]),
-            const Gap(20),
-
-            const SectionHeader('This Week'),
-            const Gap(12),
-            PlaceholderList(items: const [
-              PlaceholderListItem(
-                title: 'Gym Membership',
-                subtitle: '3 days ago · Health',
-                value: '−\$35.00',
-                valueColor: AppColors.error,
-                icon: Icons.fitness_center_rounded,
-                iconColor: AppColors.health,
-              ),
-              PlaceholderListItem(
-                title: 'Restaurant Dinner',
-                subtitle: '4 days ago · Food',
-                value: '−\$62.80',
-                valueColor: AppColors.error,
-                icon: Icons.restaurant_rounded,
-                iconColor: AppColors.fasting,
-              ),
-              PlaceholderListItem(
-                title: 'Transport',
-                subtitle: '5 days ago · Transport',
-                value: '−\$18.50',
-                valueColor: AppColors.error,
-                icon: Icons.directions_car_rounded,
-                iconColor: AppColors.commute,
-              ),
-            ]),
-          ],
+                Expanded(
+                  child: filtered.isEmpty
+                      ? EmptyState(
+                          message: _query.isNotEmpty
+                              ? 'No results for "$_query"'
+                              : 'No transactions yet',
+                          icon: Icons.receipt_long_outlined,
+                          compact: true,
+                        )
+                      : ListView.builder(
+                          padding:
+                              const EdgeInsets.fromLTRB(16, 0, 16, 100),
+                          itemCount: groups.length,
+                          itemBuilder: (ctx, gi) {
+                            final dateKey =
+                                groups.keys.elementAt(gi);
+                            final txs = groups[dateKey]!;
+                            return Column(
+                              crossAxisAlignment:
+                                  CrossAxisAlignment.start,
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.only(
+                                      top: 16, bottom: 8),
+                                  child: Text(
+                                    dateKey,
+                                    style: TextStyle(
+                                      fontFamily: 'IBMPlexMono',
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w600,
+                                      letterSpacing: 1,
+                                      color: textSecondary,
+                                    ),
+                                  ),
+                                ),
+                                AppCard(
+                                  padding: EdgeInsets.zero,
+                                  child: Column(
+                                    children: [
+                                      for (int i = 0;
+                                          i < txs.length;
+                                          i++) ...[
+                                        if (i > 0)
+                                          Divider(
+                                              height: 1,
+                                              color: isDark
+                                                  ? AppColors.border
+                                                  : AppColors.lightBorder),
+                                        _TxTile(
+                                          tx: txs[i],
+                                          textSecondary: textSecondary,
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        ),
+                ),
+              ],
+            );
+          },
         ),
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => showAddTransaction(context),
+        backgroundColor: AppColors.accent,
+        foregroundColor: Colors.white,
+        icon: const Icon(Icons.add_rounded),
+        label:
+            const Text('Add', style: TextStyle(fontWeight: FontWeight.w600)),
+      ),
+    );
+  }
+}
+
+class _TxTile extends StatelessWidget {
+  const _TxTile({required this.tx, required this.textSecondary});
+  final Transaction tx;
+  final Color textSecondary;
+
+  @override
+  Widget build(BuildContext context) {
+    final fmt = NumberFormat('#,##0.##', 'en_US');
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+          horizontal: Spacing.base, vertical: 10),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: (tx.isIncome ? AppColors.success : AppColors.error)
+                  .withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(
+              tx.isIncome
+                  ? Icons.arrow_downward_rounded
+                  : Icons.arrow_upward_rounded,
+              size: 16,
+              color: tx.isIncome ? AppColors.success : AppColors.error,
+            ),
+          ),
+          const Gap(12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  tx.description,
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyMedium
+                      ?.copyWith(fontWeight: FontWeight.w500),
+                ),
+                Text(
+                  '${tx.category} · ${tx.accountName}',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: textSecondary,
+                    fontFamily: 'IBMPlexMono',
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Text(
+            '${tx.isIncome ? '+' : '−'}EGP ${fmt.format(tx.amount)}',
+            style: TextStyle(
+              fontFamily: 'IBMPlexMono',
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: tx.isIncome ? AppColors.success : AppColors.error,
+            ),
+          ),
+        ],
       ),
     );
   }

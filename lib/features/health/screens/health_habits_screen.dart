@@ -1,164 +1,225 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
+import 'package:intl/intl.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../shared/widgets/placeholders.dart';
+import '../../../engines/health/data/models/health_models.dart';
+import '../../../shared/models/all_providers.dart';
+import '../../../shared/widgets/app_card.dart';
+import '../../../shared/widgets/app_chart.dart';
+import '../../../shared/widgets/app_states.dart';
+import '../../../shared/widgets/bottom_sheets.dart';
+import '../../../shared/widgets/placeholders.dart' show ScreenHeader;
 
-class HealthHabitsScreen extends StatelessWidget {
+class HealthHabitsScreen extends ConsumerWidget {
   const HealthHabitsScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardColor = isDark ? AppColors.card : AppColors.lightCard;
-    final borderColor = isDark ? AppColors.border : AppColors.lightBorder;
     final textSecondary =
         isDark ? AppColors.textSecondary : AppColors.lightTextSecondary;
+    final habitsAsync = ref.watch(habitsProvider);
+    final todayStr = DateFormat('yyyy-MM-dd').format(DateTime.now());
 
     return Scaffold(
       body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 20, 16, 32),
-          children: [
-            const ScreenHeader(
-              title: 'Habits',
-              subtitle: 'Build consistency with daily habits',
-            ),
-            const Gap(24),
+        child: habitsAsync.when(
+          loading: () => const Center(
+              child: CircularProgressIndicator(color: AppColors.accent)),
+          error: (e, _) => ErrorState(
+              message: 'Failed to load habits',
+              onRetry: () => ref.invalidate(habitsProvider)),
+          data: (habits) {
+            final active = habits.where((h) => !h.isArchived).toList();
+            final done = active.where((h) => h.isDoneToday).length;
+            final pct = active.isEmpty ? 0.0 : done / active.length;
 
-            const SectionHeader('Today'),
-            const Gap(12),
-            StatsGrid(children: [
-              StatCard(
-                label: "Today's Habits",
-                value: '6 / 10',
-                subtitle: 'Completed',
-                icon: Icons.check_circle_rounded,
-                iconColor: AppColors.success,
-                trend: '+1 vs yesterday',
-                trendUp: true,
-              ),
-              StatCard(
-                label: 'Completion Rate',
-                value: '60%',
-                subtitle: 'Today',
-                icon: Icons.pie_chart_rounded,
-              ),
-              StatCard(
-                label: 'Best Streak',
-                value: '21 days',
-                subtitle: 'Morning Prayer',
-                icon: Icons.emoji_events_rounded,
-                iconColor: AppColors.gold,
-              ),
-              StatCard(
-                label: 'Active Habits',
-                value: '10',
-                subtitle: 'Tracking',
-                icon: Icons.list_alt_rounded,
-              ),
-            ]),
-            const Gap(24),
+            final days7 = List.generate(
+                7, (i) => DateTime.now().subtract(Duration(days: 6 - i)));
+            final completionData = days7.map((day) {
+              if (active.isEmpty) return 0.0;
+              final dayDone =
+                  active.where((h) => h.isDoneOn(day)).length;
+              return (dayDone / active.length) * 100;
+            }).toList();
+            final dayLabels = days7
+                .map((d) => DateFormat('EEE').format(d).substring(0, 1))
+                .toList();
 
-            const SectionHeader('Weekly Completion', action: '4 Weeks'),
-            const Gap(12),
-            PlaceholderChart(
-              height: 140,
-              label: 'Completion %',
-              data: const [55, 70, 65, 80, 72, 68, 60],
-            ),
-            const Gap(24),
+            final bestStreak = active.isEmpty
+                ? 0
+                : active
+                    .map((h) => h.longestStreak)
+                    .reduce((a, b) => a > b ? a : b);
 
-            const SectionHeader("Today's Habits", action: '+ Add'),
-            const Gap(12),
-            _HabitList(
-              cardColor: cardColor,
-              borderColor: borderColor,
-              textSecondary: textSecondary,
-            ),
-          ],
+            return ListView(
+              padding: const EdgeInsets.fromLTRB(16, 20, 16, 100),
+              children: [
+                const ScreenHeader(
+                  title: 'Habits',
+                  subtitle: 'Build consistency, one day at a time',
+                ),
+                const Gap(24),
+
+                BentoGrid(
+                  children: [
+                    BentoCell(
+                      child: KpiCard(
+                        label: 'Done Today',
+                        value: '$done / ${active.length}',
+                        icon: Icons.check_circle_rounded,
+                        iconColor: AppColors.success,
+                        subtitle:
+                            '${(pct * 100).toStringAsFixed(0)}% complete',
+                      ),
+                    ),
+                    BentoCell(
+                      child: KpiCard(
+                        label: 'Best Streak',
+                        value: '${bestStreak}d',
+                        icon: Icons.local_fire_department_rounded,
+                        iconColor: AppColors.error,
+                        subtitle: 'All time',
+                      ),
+                    ),
+                  ],
+                ),
+                const Gap(20),
+
+                ChartCard(
+                  title: '7-Day Completion %',
+                  height: 130,
+                  child: AppBarChart(
+                    data: completionData,
+                    labels: dayLabels,
+                    maxY: 100,
+                  ),
+                ),
+                const Gap(20),
+
+                BentoSectionHeader(
+                  "Today's Habits",
+                  action: TextButton.icon(
+                    onPressed: () => showAddHabit(context),
+                    icon: const Icon(Icons.add_rounded, size: 16),
+                    label: const Text('New', style: TextStyle(fontSize: 12)),
+                  ),
+                ),
+                const Gap(12),
+
+                if (active.isEmpty)
+                  EmptyState(
+                    message:
+                        'No habits yet.\nTap "+ New" to create your first.',
+                    icon: Icons.star_outline_rounded,
+                    action: FilledButton.icon(
+                      onPressed: () => showAddHabit(context),
+                      icon: const Icon(Icons.add_rounded, size: 16),
+                      label: const Text('Create habit'),
+                    ),
+                  )
+                else
+                  AppCard(
+                    padding: EdgeInsets.zero,
+                    child: Column(
+                      children: [
+                        for (int i = 0; i < active.length; i++) ...[
+                          if (i > 0)
+                            Divider(
+                                height: 1,
+                                color: isDark
+                                    ? AppColors.border
+                                    : AppColors.lightBorder),
+                          _HabitTile(
+                            habit: active[i],
+                            dateKey: todayStr,
+                            textSecondary: textSecondary,
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+              ],
+            );
+          },
         ),
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => showAddHabit(context),
+        backgroundColor: AppColors.accent,
+        foregroundColor: Colors.white,
+        icon: const Icon(Icons.add_rounded),
+        label: const Text('New habit',
+            style: TextStyle(fontWeight: FontWeight.w600)),
       ),
     );
   }
 }
 
-class _HabitList extends StatelessWidget {
-  const _HabitList({
-    required this.cardColor,
-    required this.borderColor,
+class _HabitTile extends ConsumerWidget {
+  const _HabitTile({
+    required this.habit,
+    required this.dateKey,
     required this.textSecondary,
   });
-  final Color cardColor;
-  final Color borderColor;
+
+  final Habit habit;
+  final String dateKey;
   final Color textSecondary;
 
   @override
-  Widget build(BuildContext context) {
-    const habits = [
-      ('Morning Prayer (Fajr)', true, Icons.mosque_rounded, AppColors.deen, '12 day streak'),
-      ('30-min Exercise', true, Icons.fitness_center_rounded, AppColors.health, '5 day streak'),
-      ('Cold Shower', true, Icons.shower_rounded, AppColors.cfi, '3 day streak'),
-      ('Read Quran', true, Icons.menu_book_rounded, AppColors.deen, '7 day streak'),
-      ('Take Vitamins', true, Icons.medication_rounded, AppColors.success, '14 day streak'),
-      ('Drink 8 Glasses', false, Icons.water_drop_rounded, AppColors.cfi, '0 / 8 today'),
-      ('No Social Media AM', true, Icons.phone_locked_rounded, AppColors.kyberia, '4 day streak'),
-      ('Gratitude Journal', false, Icons.edit_note_rounded, AppColors.pmp, 'Not logged'),
-      ('Evening Walk', false, Icons.directions_walk_rounded, AppColors.health, '0 min today'),
-      ('Sleep by 23:00', false, Icons.bedtime_rounded, AppColors.rest, 'Pending'),
-    ];
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isDone = habit.isDoneToday;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: borderColor),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Column(
-        children: habits.asMap().entries.map((e) {
-          final i = e.key;
-          final h = e.value;
-          return Column(
-            children: [
-              if (i > 0) Divider(height: 1, color: borderColor),
-              ListTile(
-                contentPadding: const EdgeInsets.symmetric(
-                    horizontal: Spacing.base, vertical: 4),
-                leading: Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: h.$4.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
+    return InkWell(
+      onTap: () =>
+          ref.read(habitsProvider.notifier).toggle(habit.id, dateKey),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+            horizontal: Spacing.base, vertical: 12),
+        child: Row(
+          children: [
+            Text(habit.icon, style: const TextStyle(fontSize: 22)),
+            const Gap(12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    habit.name,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w500,
+                          decoration:
+                              isDone ? TextDecoration.lineThrough : null,
+                          color: isDone ? textSecondary : null,
+                        ),
                   ),
-                  child: Icon(h.$3, color: h.$4, size: 18),
-                ),
-                title: Text(
-                  h.$1,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w500,
-                        decoration:
-                            h.$2 ? TextDecoration.none : null,
+                  if (habit.streak > 0)
+                    Text(
+                      '🔥 ${habit.streak}d streak',
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontFamily: 'IBMPlexMono',
+                        color: AppColors.error,
                       ),
-                ),
-                subtitle: Text(
-                  h.$5,
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodySmall
-                      ?.copyWith(color: textSecondary),
-                ),
-                trailing: Icon(
-                  h.$2
-                      ? Icons.check_circle_rounded
-                      : Icons.radio_button_unchecked_rounded,
-                  color: h.$2 ? AppColors.success : AppColors.textMuted,
-                  size: 24,
-                ),
+                    ),
+                ],
               ),
-            ],
-          );
-        }).toList(),
+            ),
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 200),
+              child: Icon(
+                isDone
+                    ? Icons.check_circle_rounded
+                    : Icons.radio_button_unchecked_rounded,
+                key: ValueKey(isDone),
+                color: isDone ? AppColors.success : textSecondary,
+                size: 24,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
