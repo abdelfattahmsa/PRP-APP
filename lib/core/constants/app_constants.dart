@@ -22,6 +22,9 @@ class AppConstants {
   static const prefScheduleMode = 'schedule_mode';
   static const prefAlarmsEnabled = 'alarms_enabled';
   static const prefOnboarded = 'onboarded';
+  static const prefDayStartHour = 'day_start_hour';
+  static const prefFirstDayOfWeek = 'first_day_of_week';
+  static const prefDefaultCurrency = 'default_currency';
 
   // Default schedule modes
   static const scheduleModes = ['normal', 'fasting', 'friday', 'cairo'];

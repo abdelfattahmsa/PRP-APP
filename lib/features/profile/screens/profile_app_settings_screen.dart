@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
+import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/providers/theme_provider.dart';
 import '../../../shared/models/all_providers.dart';
 import '../../../shared/widgets/placeholders.dart';
-import '../../../engines/categories/providers/user_categories_provider.dart';
 import '../../../engines/categories/data/models/user_category_model.dart';
 
 const _uuid = Uuid();
@@ -26,6 +27,42 @@ class _ProfileAppSettingsScreenState
   bool _notifyHabits = false;
   bool _notifyFasting = true;
   bool _compactMode = false;
+  String _scheduleMode = 'normal';
+  int _dayStartHour = 6;
+  int _firstDayOfWeek = 1; // 1=Monday, 7=Sunday
+  String _defaultCurrency = 'EGP';
+
+  static const _currencies = ['EGP', 'USD', 'EUR', 'GBP', 'SAR', 'AED'];
+  static const _currencyLabels = [
+    'EGP — Egyptian Pound',
+    'USD — US Dollar',
+    'EUR — Euro',
+    'GBP — British Pound',
+    'SAR — Saudi Riyal',
+    'AED — UAE Dirham',
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPrefs();
+  }
+
+  Future<void> _loadPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
+    setState(() {
+      _scheduleMode = prefs.getString(AppConstants.prefScheduleMode) ?? 'normal';
+      _dayStartHour = prefs.getInt(AppConstants.prefDayStartHour) ?? 6;
+      _firstDayOfWeek = prefs.getInt(AppConstants.prefFirstDayOfWeek) ?? 1;
+      _defaultCurrency = prefs.getString(AppConstants.prefDefaultCurrency) ?? 'EGP';
+    });
+  }
+
+  Future<void> _savePref(Future<void> Function(SharedPreferences) fn) async {
+    final prefs = await SharedPreferences.getInstance();
+    await fn(prefs);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -150,23 +187,60 @@ class _ProfileAppSettingsScreenState
             SectionCard(children: [
               SettingsTile(
                 title: 'Schedule Mode',
-                subtitle: 'Normal',
+                subtitle: _scheduleModeLabel(_scheduleMode),
                 leading: const Icon(Icons.view_timeline_outlined, size: 20),
-                onTap: () {},
+                onTap: () => _pickFromList(
+                  context,
+                  title: 'Schedule Mode',
+                  options: AppConstants.scheduleModes,
+                  labels: AppConstants.scheduleModes
+                      .map(_scheduleModeLabel)
+                      .toList(),
+                  selected: _scheduleMode,
+                  onPick: (v) {
+                    setState(() => _scheduleMode = v);
+                    _savePref((p) async =>
+                        p.setString(AppConstants.prefScheduleMode, v));
+                  },
+                ),
               ),
               Divider(height: 1, color: borderColor),
               SettingsTile(
                 title: 'Day Start Time',
-                subtitle: '06:00',
+                subtitle:
+                    '${_dayStartHour.toString().padLeft(2, '0')}:00',
                 leading: const Icon(Icons.wb_sunny_outlined, size: 20),
-                onTap: () {},
+                onTap: () async {
+                  final picked = await showTimePicker(
+                    context: context,
+                    initialTime:
+                        TimeOfDay(hour: _dayStartHour, minute: 0),
+                    helpText: 'Day Start Time',
+                  );
+                  if (picked != null && mounted) {
+                    setState(() => _dayStartHour = picked.hour);
+                    _savePref((p) async =>
+                        p.setInt(AppConstants.prefDayStartHour, picked.hour));
+                  }
+                },
               ),
               Divider(height: 1, color: borderColor),
               SettingsTile(
                 title: 'First Day of Week',
-                subtitle: 'Monday',
+                subtitle: _firstDayOfWeek == 1 ? 'Monday' : 'Sunday',
                 leading: const Icon(Icons.date_range_outlined, size: 20),
-                onTap: () {},
+                onTap: () => _pickFromList(
+                  context,
+                  title: 'First Day of Week',
+                  options: ['1', '7'],
+                  labels: const ['Monday', 'Sunday'],
+                  selected: _firstDayOfWeek.toString(),
+                  onPick: (v) {
+                    setState(() => _firstDayOfWeek = int.parse(v));
+                    _savePref((p) async =>
+                        p.setInt(AppConstants.prefFirstDayOfWeek, int.parse(v)));
+                  },
+                ),
               ),
               Divider(height: 1, color: borderColor),
               SettingsTile(
@@ -184,9 +258,21 @@ class _ProfileAppSettingsScreenState
             SectionCard(children: [
               SettingsTile(
                 title: 'Default Currency',
-                subtitle: 'EGP — Egyptian Pound',
+                subtitle: _currencyLabels[_currencies.indexOf(_defaultCurrency)
+                    .clamp(0, _currencies.length - 1)],
                 leading: const Icon(Icons.attach_money_outlined, size: 20),
-                onTap: () {},
+                onTap: () => _pickFromList(
+                  context,
+                  title: 'Default Currency',
+                  options: _currencies,
+                  labels: _currencyLabels,
+                  selected: _defaultCurrency,
+                  onPick: (v) {
+                    setState(() => _defaultCurrency = v);
+                    _savePref((p) async =>
+                        p.setString(AppConstants.prefDefaultCurrency, v));
+                  },
+                ),
               ),
               Divider(height: 1, color: borderColor),
               SettingsTile(
@@ -260,7 +346,7 @@ class _ProfileAppSettingsScreenState
                   SectionCard(children: [
                     SettingsTile(
                       title: 'Default Fasting Goal',
-                      subtitle: '$goalHours hours (${goalHours}:${24 - goalHours} protocol)',
+                      subtitle: '$goalHours hours ($goalHours:${24 - goalHours} protocol)',
                       leading: const Icon(Icons.hourglass_empty_rounded, size: 20),
                       onTap: () => _pickFromList(
                         ctx,
@@ -375,6 +461,15 @@ class _ThemeOption extends StatelessWidget {
 // ══════════════════════════════════════════════════════════════
 // SETTINGS HELPERS
 // ══════════════════════════════════════════════════════════════
+
+String _scheduleModeLabel(String mode) {
+  switch (mode) {
+    case 'fasting': return 'Fasting Day';
+    case 'friday':  return 'Friday';
+    case 'cairo':   return 'Cairo Extended';
+    default:        return 'Normal';
+  }
+}
 
 Future<void> _pickMinutes(
   BuildContext context, {
