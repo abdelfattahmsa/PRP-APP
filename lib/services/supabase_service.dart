@@ -60,6 +60,16 @@ class SupabaseService {
   Future<void> updateProfile(AppUser user) =>
       _db.from('profiles').update(user.toJson()).eq('id', _uid);
 
+  Future<void> updateUserName(String fullName) async {
+    // Update Supabase Auth metadata (drives currentUserProvider reactively)
+    await _db.auth.updateUser(UserAttributes(data: {'full_name': fullName}));
+    // Also persist to profiles table
+    await _db
+        .from('profiles')
+        .update({'full_name': fullName})
+        .eq('id', _uid);
+  }
+
   // ── SCHEDULE ──────────────────────────────────────────────────
   Future<List<ScheduleBlock>> getScheduleBlocks(String mode) async {
     final res = await _db

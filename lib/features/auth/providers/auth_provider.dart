@@ -69,6 +69,12 @@ class AuthNotifier extends AsyncNotifier<void> {
     state = await AsyncValue.guard(
         () => SupabaseService.instance.resetPassword(email));
   }
+
+  Future<void> updateName(String fullName) async {
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(
+        () => SupabaseService.instance.updateUserName(fullName));
+  }
 }
 
 final authNotifierProvider =

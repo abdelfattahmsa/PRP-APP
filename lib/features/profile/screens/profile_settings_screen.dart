@@ -6,6 +6,36 @@ import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/placeholders.dart';
 import '../../../features/auth/providers/auth_provider.dart';
 
+Future<void> _showEditNameDialog(BuildContext context, WidgetRef ref, String? current) async {
+  final ctrl = TextEditingController(text: current ?? '');
+  final saved = await showDialog<String>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: const Text('Edit Full Name'),
+      content: TextField(
+        controller: ctrl,
+        autofocus: true,
+        textCapitalization: TextCapitalization.words,
+        decoration: const InputDecoration(labelText: 'Full name'),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(ctx).pop(),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.of(ctx).pop(ctrl.text.trim()),
+          child: const Text('Save'),
+        ),
+      ],
+    ),
+  );
+  ctrl.dispose();
+  if (saved != null && saved.isNotEmpty) {
+    await ref.read(authNotifierProvider.notifier).updateName(saved);
+  }
+}
+
 class ProfileSettingsScreen extends ConsumerWidget {
   const ProfileSettingsScreen({super.key});
 
@@ -97,7 +127,7 @@ class ProfileSettingsScreen extends ConsumerWidget {
                   IconButton(
                     icon: const Icon(Icons.edit_rounded, size: 18),
                     color: textSecondary,
-                    onPressed: () {},
+                    onPressed: () => _showEditNameDialog(context, ref, user?.fullName),
                   ),
                 ],
               ),
@@ -109,9 +139,9 @@ class ProfileSettingsScreen extends ConsumerWidget {
             SectionCard(children: [
               SettingsTile(
                 title: 'Full Name',
-                subtitle: 'Update your display name',
+                subtitle: user?.fullName?.isNotEmpty == true ? user!.fullName! : 'Tap to set your name',
                 leading: const Icon(Icons.person_outline, size: 20),
-                onTap: () {},
+                onTap: () => _showEditNameDialog(context, ref, user?.fullName),
               ),
               Divider(height: 1, color: borderColor),
               SettingsTile(
