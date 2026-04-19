@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
+import 'package:uuid/uuid.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/providers/theme_provider.dart';
 import '../../../shared/widgets/placeholders.dart';
+import '../../../engines/categories/providers/user_categories_provider.dart';
+import '../../../engines/categories/data/models/user_category_model.dart';
+
+const _uuid = Uuid();
 
 class ProfileAppSettingsScreen extends ConsumerStatefulWidget {
   const ProfileAppSettingsScreen({super.key});
@@ -162,6 +167,13 @@ class _ProfileAppSettingsScreenState
                 leading: const Icon(Icons.date_range_outlined, size: 20),
                 onTap: () {},
               ),
+              Divider(height: 1, color: borderColor),
+              SettingsTile(
+                title: 'Schedule Block Categories',
+                subtitle: 'Manage your time block categories',
+                leading: const Icon(Icons.grid_view_rounded, size: 20),
+                onTap: () => _showCategoryManager(context, ref, 'schedule'),
+              ),
             ]),
             const Gap(24),
 
@@ -180,7 +192,7 @@ class _ProfileAppSettingsScreenState
                 title: 'Transaction Categories',
                 subtitle: 'Manage your spending categories',
                 leading: const Icon(Icons.category_outlined, size: 20),
-                onTap: () {},
+                onTap: () => _showCategoryManager(context, ref, 'transaction'),
               ),
               Divider(height: 1, color: borderColor),
               SettingsTile(
@@ -320,6 +332,237 @@ class _ThemeOption extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+// CATEGORY MANAGER
+// ══════════════════════════════════════════════════════════════
+
+Future<void> _showCategoryManager(
+    BuildContext context, WidgetRef ref, String engine) {
+  return showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (ctx) => UncontrolledProviderScope(
+      container: ProviderScope.containerOf(context),
+      child: _CategoryManagerSheet(engine: engine),
+    ),
+  );
+}
+
+class _CategoryManagerSheet extends ConsumerStatefulWidget {
+  const _CategoryManagerSheet({required this.engine});
+  final String engine;
+
+  @override
+  ConsumerState<_CategoryManagerSheet> createState() =>
+      _CategoryManagerSheetState();
+}
+
+class _CategoryManagerSheetState
+    extends ConsumerState<_CategoryManagerSheet> {
+  bool _adding = false;
+  final _nameCtrl = TextEditingController();
+  String _emoji = '📌';
+
+  static const _quickEmojis = [
+    '📌', '💰', '🍽️', '🚗', '📋', '🛍️', '💊', '👤', '💼',
+    '🔄', '⚗️', '🕌', '📚', '🚶', '🏗️', '💤', '🌙', '🎯',
+    '🏋️', '📖', '🧘', '☕', '🎵', '🌿', '✅',
+  ];
+
+  @override
+  void dispose() {
+    _nameCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _addCategory() async {
+    final name = _nameCtrl.text.trim();
+    if (name.isEmpty) return;
+    final cat = UserCategory(
+      id: _uuid.v4(),
+      name: name,
+      emoji: _emoji,
+      engine: widget.engine,
+      key: widget.engine == 'schedule'
+          ? name.toLowerCase().replaceAll(' ', '_')
+          : null,
+      order: 99,
+    );
+    try {
+      await ref.read(userCategoriesProvider.notifier).add(cat);
+      _nameCtrl.clear();
+      setState(() {
+        _adding = false;
+        _emoji = '📌';
+      });
+    } catch (_) {}
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = isDark ? AppColors.surface : AppColors.lightSurface;
+    final border = isDark ? AppColors.border : AppColors.lightBorder;
+    final accent = Theme.of(context).colorScheme.primary;
+    final bottom = MediaQuery.viewInsetsOf(context).bottom;
+
+    final catsAsync = ref.watch(userCategoriesProvider);
+    final cats = (catsAsync.value ?? [])
+        .where((c) => c.engine == widget.engine)
+        .toList();
+    final label = widget.engine == 'schedule'
+        ? 'Schedule Categories'
+        : 'Transaction Categories';
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+      constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.75),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: border),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Center(
+            child: Container(
+              margin: const EdgeInsets.only(top: 12, bottom: 4),
+              width: 36, height: 4,
+              decoration: BoxDecoration(
+                  color: border,
+                  borderRadius: BorderRadius.circular(2)),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+            child: Row(
+              children: [
+                Text(label,
+                    style: Theme.of(context)
+                        .textTheme
+                        .titleMedium
+                        ?.copyWith(fontWeight: FontWeight.w700)),
+                const Spacer(),
+                IconButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  icon: const Icon(Icons.close_rounded, size: 20),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+              ],
+            ),
+          ),
+          const Divider(height: 20),
+          Flexible(
+            child: ListView(
+              padding: EdgeInsets.fromLTRB(16, 0, 16, 16 + bottom),
+              shrinkWrap: true,
+              children: [
+                ...cats.map((cat) => ListTile(
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 4, vertical: 2),
+                      leading: Text(cat.emoji,
+                          style: const TextStyle(fontSize: 22)),
+                      title: Text(cat.name),
+                      subtitle: cat.key != null
+                          ? Text('key: ${cat.key}',
+                              style: const TextStyle(
+                                  fontSize: 10, fontFamily: 'IBMPlexMono'))
+                          : null,
+                      trailing: IconButton(
+                        icon: Icon(Icons.delete_outline_rounded,
+                            size: 18, color: AppColors.error),
+                        onPressed: () => ref
+                            .read(userCategoriesProvider.notifier)
+                            .delete(cat.id),
+                      ),
+                    )),
+                if (cats.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    child: Text(
+                      'No custom categories yet.\nAdd one below.',
+                      style: TextStyle(
+                          color: isDark
+                              ? AppColors.textSecondary
+                              : AppColors.lightTextSecondary),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                const Gap(8),
+                if (!_adding)
+                  OutlinedButton.icon(
+                    onPressed: () => setState(() => _adding = true),
+                    icon: const Icon(Icons.add, size: 16),
+                    label: const Text('Add Category'),
+                  )
+                else ...[
+                  Wrap(
+                    spacing: 6, runSpacing: 6,
+                    children: _quickEmojis.map((e) {
+                      final sel = e == _emoji;
+                      return GestureDetector(
+                        onTap: () => setState(() => _emoji = e),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 100),
+                          width: 40, height: 40,
+                          decoration: BoxDecoration(
+                            color: sel
+                                ? accent.withValues(alpha: 0.15)
+                                : Colors.transparent,
+                            borderRadius: BorderRadius.circular(8),
+                            border:
+                                Border.all(color: sel ? accent : border),
+                          ),
+                          child: Center(
+                              child: Text(e,
+                                  style:
+                                      const TextStyle(fontSize: 18))),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                  const Gap(12),
+                  Row(children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _nameCtrl,
+                        autofocus: true,
+                        textCapitalization: TextCapitalization.words,
+                        decoration: InputDecoration(
+                          hintText: 'Category name',
+                          prefixText: '$_emoji  ',
+                          isDense: true,
+                        ),
+                        onSubmitted: (_) => _addCategory(),
+                      ),
+                    ),
+                    const Gap(8),
+                    FilledButton(
+                      onPressed: _addCategory,
+                      style: FilledButton.styleFrom(
+                        backgroundColor: accent,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 12),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10)),
+                      ),
+                      child: const Text('Add'),
+                    ),
+                  ]),
+                ],
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
