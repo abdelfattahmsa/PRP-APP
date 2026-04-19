@@ -4,6 +4,7 @@ import 'package:gap/gap.dart';
 import 'package:uuid/uuid.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/providers/theme_provider.dart';
+import '../../../shared/models/all_providers.dart';
 import '../../../shared/widgets/placeholders.dart';
 import '../../../engines/categories/providers/user_categories_provider.dart';
 import '../../../engines/categories/data/models/user_category_model.dart';
@@ -205,50 +206,84 @@ class _ProfileAppSettingsScreenState
             const Gap(24),
 
             // ── Energy settings ─────────────────────────────────
-            const SectionHeader('Energy'),
-            const Gap(12),
-            SectionCard(children: [
-              SettingsTile(
-                title: 'Focus Duration',
-                subtitle: '25 minutes',
-                leading: const Icon(Icons.timer_outlined, size: 20),
-                onTap: () {},
-              ),
-              Divider(height: 1, color: borderColor),
-              SettingsTile(
-                title: 'Short Break',
-                subtitle: '5 minutes',
-                leading: const Icon(Icons.coffee_outlined, size: 20),
-                onTap: () {},
-              ),
-              Divider(height: 1, color: borderColor),
-              SettingsTile(
-                title: 'Long Break',
-                subtitle: '15 minutes after 4 sessions',
-                leading: const Icon(Icons.self_improvement_outlined, size: 20),
-                onTap: () {},
-              ),
-            ]),
+            Builder(builder: (ctx) {
+              final timer = ref.watch(focusTimerProvider);
+              final notifier = ref.read(focusTimerProvider.notifier);
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SectionHeader('Energy'),
+                  const Gap(12),
+                  SectionCard(children: [
+                    SettingsTile(
+                      title: 'Focus Duration',
+                      subtitle: '${timer.focusDuration} minutes',
+                      leading: const Icon(Icons.timer_outlined, size: 20),
+                      onTap: () => _pickMinutes(
+                        ctx,
+                        title: 'Focus Duration',
+                        initial: timer.focusDuration,
+                        min: 5,
+                        max: 120,
+                        onPick: (v) => notifier.setDuration(v, timer.breakDuration),
+                      ),
+                    ),
+                    Divider(height: 1, color: borderColor),
+                    SettingsTile(
+                      title: 'Break Duration',
+                      subtitle: '${timer.breakDuration} minutes',
+                      leading: const Icon(Icons.coffee_outlined, size: 20),
+                      onTap: () => _pickMinutes(
+                        ctx,
+                        title: 'Break Duration',
+                        initial: timer.breakDuration,
+                        min: 1,
+                        max: 60,
+                        onPick: (v) => notifier.setDuration(timer.focusDuration, v),
+                      ),
+                    ),
+                  ]),
+                ],
+              );
+            }),
             const Gap(24),
 
             // ── Health settings ─────────────────────────────────
-            const SectionHeader('Health'),
-            const Gap(12),
-            SectionCard(children: [
-              SettingsTile(
-                title: 'Default Fasting Protocol',
-                subtitle: '16:8 Intermittent Fasting',
-                leading: const Icon(Icons.hourglass_empty_rounded, size: 20),
-                onTap: () {},
-              ),
-              Divider(height: 1, color: borderColor),
-              SettingsTile(
-                title: 'Habit Categories',
-                subtitle: 'Manage habit groups',
-                leading: const Icon(Icons.favorite_outline, size: 20),
-                onTap: () {},
-              ),
-            ]),
+            Builder(builder: (ctx) {
+              final fasting = ref.watch(fastingProvider);
+              final goalHours = fasting.goalHours;
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SectionHeader('Health'),
+                  const Gap(12),
+                  SectionCard(children: [
+                    SettingsTile(
+                      title: 'Default Fasting Goal',
+                      subtitle: '$goalHours hours (${goalHours}:${24 - goalHours} protocol)',
+                      leading: const Icon(Icons.hourglass_empty_rounded, size: 20),
+                      onTap: () => _pickFromList(
+                        ctx,
+                        title: 'Fasting Protocol',
+                        options: ['12', '14', '16', '18', '20', '24'],
+                        labels: const [
+                          '12h — 12:12',
+                          '14h — 14:10',
+                          '16h — 16:8 (recommended)',
+                          '18h — 18:6',
+                          '20h — 20:4 (OMAD-ish)',
+                          '24h — Full day fast',
+                        ],
+                        selected: goalHours.toString(),
+                        onPick: (v) => ref
+                            .read(fastingProvider.notifier)
+                            .setGoal(int.parse(v)),
+                      ),
+                    ),
+                  ]),
+                ],
+              );
+            }),
             const Gap(24),
 
             // ── About ───────────────────────────────────────────
@@ -335,6 +370,103 @@ class _ThemeOption extends StatelessWidget {
       ),
     );
   }
+}
+
+// ══════════════════════════════════════════════════════════════
+// SETTINGS HELPERS
+// ══════════════════════════════════════════════════════════════
+
+Future<void> _pickMinutes(
+  BuildContext context, {
+  required String title,
+  required int initial,
+  required int min,
+  required int max,
+  required ValueChanged<int> onPick,
+}) async {
+  int value = initial;
+  final result = await showDialog<int>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: Text(title),
+      content: StatefulBuilder(
+        builder: (ctx, setState) => Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('$value minutes',
+                style: const TextStyle(
+                    fontSize: 24, fontWeight: FontWeight.w700)),
+            const Gap(16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                IconButton.filled(
+                  onPressed: value > min
+                      ? () => setState(() => value -= 5)
+                      : null,
+                  icon: const Icon(Icons.remove_rounded),
+                ),
+                const Gap(16),
+                IconButton.filled(
+                  onPressed: value < max
+                      ? () => setState(() => value += 5)
+                      : null,
+                  icon: const Icon(Icons.add_rounded),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel')),
+        FilledButton(
+            onPressed: () => Navigator.pop(ctx, value),
+            child: const Text('Save')),
+      ],
+    ),
+  );
+  if (result != null) onPick(result);
+}
+
+Future<void> _pickFromList(
+  BuildContext context, {
+  required String title,
+  required List<String> options,
+  required List<String> labels,
+  required String selected,
+  required ValueChanged<String> onPick,
+}) async {
+  final result = await showDialog<String>(
+    context: context,
+    builder: (ctx) => SimpleDialog(
+      title: Text(title),
+      children: [
+        for (int i = 0; i < options.length; i++)
+          SimpleDialogOption(
+            onPressed: () => Navigator.pop(ctx, options[i]),
+            child: Row(
+              children: [
+                Icon(
+                  options[i] == selected
+                      ? Icons.radio_button_checked_rounded
+                      : Icons.radio_button_unchecked_rounded,
+                  size: 18,
+                  color: options[i] == selected
+                      ? AppColors.pmp
+                      : AppColors.textSecondary,
+                ),
+                const Gap(12),
+                Text(labels[i]),
+              ],
+            ),
+          ),
+      ],
+    ),
+  );
+  if (result != null) onPick(result);
 }
 
 // ══════════════════════════════════════════════════════════════
