@@ -46,10 +46,19 @@ class DebtsNotifier extends AsyncNotifier<List<ExternalDebt>> {
   @override
   Future<List<ExternalDebt>> build() => MoneyRepository.instance.getDebts();
 
-  Future<void> add(ExternalDebt debt) async {
+  Future<void> upsert(ExternalDebt debt) async {
     await MoneyRepository.instance.upsertDebt(debt);
-    state = AsyncData([...state.value!, debt]);
+    final existing = state.value?.indexWhere((d) => d.id == debt.id) ?? -1;
+    if (existing >= 0) {
+      final updated = [...state.value!];
+      updated[existing] = debt;
+      state = AsyncData(updated);
+    } else {
+      state = AsyncData([...state.value!, debt]);
+    }
   }
+
+  Future<void> add(ExternalDebt debt) => upsert(debt);
 
   Future<void> delete(String id) async {
     await MoneyRepository.instance.deleteDebt(id);
@@ -70,7 +79,14 @@ class InvestmentsNotifier extends AsyncNotifier<List<Investment>> {
 
   Future<void> add(Investment inv) async {
     await MoneyRepository.instance.upsertInvestment(inv);
-    state = AsyncData([...state.value!, inv]);
+    final existing = state.value?.indexWhere((i) => i.id == inv.id) ?? -1;
+    if (existing >= 0) {
+      final updated = [...state.value!];
+      updated[existing] = inv;
+      state = AsyncData(updated);
+    } else {
+      state = AsyncData([...state.value!, inv]);
+    }
   }
 
   Future<void> delete(String id) async {
