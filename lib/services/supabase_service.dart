@@ -2,6 +2,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 import '../shared/models/models.dart';
 import '../engines/ideas/data/models/idea_models.dart';
+import '../engines/health/providers/fasting_provider.dart';
 
 const _uuidGen = Uuid();
 
@@ -351,6 +352,44 @@ class SupabaseService {
       {'id': _uuid(), 'user_id': uid, 'title': 'Debt ≤ 100K Target', 'date': '2026-09-15', 'type_key': 'milestone', 'is_done': false},
     ];
     await _db.from('calendar_events').insert(events);
+  }
+
+  // ── FASTING ────────────────────────────────────────────────────
+  Future<List<FastRecord>> getFastingRecords() async {
+    final res = await _db
+        .from('fasting_records')
+        .select()
+        .eq('user_id', _uid)
+        .order('start_time', ascending: false);
+    return res.map((j) => FastRecord.fromJson(j)).toList();
+  }
+
+  Future<FastRecord> startFastRecord({
+    required DateTime startTime,
+    required int goalHours,
+  }) async {
+    final row = await _db.from('fasting_records').insert({
+      'user_id': _uid,
+      'start_time': startTime.toIso8601String(),
+      'goal_hours': goalHours,
+    }).select().single();
+    return FastRecord.fromJson(row);
+  }
+
+  Future<void> updateFastRecord(
+    String id, {
+    DateTime? endTime,
+    int? goalHours,
+  }) async {
+    final data = <String, dynamic>{};
+    if (endTime != null) data['end_time'] = endTime.toIso8601String();
+    if (goalHours != null) data['goal_hours'] = goalHours;
+    if (data.isEmpty) return;
+    await _db
+        .from('fasting_records')
+        .update(data)
+        .eq('id', id)
+        .eq('user_id', _uid);
   }
 
   // ── IDEAS ──────────────────────────────────────────────────────

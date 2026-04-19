@@ -1,6 +1,5 @@
-import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import '../../../../services/supabase_service.dart';
 
 // ══════════════════════════════════════════════════════════════
 // FASTING MODEL
@@ -8,11 +7,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class FastRecord {
   const FastRecord({
+    this.id,
     required this.startTime,
     this.endTime,
     required this.goalHours,
   });
 
+  final String? id;
   final DateTime startTime;
   final DateTime? endTime;
   final int goalHours;
@@ -24,16 +25,21 @@ class FastRecord {
 
   bool get goalReached => duration.inMinutes >= goalHours * 60;
 
-  Map<String, dynamic> toJson() => {
-        'start': startTime.toIso8601String(),
-        'end': endTime?.toIso8601String(),
-        'goal': goalHours,
-      };
-
   factory FastRecord.fromJson(Map<String, dynamic> j) => FastRecord(
-        startTime: DateTime.parse(j['start'] as String),
-        endTime: j['end'] != null ? DateTime.parse(j['end'] as String) : null,
-        goalHours: j['goal'] as int? ?? 16,
+        id: j['id'] as String?,
+        startTime: DateTime.parse(j['start_time'] as String),
+        endTime: j['end_time'] != null
+            ? DateTime.parse(j['end_time'] as String)
+            : null,
+        goalHours: j['goal_hours'] as int? ?? 16,
+      );
+
+  FastRecord copyWith({String? id, DateTime? endTime, int? goalHours}) =>
+      FastRecord(
+        id: id ?? this.id,
+        startTime: startTime,
+        endTime: endTime ?? this.endTime,
+        goalHours: goalHours ?? this.goalHours,
       );
 }
 
@@ -44,7 +50,7 @@ class FastingState {
     this.history = const [],
   });
 
-  final FastRecord? active; // null → not currently fasting
+  final FastRecord? active;
   final int goalHours;
   final List<FastRecord> history;
 
@@ -81,7 +87,6 @@ class FastingState {
         break;
       }
     }
-    // also count active fast if goal reached
     if (active != null && active!.goalReached) streak++;
     return streak;
   }
@@ -112,12 +117,8 @@ class FastingState {
 }
 
 // ══════════════════════════════════════════════════════════════
-// NOTIFIER
+// NOTIFIER — Supabase-backed, optimistic updates
 // ══════════════════════════════════════════════════════════════
-
-const _kPrefActive = 'fasting_active';
-const _kPrefHistory = 'fasting_history';
-const _kPrefGoal = 'fasting_goal';
 
 class FastingNotifier extends Notifier<FastingState> {
   @override
@@ -127,81 +128,76 @@ class FastingNotifier extends Notifier<FastingState> {
   }
 
   Future<void> _load() async {
-    final prefs = await SharedPreferences.getInstance();
-    final activeJson = prefs.getString(_kPrefActive);
-    final historyJson = prefs.getStringList(_kPrefHistory) ?? [];
-    final goal = prefs.getInt(_kPrefGoal) ?? 16;
-
-    FastRecord? active;
-    if (activeJson != null) {
-      try {
-        active = FastRecord.fromJson(jsonDecode(activeJson));
-      } catch (_) {}
+    try {
+      final records = await SupabaseService.instance.getFastingRecords();
+      FastRecord? active;
+      final history = <FastRecord>[];
+      for (final r in records) {
+        if (r.endTime == null && active == null) {
+          active = r;
+        } else if (r.endTime != null) {
+          history.add(r);
+        }
+      }
+      state = FastingState(
+        active: active,
+        goalHours: active?.goalHours ?? 16,
+        history: history,
+      );
+    } catch (_) {
+      // Not logged in yet or network error — keep default state
     }
-
-    final history = historyJson
-        .map((s) {
-          try {
-            return FastRecord.fromJson(jsonDecode(s));
-          } catch (_) {
-            return null;
-          }
-        })
-        .whereType<FastRecord>()
-        .toList();
-
-    state = FastingState(active: active, goalHours: goal, history: history);
-  }
-
-  Future<void> _save() async {
-    final prefs = await SharedPreferences.getInstance();
-    if (state.active != null) {
-      await prefs.setString(_kPrefActive, jsonEncode(state.active!.toJson()));
-    } else {
-      await prefs.remove(_kPrefActive);
-    }
-    await prefs.setStringList(
-      _kPrefHistory,
-      state.history.map((r) => jsonEncode(r.toJson())).toList(),
-    );
-    await prefs.setInt(_kPrefGoal, state.goalHours);
   }
 
   void startFast({int? goalHours}) {
     final goal = goalHours ?? state.goalHours;
-    final record = FastRecord(startTime: DateTime.now(), goalHours: goal);
-    state = state.copyWith(active: () => record, goalHours: goal);
-    _save();
+    final now = DateTime.now();
+    // Optimistic local update
+    final optimistic = FastRecord(startTime: now, goalHours: goal);
+    state = state.copyWith(active: () => optimistic, goalHours: goal);
+    // Persist to Supabase, then update with server-assigned id
+    SupabaseService.instance
+        .startFastRecord(startTime: now, goalHours: goal)
+        .then((saved) {
+      state = state.copyWith(active: () => saved);
+    }).catchError((_) {
+      // Roll back on failure
+      state = state.copyWith(active: () => null);
+    });
   }
 
   void stopFast() {
     if (state.active == null) return;
-    final completed = FastRecord(
-      startTime: state.active!.startTime,
-      endTime: DateTime.now(),
-      goalHours: state.active!.goalHours,
-    );
+    final activeId = state.active!.id;
+    final endTime = DateTime.now();
+    final completed = state.active!.copyWith(endTime: endTime);
     state = state.copyWith(
       active: () => null,
       history: [...state.history, completed],
     );
-    _save();
+    if (activeId != null) {
+      SupabaseService.instance
+          .updateFastRecord(activeId, endTime: endTime)
+          .catchError((_) {
+        // If server fails, we at least have it in local state
+      });
+    }
   }
 
   void extendFast(int extraHours) {
     if (state.active == null) return;
     final newGoal = state.active!.goalHours + extraHours;
-    final extended = FastRecord(
-      startTime: state.active!.startTime,
-      goalHours: newGoal,
-    );
+    final extended = state.active!.copyWith(goalHours: newGoal);
     state = state.copyWith(active: () => extended);
-    _save();
+    if (extended.id != null) {
+      SupabaseService.instance
+          .updateFastRecord(extended.id!, goalHours: newGoal)
+          .catchError((_) {});
+    }
   }
 
   void setGoal(int hours) {
     state = state.copyWith(goalHours: hours);
-    _save();
   }
 }
 
