@@ -10,6 +10,8 @@ import '../../engines/health/data/models/health_models.dart';
 import '../../engines/health/providers/health_providers.dart';
 import '../../engines/time/data/models/time_models.dart';
 import '../../engines/time/providers/time_providers.dart';
+import '../../engines/categories/providers/user_categories_provider.dart';
+import '../../engines/categories/data/models/user_category_model.dart';
 
 const _uuid = Uuid();
 
@@ -134,7 +136,7 @@ class _AddTransactionSheetState extends ConsumerState<_AddTransactionSheet> {
   final _amountCtrl = TextEditingController();
   final _notesCtrl = TextEditingController();
 
-  String _category = AppConstants.txCategories.first;
+  String _category = kDefaultTxCategories.first.storageKey;
   String? _accountName;
   bool _isIncome = false;
   DateTime _date = DateTime.now();
@@ -197,6 +199,7 @@ class _AddTransactionSheetState extends ConsumerState<_AddTransactionSheet> {
     final accent = Theme.of(context).colorScheme.primary;
     final accountsAsync = ref.watch(bankAccountsProvider);
     final accounts = accountsAsync.value ?? [];
+    final txCats = ref.watch(txCategoriesProvider);
 
     return _SheetWrapper(
       title: 'Add Transaction',
@@ -295,10 +298,13 @@ class _AddTransactionSheetState extends ConsumerState<_AddTransactionSheet> {
 
             // Category
             DropdownButtonFormField<String>(
-              value: _category,
+              value: txCats.any((c) => c.storageKey == _category) ? _category : txCats.first.storageKey,
               decoration: const InputDecoration(labelText: 'Category'),
-              items: AppConstants.txCategories
-                  .map((c) => DropdownMenuItem(value: c, child: Text(c)))
+              items: txCats
+                  .map((c) => DropdownMenuItem(
+                        value: c.storageKey,
+                        child: Text('${c.emoji} ${c.name}'),
+                      ))
                   .toList(),
               onChanged: (v) => setState(() => _category = v!),
             ),
@@ -586,7 +592,7 @@ class _AddScheduleBlockSheetState
   final _labelCtrl = TextEditingController();
   final _noteCtrl = TextEditingController();
 
-  String _category = 'work';
+  String _category = kDefaultScheduleCategories.firstWhere((c) => c.key == 'work').storageKey;
   String _scheduleMode = 'normal';
   TimeOfDay _time = const TimeOfDay(hour: 9, minute: 0);
   int _duration = 60;
@@ -641,6 +647,7 @@ class _AddScheduleBlockSheetState
   @override
   Widget build(BuildContext context) {
     final accent = Theme.of(context).colorScheme.primary;
+    final scheduleCats = ref.watch(scheduleCategoriesProvider);
 
     return _SheetWrapper(
       title: 'Add Schedule Block',
@@ -702,10 +709,13 @@ class _AddScheduleBlockSheetState
 
             // Category
             DropdownButtonFormField<String>(
-              value: _category,
+              value: scheduleCats.any((c) => c.storageKey == _category) ? _category : scheduleCats.first.storageKey,
               decoration: const InputDecoration(labelText: 'Category'),
-              items: AppConstants.categoryKeys
-                  .map((k) => DropdownMenuItem(value: k, child: Text(k)))
+              items: scheduleCats
+                  .map((c) => DropdownMenuItem(
+                        value: c.storageKey,
+                        child: Text('${c.emoji} ${c.name}'),
+                      ))
                   .toList(),
               onChanged: (v) => setState(() => _category = v!),
             ),

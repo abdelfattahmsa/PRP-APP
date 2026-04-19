@@ -3,6 +3,7 @@ import 'package:uuid/uuid.dart';
 import '../shared/models/models.dart';
 import '../engines/ideas/data/models/idea_models.dart';
 import '../engines/health/providers/fasting_provider.dart';
+import '../engines/categories/data/models/user_category_model.dart';
 
 const _uuidGen = Uuid();
 
@@ -306,6 +307,9 @@ class SupabaseService {
 
     // Seed default calendar events (milestones + Islamic dates)
     await _seedDefaultCalendarEvents(uid);
+
+    // Seed default user categories
+    await _seedDefaultCategories(uid);
   }
 
   Future<void> _seedScheduleBlocks(String uid) async {
@@ -364,6 +368,28 @@ class SupabaseService {
     await _db.from('calendar_events').insert(events);
   }
 
+  // ── USER CATEGORIES ────────────────────────────────────────────
+  Future<List<UserCategory>> getUserCategories() async {
+    final res = await _db
+        .from('user_categories')
+        .select()
+        .eq('user_id', _uid)
+        .order('order');
+    return res.map((j) => UserCategory.fromJson(j)).toList();
+  }
+
+  Future<UserCategory> upsertUserCategory(UserCategory cat) async {
+    final row = await _db
+        .from('user_categories')
+        .upsert({...cat.toJson(), 'user_id': _uid})
+        .select()
+        .single();
+    return UserCategory.fromJson(row);
+  }
+
+  Future<void> deleteUserCategory(String id) =>
+      _db.from('user_categories').delete().eq('id', id).eq('user_id', _uid);
+
   // ── FASTING ────────────────────────────────────────────────────
   Future<List<FastRecord>> getFastingRecords() async {
     final res = await _db
@@ -400,6 +426,22 @@ class SupabaseService {
         .update(data)
         .eq('id', id)
         .eq('user_id', _uid);
+  }
+
+  Future<void> _seedDefaultCategories(String uid) async {
+    final rows = [
+      ...kDefaultScheduleCategories,
+      ...kDefaultTxCategories,
+    ].map((c) => {
+          'id': _uuid(),
+          'user_id': uid,
+          'name': c.name,
+          'emoji': c.emoji,
+          'engine': c.engine,
+          'key': c.key,
+          'order': c.order,
+        }).toList();
+    await _db.from('user_categories').insert(rows);
   }
 
   // ── IDEAS ──────────────────────────────────────────────────────
