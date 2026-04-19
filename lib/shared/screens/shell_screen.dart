@@ -6,6 +6,7 @@ import '../../core/theme/app_theme.dart';
 import '../../core/router/app_router.dart';
 import '../../core/constants/app_constants.dart';
 import '../../features/auth/providers/auth_provider.dart';
+import '../../engines/energy/providers/energy_providers.dart';
 
 // ══════════════════════════════════════════════════════════════
 // NAVIGATION MODEL
@@ -353,6 +354,7 @@ class _MobileShell extends StatelessWidget {
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Column(
         children: [
+          const _FocusTimerBanner(),
           // Sub-tab bar sits at top of body when tab has sub-tabs
           if (activeTab.hasSubTabs)
             _MobileSubTabBar(
@@ -795,7 +797,7 @@ class _SidebarProfileFooter extends StatelessWidget {
     final textMuted = isDark ? AppColors.textMuted : AppColors.lightTextMuted;
     final borderColor = isDark ? AppColors.border : AppColors.lightBorder;
 
-    final user = userAsync.when(data: (u) => u, loading: () => null, error: (_, __) => null);
+    final user = userAsync;
     final initial = user?.fullName?.isNotEmpty == true
         ? user!.fullName![0].toUpperCase()
         : '?';
@@ -933,6 +935,63 @@ class _SidebarProfileFooter extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+// ── Persistent focus timer banner ─────────────────────────────
+
+class _FocusTimerBanner extends ConsumerWidget {
+  const _FocusTimerBanner();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final timer = ref.watch(focusTimerProvider);
+    if (!timer.isRunning) return const SizedBox.shrink();
+
+    final mins = (timer.secondsLeft ~/ 60).toString().padLeft(2, '0');
+    final secs = (timer.secondsLeft % 60).toString().padLeft(2, '0');
+    final label = timer.mode == 'focus' ? 'Focus' : 'Break';
+    final color = timer.mode == 'focus' ? AppColors.accent : AppColors.warning;
+
+    return Material(
+      color: color.withValues(alpha: 0.12),
+      child: InkWell(
+        onTap: () => GoRouter.of(context).go(Routes.energyFocus),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Row(
+            children: [
+              Icon(Icons.timer_rounded, size: 16, color: color),
+              const Gap(8),
+              Text(
+                '$label — $mins:$secs',
+                style: TextStyle(
+                  fontFamily: 'IBMPlexMono',
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: color,
+                ),
+              ),
+              const Spacer(),
+              SizedBox(
+                width: 80,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(2),
+                  child: LinearProgressIndicator(
+                    value: timer.progress,
+                    minHeight: 3,
+                    backgroundColor: color.withValues(alpha: 0.2),
+                    valueColor: AlwaysStoppedAnimation(color),
+                  ),
+                ),
+              ),
+              const Gap(8),
+              Icon(Icons.chevron_right_rounded, size: 16, color: color),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

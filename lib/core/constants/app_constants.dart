@@ -2,12 +2,15 @@
 class AppConstants {
   AppConstants._();
 
-  static const appName = 'PRP System';
-  static const appVersion = '3.0.0';
+  static const appName = 'PRP';
+  static const appVersion = '4.1.0';
 
-  // Supabase — fill these in from your Supabase project settings
+  // Supabase
   static const supabaseUrl = 'https://qjqkmvlqrrkowvisvcmc.supabase.co';
   static const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFqcWttdmxxcnJrb3d2aXN2Y21jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ3Njg4MjQsImV4cCI6MjA5MDM0NDgyNH0.aB1h2odqDdyAIFWq1_-61wz6_AMJHIQSR0aZl4BKhNQ';
+
+  // Clerk Auth
+  static const clerkPublishableKey = 'pk_live_Y2xlcmsucHJwLWFwcC53ZWJzaXRlJA';
 
   // Hive box names
   static const hiveBoxSettings = 'settings';

@@ -5,10 +5,16 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/router/app_router.dart';
+import '../../../features/auth/providers/auth_provider.dart';
 import '../../../shared/models/all_providers.dart';
 import '../../../shared/widgets/app_card.dart';
 import '../../../shared/widgets/app_states.dart';
 import '../../../shared/widgets/placeholders.dart' show ScreenHeader;
+
+// Ticks every second for the live clock
+final _clockProvider = StreamProvider<DateTime>((ref) {
+  return Stream.periodic(const Duration(seconds: 1), (_) => DateTime.now());
+});
 
 class OverviewScreen extends ConsumerWidget {
   const OverviewScreen({super.key});
@@ -19,6 +25,8 @@ class OverviewScreen extends ConsumerWidget {
     final textSecondary =
         isDark ? AppColors.textSecondary : AppColors.lightTextSecondary;
 
+    final currentUser = ref.watch(currentUserProvider);
+    final now = ref.watch(_clockProvider).value ?? DateTime.now();
     final summary = ref.watch(financeSummaryProvider);
     final habitsToday = ref.watch(habitsTodayProvider);
     final sessAsync = ref.watch(focusSessionsProvider);
@@ -46,10 +54,7 @@ class OverviewScreen extends ConsumerWidget {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 20, 16, 32),
           children: [
-            const ScreenHeader(
-              title: 'Overview',
-              subtitle: 'Personal Resource Planner',
-            ),
+            _GreetingHeader(user: currentUser, now: now, textSecondary: textSecondary),
             const Gap(24),
 
             // ── KPI Grid ─────────────────────────────────────────
@@ -350,6 +355,90 @@ class _QuickActions extends StatelessWidget {
           ),
         );
       }).toList(),
+    );
+  }
+}
+
+// ── Greeting Header with live clock ───────────────────────────
+
+class _GreetingHeader extends StatelessWidget {
+  const _GreetingHeader({
+    required this.user,
+    required this.now,
+    required this.textSecondary,
+  });
+
+  final dynamic user; // AppUser?
+  final DateTime now;
+  final Color textSecondary;
+
+  String get _greeting {
+    final h = now.hour;
+    if (h < 12) return 'Good morning';
+    if (h < 17) return 'Good afternoon';
+    return 'Good evening';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final firstName = (user?.fullName as String?)?.split(' ').first ?? 'there';
+    final timeFmt = DateFormat('HH:mm');
+    final dateFmt = DateFormat('EEEE, d MMM');
+    final tz = now.timeZoneName;
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '$_greeting, $firstName',
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+              ),
+              const Gap(4),
+              Text(
+                dateFmt.format(now),
+                style: Theme.of(context)
+                    .textTheme
+                    .bodySmall
+                    ?.copyWith(color: textSecondary),
+              ),
+            ],
+          ),
+        ),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Text(
+              timeFmt.format(now),
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontFamily: 'IBMPlexMono',
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.accent,
+                  ),
+            ),
+            const Gap(2),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: AppColors.accent.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(
+                tz,
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: AppColors.accent,
+                      fontFamily: 'IBMPlexMono',
+                    ),
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }

@@ -1,3 +1,4 @@
+import 'package:clerk_flutter/clerk_flutter.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,6 +8,7 @@ import 'core/theme/app_theme.dart';
 import 'core/router/app_router.dart';
 import 'core/constants/app_constants.dart';
 import 'core/providers/theme_provider.dart';
+import 'features/auth/providers/auth_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,6 +25,14 @@ void main() async {
     return true;
   };
 
+  // Initialise Clerk auth state before building the widget tree
+  final clerkState = await ClerkAuthState.create(
+    config: ClerkAuthConfig(
+      publishableKey: AppConstants.clerkPublishableKey,
+    ),
+  );
+
+  // Initialise Supabase for DATA only (auth handled by Clerk)
   await Supabase.initialize(
     url: AppConstants.supabaseUrl,
     anonKey: AppConstants.supabaseAnonKey,
@@ -30,7 +40,19 @@ void main() async {
 
   tz.initializeTimeZones();
 
-  runApp(const ProviderScope(child: PRPApp()));
+  runApp(
+    ProviderScope(
+      overrides: [
+        // Inject the pre-created ClerkAuthState into Riverpod
+        clerkAuthProvider.overrideWith((_) => clerkState),
+      ],
+      child: ClerkAuth(
+        // Share the same ClerkAuthState instance with the widget tree
+        authState: clerkState,
+        child: const PRPApp(),
+      ),
+    ),
+  );
 }
 
 class PRPApp extends ConsumerWidget {

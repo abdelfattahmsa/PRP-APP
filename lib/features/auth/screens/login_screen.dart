@@ -45,6 +45,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Widget build(BuildContext context) {
     final authState = ref.watch(authNotifierProvider);
     final isLoading = authState.isLoading;
+    final accent = Theme.of(context).colorScheme.primary;
 
     return Scaffold(
       body: Center(
@@ -57,47 +58,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Brand mark
-                  Container(
-                    width: 64,
-                    height: 64,
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [AppColors.gold, AppColors.goldDim],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.gold.withValues(alpha: 0.2),
-                          blurRadius: 20,
-                          spreadRadius: 2,
-                        ),
-                      ],
-                    ),
-                    child: const Center(
-                      child: Text(
-                        'LP',
-                        style: TextStyle(
-                          color: AppColors.bg,
-                          fontFamily: 'PlayfairDisplay',
-                          fontSize: 24,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: -1,
-                        ),
-                      ),
-                    ),
-                  )
+                  // Brand mark — PRP logo (green accent, Flutter-style)
+                  _PRPLogo(size: 72)
                       .animate()
                       .fadeIn(duration: 600.ms)
                       .scale(begin: const Offset(0.8, 0.8)),
                   const Gap(20),
 
-                  // Title
                   Text(
-                    'Life Plan',
-                    style: Theme.of(context).textTheme.displayMedium,
+                    'PRP',
+                    style: Theme.of(context).textTheme.displayMedium?.copyWith(
+                          fontFamily: 'PlayfairDisplay',
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: -1,
+                        ),
                   )
                       .animate()
                       .fadeIn(delay: 200.ms, duration: 500.ms)
@@ -105,7 +79,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
                   const Gap(6),
                   Text(
-                    'Design your day. Own your year.',
+                    'Personal Resource Planner',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: AppColors.textSecondary,
                           fontStyle: FontStyle.italic,
@@ -116,7 +90,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
                   const Gap(40),
 
-                  // Card
+                  // Auth card
                   Container(
                     padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
@@ -144,7 +118,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           hint: 'you@example.com',
                           keyboardType: TextInputType.emailAddress,
                           validator: (v) =>
-                              v != null && v.contains('@') ? null : 'Invalid email',
+                              v != null && v.contains('@')
+                                  ? null
+                                  : 'Invalid email',
                         ),
                         const Gap(14),
 
@@ -155,27 +131,33 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           obscureText: _obscure,
                           suffix: IconButton(
                             icon: Icon(
-                              _obscure ? Icons.visibility_off : Icons.visibility,
+                              _obscure
+                                  ? Icons.visibility_off
+                                  : Icons.visibility,
                               color: AppColors.textSecondary,
                               size: 18,
                             ),
-                            onPressed: () => setState(() => _obscure = !_obscure),
+                            onPressed: () =>
+                                setState(() => _obscure = !_obscure),
                           ),
                           validator: (v) =>
-                              v != null && v.length >= 6 ? null : 'Min 6 characters',
+                              v != null && v.length >= 6
+                                  ? null
+                                  : 'Min 6 characters',
                         ),
                         const Gap(8),
 
                         Align(
                           alignment: Alignment.centerRight,
                           child: TextButton(
-                            onPressed: () => context.push(Routes.forgotPassword),
+                            onPressed: () =>
+                                context.push(Routes.forgotPassword),
                             child: Text(
                               'Forgot password?',
                               style: Theme.of(context)
                                   .textTheme
                                   .labelMedium
-                                  ?.copyWith(color: AppColors.gold),
+                                  ?.copyWith(color: accent),
                             ),
                           ),
                         ),
@@ -203,7 +185,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                     .textTheme
                                     .bodySmall
                                     ?.copyWith(
-                                      color: AppColors.gold,
+                                      color: accent,
                                       fontWeight: FontWeight.w600,
                                     ),
                               ),
@@ -219,6 +201,48 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ],
               ),
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── PRP Logo Mark (Flutter-style geometric) ────────────────────
+
+class _PRPLogo extends StatelessWidget {
+  const _PRPLogo({this.size = 64});
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [AppColors.accent, AppColors.accentDim],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(size * 0.22),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.accent.withValues(alpha: 0.25),
+            blurRadius: 20,
+            spreadRadius: 2,
+          ),
+        ],
+      ),
+      child: Center(
+        child: Text(
+          'PRP',
+          style: TextStyle(
+            color: Colors.white,
+            fontFamily: 'PlayfairDisplay',
+            fontSize: size * 0.32,
+            fontWeight: FontWeight.w900,
+            letterSpacing: -0.5,
           ),
         ),
       ),

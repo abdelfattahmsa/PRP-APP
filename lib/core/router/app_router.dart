@@ -90,13 +90,12 @@ class Routes {
 // ROUTER PROVIDER
 // ══════════════════════════════════════════════════════════════
 final routerProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(authStateProvider);
+  // authStateProvider is now a plain Provider<bool> (Clerk isSignedIn)
+  final isLoggedIn = ref.watch(authStateProvider);
 
   return GoRouter(
     initialLocation: Routes.overview,
     redirect: (context, state) {
-      if (authState.isLoading) return Routes.login;
-      final isLoggedIn = authState.value != null;
       final loc = state.matchedLocation;
       final isAuthRoute = loc.startsWith('/login') ||
           loc.startsWith('/signup') ||

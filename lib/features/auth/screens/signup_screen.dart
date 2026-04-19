@@ -1,6 +1,3 @@
-// ── signup_screen.dart ────────────────────────────────────────
-// lib/features/auth/screens/signup_screen.dart
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -51,6 +48,8 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   @override
   Widget build(BuildContext context) {
     final isLoading = ref.watch(authNotifierProvider).isLoading;
+    final accent = Theme.of(context).colorScheme.primary;
+
     return Scaffold(
       body: Center(
         child: SingleChildScrollView(
@@ -61,13 +60,28 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
               key: _formKey,
               child: Column(
                 children: [
-                  const DiamondLogo().animate().fadeIn(duration: 600.ms),
-                  const Gap(20),
-                  Text('Create Account',
-                      style: Theme.of(context).textTheme.headlineLarge)
+                  _PRPLogo(size: 72)
                       .animate()
-                      .fadeIn(delay: 200.ms),
-                  const Gap(28),
+                      .fadeIn(duration: 600.ms)
+                      .scale(begin: const Offset(0.8, 0.8)),
+                  const Gap(20),
+                  Text(
+                    'PRP',
+                    style: Theme.of(context).textTheme.displayMedium?.copyWith(
+                          fontFamily: 'PlayfairDisplay',
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: -1,
+                        ),
+                  ).animate().fadeIn(delay: 200.ms, duration: 500.ms).slideY(begin: 0.2),
+                  const Gap(6),
+                  Text(
+                    'Personal Resource Planner',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppColors.textSecondary,
+                          fontStyle: FontStyle.italic,
+                        ),
+                  ).animate().fadeIn(delay: 300.ms, duration: 400.ms),
+                  const Gap(32),
                   Container(
                     padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
@@ -78,10 +92,20 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
+                        Text(
+                          'Create Account',
+                          style: Theme.of(context).textTheme.headlineSmall,
+                        ),
+                        const Gap(4),
+                        Text(
+                          'Start planning your resources',
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                        const Gap(24),
                         AppTextField(
                           controller: _nameCtrl,
                           label: 'Full Name',
-                          hint: 'Abdelfattah M. Aboulfoutoh',
+                          hint: 'Your full name',
                           validator: (v) =>
                               v != null && v.isNotEmpty ? null : 'Required',
                         ),
@@ -131,24 +155,28 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text('Already have an account? ',
-                                style: Theme.of(context).textTheme.bodySmall),
+                            Text(
+                              'Already have an account? ',
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
                             GestureDetector(
                               onTap: () => context.pop(),
-                              child: Text('Sign in',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodySmall
-                                      ?.copyWith(
-                                        color: AppColors.gold,
-                                        fontWeight: FontWeight.w600,
-                                      )),
+                              child: Text(
+                                'Sign in',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.copyWith(
+                                      color: accent,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                              ),
                             ),
                           ],
                         ),
                       ],
                     ),
-                  ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.1),
+                  ).animate().fadeIn(delay: 400.ms, duration: 500.ms).slideY(begin: 0.15),
                 ],
               ),
             ),
@@ -159,9 +187,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   }
 }
 
-
-// ── forgot_password_screen.dart ───────────────────────────────
-// lib/features/auth/screens/forgot_password_screen.dart
+// ── Forgot Password ────────────────────────────────────────────
 
 class ForgotPasswordScreen extends ConsumerStatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -245,6 +271,48 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                       ),
                     ],
                   ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── PRP Logo Mark ──────────────────────────────────────────────
+
+class _PRPLogo extends StatelessWidget {
+  const _PRPLogo({this.size = 64});
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [AppColors.accent, AppColors.accentDim],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(size * 0.22),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.accent.withValues(alpha: 0.25),
+            blurRadius: 20,
+            spreadRadius: 2,
+          ),
+        ],
+      ),
+      child: Center(
+        child: Text(
+          'PRP',
+          style: TextStyle(
+            color: Colors.white,
+            fontFamily: 'PlayfairDisplay',
+            fontSize: size * 0.32,
+            fontWeight: FontWeight.w900,
+            letterSpacing: -0.5,
           ),
         ),
       ),

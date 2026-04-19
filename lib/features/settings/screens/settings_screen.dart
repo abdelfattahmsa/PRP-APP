@@ -48,7 +48,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final userAsync = ref.watch(currentUserProvider);
+    final user = ref.watch(currentUserProvider);
     final scheduleMode = _scheduleMode;
     final alarmsEnabled = _alarmsEnabled;
 
@@ -72,11 +72,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   // ── Profile card ────────────────────────────
                   _SectionLabel(label: 'ACCOUNT'),
                   const Gap(10),
-                  userAsync.when(
-                    data: (user) => _ProfileCard(user: user),
-                    loading: () => const _ProfileCard(user: null),
-                    error: (_, __) => const _ProfileCard(user: null),
-                  ),
+                  _ProfileCard(user: user),
                   const Gap(24),
 
                   // ── Schedule preferences ────────────────────

@@ -10,7 +10,7 @@ class ProfileSettingsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final userAsync = ref.watch(currentUserProvider);
+    final user = ref.watch(currentUserProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final cardColor = isDark ? AppColors.card : AppColors.lightCard;
     final borderColor = isDark ? AppColors.border : AppColors.lightBorder;
@@ -37,74 +37,68 @@ class ProfileSettingsScreen extends ConsumerWidget {
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: borderColor),
               ),
-              child: userAsync.when(
-                data: (user) => Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 32,
-                      backgroundColor: accent.withValues(alpha: 0.15),
-                      child: Text(
-                        user?.fullName?.isNotEmpty == true
-                            ? user!.fullName![0].toUpperCase()
-                            : '?',
-                        style: TextStyle(
-                          fontFamily: 'PlayfairDisplay',
-                          fontSize: 28,
-                          fontWeight: FontWeight.w700,
-                          color: accent,
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 32,
+                    backgroundColor: accent.withValues(alpha: 0.15),
+                    child: Text(
+                      user?.fullName?.isNotEmpty == true
+                          ? user!.fullName![0].toUpperCase()
+                          : '?',
+                      style: TextStyle(
+                        fontFamily: 'PlayfairDisplay',
+                        fontSize: 28,
+                        fontWeight: FontWeight.w700,
+                        color: accent,
+                      ),
+                    ),
+                  ),
+                  const Gap(Spacing.base),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          user?.fullName ?? 'User',
+                          style: Theme.of(context)
+                              .textTheme
+                              .titleMedium
+                              ?.copyWith(fontWeight: FontWeight.w700),
                         ),
-                      ),
-                    ),
-                    const Gap(Spacing.base),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            user?.fullName ?? 'User',
+                        const Gap(4),
+                        Text(
+                          user?.email ?? '',
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodySmall
+                              ?.copyWith(color: textSecondary),
+                        ),
+                        const Gap(8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: accent.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            'Free Plan',
                             style: Theme.of(context)
                                 .textTheme
-                                .titleMedium
-                                ?.copyWith(fontWeight: FontWeight.w700),
+                                .labelSmall
+                                ?.copyWith(color: accent),
                           ),
-                          const Gap(4),
-                          Text(
-                            user?.email ?? '',
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodySmall
-                                ?.copyWith(color: textSecondary),
-                          ),
-                          const Gap(8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 3),
-                            decoration: BoxDecoration(
-                              color: accent.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Text(
-                              'Free Plan',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .labelSmall
-                                  ?.copyWith(color: accent),
-                            ),
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                    IconButton(
-                      icon: const Icon(Icons.edit_rounded, size: 18),
-                      color: textSecondary,
-                      onPressed: () {},
-                    ),
-                  ],
-                ),
-                loading: () => const SizedBox(
-                    height: 64,
-                    child: Center(child: CircularProgressIndicator())),
-                error: (_, __) => const SizedBox.shrink(),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.edit_rounded, size: 18),
+                    color: textSecondary,
+                    onPressed: () {},
+                  ),
+                ],
               ),
             ),
             const Gap(24),
