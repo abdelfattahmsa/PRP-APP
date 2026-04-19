@@ -132,7 +132,7 @@ class CalendarEvent extends Equatable {
         id: json['id'] as String,
         date: DateTime.parse(json['date'] as String),
         title: json['title'] as String,
-        typeKey: json['type_key'] as String,
+        typeKey: (json['type_key'] ?? json['type']) as String? ?? 'personal',
         notes: json['notes'] as String?,
         linkUrl: json['link_url'] as String?,
         attachmentUrl: json['attachment_url'] as String?,

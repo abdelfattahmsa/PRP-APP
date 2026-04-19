@@ -31,12 +31,14 @@ class FocusSession extends Equatable {
 
   factory FocusSession.fromJson(Map<String, dynamic> json) => FocusSession(
         id: json['id'] as String,
-        date: DateTime.parse(json['date'] as String),
-        blockLabel: json['block_label'] as String,
-        blockCategoryKey: json['block_category_key'] as String,
-        plannedSeconds: json['planned_seconds'] as int,
-        actualSeconds: json['actual_seconds'] as int,
-        completed: json['completed'] as bool,
+        date: DateTime.parse((json['date'] ?? json['created_at'] ?? DateTime.now().toIso8601String()) as String),
+        blockLabel: json['block_label'] as String? ?? json['mode'] as String? ?? 'Focus',
+        blockCategoryKey: json['block_category_key'] as String? ?? 'rest',
+        plannedSeconds: json['planned_seconds'] as int? ??
+            ((json['duration'] as num?)?.toInt() ?? 1500),
+        actualSeconds: json['actual_seconds'] as int? ??
+            ((json['duration'] as num?)?.toInt() ?? 0),
+        completed: json['completed'] as bool? ?? true,
         note: json['note'] as String?,
         startedAt: json['started_at'] != null
             ? DateTime.parse(json['started_at'] as String)

@@ -84,7 +84,7 @@ class ExternalDebt extends Equatable {
 
   factory ExternalDebt.fromJson(Map<String, dynamic> json) => ExternalDebt(
         id: json['id'] as String,
-        source: json['source'] as String,
+        source: (json['source'] ?? json['name'] ?? json['creditor']) as String? ?? 'Unknown',
         amount: (json['amount'] as num).toDouble(),
         notes: json['notes'] as String?,
         dueDate: json['due_date'] != null
@@ -128,7 +128,7 @@ class Investment extends Equatable {
         id: json['id'] as String,
         type: json['type'] as String,
         amount: (json['amount'] as num).toDouble(),
-        unit: json['unit'] as String,
+        unit: json['unit'] as String? ?? 'EGP',
         notes: json['notes'] as String?,
         purchaseDate: json['purchase_date'] != null
             ? DateTime.parse(json['purchase_date'] as String)
@@ -173,10 +173,10 @@ class Transaction extends Equatable {
   factory Transaction.fromJson(Map<String, dynamic> json) => Transaction(
         id: json['id'] as String,
         date: DateTime.parse(json['date'] as String),
-        description: json['description'] as String,
+        description: json['description'] as String? ?? json['title'] as String? ?? '',
         amount: (json['amount'] as num).toDouble(),
-        category: json['category'] as String,
-        accountName: json['account_name'] as String,
+        category: json['category'] as String? ?? 'General',
+        accountName: json['account_name'] as String? ?? 'Cash',
         notes: json['notes'] as String?,
         isIncome: json['is_income'] as bool? ?? false,
       );
