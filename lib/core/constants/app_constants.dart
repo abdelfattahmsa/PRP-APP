@@ -7,7 +7,7 @@ class AppConstants {
 
   // Supabase
   static const supabaseUrl = 'https://qjqkmvlqrrkowvisvcmc.supabase.co';
-  static const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFqcWttdmxxcnJrb3d2aXN2Y21jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ3Njg4MjQsImV4cCI6MjA5MDM0NDgyNH0.aB1h2odqDdyAIFWq1_-61wz6_AMJHIQSR0aZl4BKhNQ';
+  static const supabaseAnonKey = 'sb_publishable_RP1IetL7Hfe4YKuLXNWkKw_OBDI0cvX';
 
   // Clerk Auth
   static const clerkPublishableKey = 'pk_live_Y2xlcmsucHJwLWFwcC53ZWJzaXRlJA';
