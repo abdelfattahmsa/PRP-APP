@@ -45,7 +45,13 @@
       "Read(//c/Users/abdel/AppData/Local/Pub/Cache/hosted/pub.dev/clerk_flutter-0.0.14-beta/lib/**)",
       "Read(//c/Users/abdel/**)",
       "Bash(xargs cat *)",
-      "Bash(flutter pub *)"
+      "Bash(flutter pub *)",
+      "Bash(vercel --version)",
+      "Bash(cat .vercel/project.json)",
+      "Bash(cat vercel.json)",
+      "Bash(vercel deploy *)",
+      "Bash(find . -name \"generated_plugin_registrant.dart\")",
+      "Bash(cat lib/generated_plugin_registrant.dart)"
     ]
   }
 }

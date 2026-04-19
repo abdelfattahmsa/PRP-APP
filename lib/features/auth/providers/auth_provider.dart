@@ -1,40 +1,29 @@
-import 'package:clerk_auth/clerk_auth.dart' as clerk;
-import 'package:clerk_flutter/clerk_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod/legacy.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../shared/models/models.dart';
+import '../../../services/supabase_service.dart';
 
-// ══════════════════════════════════════════════════════════════
-// CLERK AUTH PROVIDER
-// Holds the ClerkAuthState instance — overridden in main.dart
-// via ProviderScope.overrides after async initialisation.
-// ══════════════════════════════════════════════════════════════
-
-final clerkAuthProvider = ChangeNotifierProvider<ClerkAuthState>((ref) {
-  throw StateError(
-    'clerkAuthProvider must be overridden in ProviderScope in main.dart',
-  );
+// ── Auth stream — drives reactive rebuilds ─────────────────────
+final _supabaseAuthStreamProvider = StreamProvider<AuthState>((ref) {
+  return Supabase.instance.client.auth.onAuthStateChange;
 });
 
-// ── Derived: is any user signed in ────────────────────────────
+// ── Is any user signed in? (used by router) ────────────────────
 final authStateProvider = Provider<bool>((ref) {
-  return ref.watch(clerkAuthProvider).isSignedIn;
+  ref.watch(_supabaseAuthStreamProvider);
+  return Supabase.instance.client.auth.currentUser != null;
 });
 
-// ── Derived: current AppUser from Clerk user object ────────────
+// ── Current AppUser — null when signed out ─────────────────────
 final currentUserProvider = Provider<AppUser?>((ref) {
-  final clerkState = ref.watch(clerkAuthProvider);
-  final user = clerkState.user;
+  ref.watch(_supabaseAuthStreamProvider);
+  final user = Supabase.instance.client.auth.currentUser;
   if (user == null) return null;
   return AppUser(
     id: user.id,
-    email: (user.emailAddresses?.isNotEmpty == true)
-        ? user.emailAddresses!.first.emailAddress
-        : '',
-    fullName: [user.firstName, user.lastName]
-        .where((s) => s != null && s.isNotEmpty)
-        .join(' '),
-    avatarUrl: user.profileImageUrl ?? user.imageUrl,
+    email: user.email ?? '',
+    fullName: user.userMetadata?['full_name'] as String? ?? '',
+    avatarUrl: user.userMetadata?['avatar_url'] as String?,
   );
 });
 
@@ -43,8 +32,6 @@ final currentUserProvider = Provider<AppUser?>((ref) {
 // ══════════════════════════════════════════════════════════════
 
 class AuthNotifier extends AsyncNotifier<void> {
-  ClerkAuthState get _clerk => ref.read(clerkAuthProvider);
-
   @override
   Future<void> build() async {}
 
@@ -54,18 +41,11 @@ class AuthNotifier extends AsyncNotifier<void> {
     required String fullName,
   }) async {
     state = const AsyncLoading();
-    state = await AsyncValue.guard(() async {
-      final parts = fullName.trim().split(' ');
-      final firstName = parts.first;
-      final lastName = parts.length > 1 ? parts.skip(1).join(' ') : null;
-      await _clerk.attemptSignUp(
-        strategy: clerk.Strategy.password,
-        emailAddress: email,
-        password: password,
-        firstName: firstName,
-        lastName: lastName,
-      );
-    });
+    state = await AsyncValue.guard(() => SupabaseService.instance.signUp(
+          email: email,
+          password: password,
+          fullName: fullName,
+        ));
   }
 
   Future<void> signIn({
@@ -73,29 +53,21 @@ class AuthNotifier extends AsyncNotifier<void> {
     required String password,
   }) async {
     state = const AsyncLoading();
-    state = await AsyncValue.guard(() async {
-      await _clerk.attemptSignIn(
-        strategy: clerk.Strategy.password,
-        identifier: email,
-        password: password,
-      );
-    });
+    state = await AsyncValue.guard(() => SupabaseService.instance.signIn(
+          email: email,
+          password: password,
+        ));
   }
 
   Future<void> signOut() async {
     state = const AsyncLoading();
-    state = await AsyncValue.guard(() => _clerk.signOut());
+    state = await AsyncValue.guard(SupabaseService.instance.signOut);
   }
 
   Future<void> resetPassword(String email) async {
-    // Clerk password reset is initiated via email — use Clerk's flow
     state = const AsyncLoading();
-    state = await AsyncValue.guard(() async {
-      await _clerk.attemptSignIn(
-        strategy: clerk.Strategy.resetPasswordEmailCode,
-        identifier: email,
-      );
-    });
+    state = await AsyncValue.guard(
+        () => SupabaseService.instance.resetPassword(email));
   }
 }
 
