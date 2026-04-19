@@ -278,7 +278,8 @@ class _DesktopShellState extends ConsumerState<_DesktopShell> {
                     padding:
                         const EdgeInsets.symmetric(vertical: Spacing.sm),
                     children: [
-                      for (var i = 0; i < kAppTabs.length; i++) ...[
+                      // Show all tabs except Profile (last) — Profile lives at the bottom
+                      for (var i = 0; i < kAppTabs.length - 1; i++) ...[
                         _SidebarTabItem(
                           tab: kAppTabs[i],
                           active: i == widget.tabIndex,
@@ -310,7 +311,12 @@ class _DesktopShellState extends ConsumerState<_DesktopShell> {
                   ),
                 ),
                 Divider(height: 1, color: borderColor),
-                _SidebarUserFooter(ref: ref, expanded: _expanded),
+                _SidebarProfileFooter(
+                  ref: ref,
+                  expanded: _expanded,
+                  active: widget.tabIndex == kAppTabs.length - 1,
+                  location: widget.location,
+                ),
               ],
             ),
           ),
@@ -766,93 +772,167 @@ class _SidebarSubTabItemCollapsed extends StatelessWidget {
   }
 }
 
-class _SidebarUserFooter extends StatelessWidget {
-  const _SidebarUserFooter({required this.ref, required this.expanded});
+class _SidebarProfileFooter extends StatelessWidget {
+  const _SidebarProfileFooter({
+    required this.ref,
+    required this.expanded,
+    required this.active,
+    required this.location,
+  });
   final WidgetRef ref;
   final bool expanded;
+  final bool active;
+  final String location;
 
   @override
   Widget build(BuildContext context) {
+    final profileTab = kAppTabs.last; // Profile is always the last tab
     final userAsync = ref.watch(currentUserProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final accent = Theme.of(context).colorScheme.primary;
+    final textSecondary =
+        isDark ? AppColors.textSecondary : AppColors.lightTextSecondary;
     final textMuted = isDark ? AppColors.textMuted : AppColors.lightTextMuted;
+    final borderColor = isDark ? AppColors.border : AppColors.lightBorder;
 
-    return Padding(
-      padding: const EdgeInsets.all(Spacing.sm),
-      child: userAsync.when(
-        data: (user) {
-          final initial = user?.fullName?.isNotEmpty == true
-              ? user!.fullName![0].toUpperCase()
-              : '?';
+    final user = userAsync.when(data: (u) => u, loading: () => null, error: (_, __) => null);
+    final initial = user?.fullName?.isNotEmpty == true
+        ? user!.fullName![0].toUpperCase()
+        : '?';
 
-          final avatar = CircleAvatar(
-            radius: 16,
-            backgroundColor: accent.withValues(alpha: 0.15),
-            child: Text(
-              initial,
-              style: TextStyle(
-                color: accent,
-                fontFamily: 'IBMPlexMono',
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
+    // Collapsed sidebar: show avatar icon that navigates to profile
+    if (!expanded) {
+      return Padding(
+        padding: const EdgeInsets.all(Spacing.sm),
+        child: Tooltip(
+          message: 'Profile',
+          child: Material(
+            color: active ? accent.withValues(alpha: 0.1) : Colors.transparent,
+            borderRadius: BorderRadius.circular(10),
+            child: InkWell(
+              onTap: () => context.go(profileTab.route),
+              borderRadius: BorderRadius.circular(10),
+              hoverColor: accent.withValues(alpha: 0.06),
+              child: SizedBox(
+                height: 44,
+                child: Center(
+                  child: CircleAvatar(
+                    radius: 14,
+                    backgroundColor: active
+                        ? accent.withValues(alpha: 0.25)
+                        : accent.withValues(alpha: 0.12),
+                    child: Text(
+                      initial,
+                      style: TextStyle(
+                        color: accent,
+                        fontFamily: 'IBMPlexMono',
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
               ),
             ),
-          );
+          ),
+        ),
+      );
+    }
 
-          if (!expanded) {
-            return Center(
-              child: Tooltip(
-                message: user?.fullName ?? 'User',
-                child: avatar,
-              ),
-            );
-          }
-
-          return Row(
-            children: [
-              avatar,
-              const Gap(10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
+    // Expanded sidebar: show user info row + profile sub-tabs when active
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Profile sub-tabs when active
+        if (active)
+          Padding(
+            padding: const EdgeInsets.only(top: 4, bottom: 2),
+            child: Column(
+              children: [
+                for (final sub in profileTab.subTabs)
+                  _SidebarSubTabItem(
+                    sub: sub,
+                    active: location.startsWith(sub.route),
+                    onTap: () => context.go(sub.route),
+                  ),
+                Divider(height: 8, color: borderColor),
+              ],
+            ),
+          ),
+        // User identity row (acts as the Profile tab item)
+        Padding(
+          padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
+          child: Material(
+            color: active ? accent.withValues(alpha: 0.1) : Colors.transparent,
+            borderRadius: BorderRadius.circular(10),
+            child: InkWell(
+              onTap: () => context.go(profileTab.route),
+              borderRadius: BorderRadius.circular(10),
+              hoverColor: accent.withValues(alpha: 0.06),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                child: Row(
                   children: [
-                    Text(
-                      user?.fullName ?? 'User',
-                      style:
-                          Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.w500,
-                              ),
-                      overflow: TextOverflow.ellipsis,
+                    CircleAvatar(
+                      radius: 14,
+                      backgroundColor: accent.withValues(alpha: 0.15),
+                      child: Text(
+                        initial,
+                        style: TextStyle(
+                          color: accent,
+                          fontFamily: 'IBMPlexMono',
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
-                    Text(
-                      user?.email ?? '',
-                      style: Theme.of(context)
-                          .textTheme
-                          .labelSmall
-                          ?.copyWith(fontSize: 8),
-                      overflow: TextOverflow.ellipsis,
+                    const Gap(10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            user?.fullName ?? 'Profile',
+                            style: Theme.of(context)
+                                .textTheme
+                                .labelMedium
+                                ?.copyWith(
+                                  fontWeight: FontWeight.w500,
+                                  color: active ? accent : null,
+                                  fontSize: 11,
+                                ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          Text(
+                            user?.email ?? '',
+                            style: TextStyle(
+                              fontSize: 8,
+                              color: textSecondary,
+                              fontFamily: 'IBMPlexMono',
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.logout_rounded, size: 13),
+                      color: textMuted,
+                      tooltip: 'Sign out',
+                      padding: EdgeInsets.zero,
+                      constraints:
+                          const BoxConstraints(minWidth: 28, minHeight: 28),
+                      onPressed: () =>
+                          ref.read(authNotifierProvider.notifier).signOut(),
                     ),
                   ],
                 ),
               ),
-              IconButton(
-                icon: const Icon(Icons.logout_rounded, size: 14),
-                color: textMuted,
-                tooltip: 'Sign out',
-                padding: EdgeInsets.zero,
-                constraints:
-                    const BoxConstraints(minWidth: 32, minHeight: 32),
-                onPressed: () =>
-                    ref.read(authNotifierProvider.notifier).signOut(),
-              ),
-            ],
-          );
-        },
-        loading: () => const SizedBox.shrink(),
-        error: (_, __) => const SizedBox.shrink(),
-      ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

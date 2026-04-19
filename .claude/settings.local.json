@@ -29,7 +29,12 @@
       "Bash(xargs wc:*)",
       "Bash(flutter devices:*)",
       "Bash(taskkill /F /IM \"dart.exe\")",
-      "Bash(taskkill /F /IM \"chrome.exe\")"
+      "Bash(taskkill /F /IM \"chrome.exe\")",
+      "Bash(dart analyze *)",
+      "Bash(npm install *)",
+      "Bash(vercel --prod --yes)",
+      "Read(//c/Users/abdel/.local/share/com.vercel.cli/**)",
+      "Bash(vercel project *)"
     ]
   }
 }

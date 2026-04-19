@@ -50,13 +50,13 @@ class AppColors {
   AppColors._();
 
   // ── DARK BACKGROUNDS ─────────────────────────────────────────
-  static const bg = Color(0xFF08070C);
-  static const surface = Color(0xFF0D0B13);
-  static const card = Color(0xFF12101E);
-  static const cardHover = Color(0xFF171526);
-  static const cardAlt = Color(0xFF171526);
-  static const border = Color(0xFF1E1B2C);
-  static const borderLight = Color(0xFF2A2640);
+  static const bg = Color(0xFF0A0A0A);
+  static const surface = Color(0xFF111111);
+  static const card = Color(0xFF1A1A1A);
+  static const cardHover = Color(0xFF222222);
+  static const cardAlt = Color(0xFF222222);
+  static const border = Color(0xFF2A2A2A);
+  static const borderLight = Color(0xFF333333);
 
   // ── ACCENT — GREEN (primary) ──────────────────────────────────
   static const accent = Color(0xFF22C55E);
@@ -108,9 +108,9 @@ class AppColors {
   static const done = Color(0xFF405040);
 
   // ── DARK TEXT ─────────────────────────────────────────────────
-  static const textPrimary = Color(0xFFE0DAF0);
-  static const textSecondary = Color(0xFF7A7090);
-  static const textMuted = Color(0xFF3A3450);
+  static const textPrimary = Color(0xFFE8E8E8);
+  static const textSecondary = Color(0xFF888888);
+  static const textMuted = Color(0xFF444444);
 
   static Color categoryColor(String key) {
     return switch (key) {
