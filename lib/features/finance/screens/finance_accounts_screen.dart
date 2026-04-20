@@ -436,7 +436,6 @@ class _BankAccountSheetState extends ConsumerState<_BankAccountSheet> {
   final _savingsCtrl = TextEditingController();
   final _ccBalanceCtrl = TextEditingController();
   final _ccLimitCtrl = TextEditingController();
-  final _minPayCtrl = TextEditingController();
   bool _hasCard = false;
   bool _saving = false;
 
@@ -452,7 +451,6 @@ class _BankAccountSheetState extends ConsumerState<_BankAccountSheet> {
       if (b.hasCard) {
         _ccBalanceCtrl.text = b.creditCardBalance > 0 ? b.creditCardBalance.toString() : '';
         _ccLimitCtrl.text = b.creditCardLimit > 0 ? b.creditCardLimit.toString() : '';
-        _minPayCtrl.text = b.minimumPayment > 0 ? b.minimumPayment.toString() : '';
       }
     }
   }
@@ -464,25 +462,33 @@ class _BankAccountSheetState extends ConsumerState<_BankAccountSheet> {
     _savingsCtrl.dispose();
     _ccBalanceCtrl.dispose();
     _ccLimitCtrl.dispose();
-    _minPayCtrl.dispose();
     super.dispose();
   }
 
   Future<void> _save() async {
     if (_nameCtrl.text.trim().isEmpty) return;
     setState(() => _saving = true);
-    final acc = BankAccount(
-      id: widget.existing?.id ?? _uuid.v4(),
-      name: _nameCtrl.text.trim(),
-      currentBalance: double.tryParse(_currentCtrl.text) ?? 0,
-      savingsBalance: double.tryParse(_savingsCtrl.text) ?? 0,
-      creditCardBalance: _hasCard ? (double.tryParse(_ccBalanceCtrl.text) ?? 0) : 0,
-      creditCardLimit: _hasCard ? (double.tryParse(_ccLimitCtrl.text) ?? 0) : 0,
-      minimumPayment: _hasCard ? (double.tryParse(_minPayCtrl.text) ?? 0) : 0,
-      order: widget.existing?.order ?? 0,
-    );
-    await ref.read(bankAccountsProvider.notifier).upsert(acc);
-    if (mounted) Navigator.pop(context);
+    try {
+      final acc = BankAccount(
+        id: widget.existing?.id ?? _uuid.v4(),
+        name: _nameCtrl.text.trim(),
+        currentBalance: double.tryParse(_currentCtrl.text) ?? 0,
+        savingsBalance: double.tryParse(_savingsCtrl.text) ?? 0,
+        creditCardBalance: _hasCard ? (double.tryParse(_ccBalanceCtrl.text) ?? 0) : 0,
+        creditCardLimit: _hasCard ? (double.tryParse(_ccLimitCtrl.text) ?? 0) : 0,
+        minimumPayment: 0,
+        order: widget.existing?.order ?? 0,
+      );
+      await ref.read(bankAccountsProvider.notifier).upsert(acc);
+      if (mounted) Navigator.pop(context);
+    } catch (e) {
+      if (mounted) {
+        setState(() => _saving = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to save: $e'), backgroundColor: AppColors.error),
+        );
+      }
+    }
   }
 
   @override
@@ -580,9 +586,6 @@ class _BankAccountSheetState extends ConsumerState<_BankAccountSheet> {
                         _NumField(ctrl: _ccLimitCtrl, label: 'CC limit (EGP)'),
                   ),
                 ]),
-                const Gap(12),
-                _NumField(
-                    ctrl: _minPayCtrl, label: 'Minimum monthly payment (EGP)'),
               ],
 
               const Gap(24),

@@ -172,10 +172,36 @@ class _HabitTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isDone = habit.isDoneToday;
 
-    return InkWell(
-      onTap: () =>
-          ref.read(habitsProvider.notifier).toggle(habit.id, dateKey),
-      child: Padding(
+    return Dismissible(
+      key: ValueKey(habit.id),
+      direction: DismissDirection.endToStart,
+      background: Container(
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 20),
+        color: AppColors.error.withOpacity(0.12),
+        child: const Icon(Icons.delete_rounded, color: AppColors.error),
+      ),
+      confirmDismiss: (_) async => await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Delete habit?'),
+          content: Text('Remove "${habit.name}"?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancel')),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Delete',
+                  style: TextStyle(color: AppColors.error))),
+          ],
+        ),
+      ),
+      onDismissed: (_) => ref.read(habitsProvider.notifier).delete(habit.id),
+      child: InkWell(
+        onTap: () =>
+            ref.read(habitsProvider.notifier).toggle(habit.id, dateKey),
+        child: Padding(
         padding: const EdgeInsets.symmetric(
             horizontal: Spacing.base, vertical: 12),
         child: Row(
@@ -221,6 +247,7 @@ class _HabitTile extends ConsumerWidget {
           ],
         ),
       ),
+    ),
     );
   }
 }

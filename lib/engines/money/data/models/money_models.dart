@@ -42,7 +42,6 @@ class BankAccount extends Equatable {
         'name': name,
         'cc_balance': creditCardBalance,
         'cc_limit': creditCardLimit,
-        'minimum_payment': minimumPayment,
         'savings_balance': savingsBalance,
         'current_balance': currentBalance,
         'order': order,

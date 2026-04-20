@@ -413,7 +413,17 @@ class SupabaseService {
         .select()
         .eq('user_id', _uid)
         .order('order');
-    return res.map((j) => UserCategory.fromJson(j)).toList();
+    final cats = res.map((j) => UserCategory.fromJson(j)).toList();
+    if (cats.isEmpty) {
+      await _seedDefaultCategories(_uid);
+      final seeded = await _db
+          .from('user_categories')
+          .select()
+          .eq('user_id', _uid)
+          .order('order');
+      return seeded.map((j) => UserCategory.fromJson(j)).toList();
+    }
+    return cats;
   }
 
   Future<UserCategory> upsertUserCategory(UserCategory cat) async {
