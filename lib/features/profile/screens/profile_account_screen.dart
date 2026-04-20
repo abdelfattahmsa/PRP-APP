@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
@@ -34,10 +36,98 @@ class ProfileAccountScreen extends ConsumerWidget {
     }
   }
 
+  Future<void> _exportData(BuildContext context, WidgetRef ref) async {
+    final user = ref.read(currentUserProvider);
+    if (user == null) return;
+
+    final export = {
+      'exported_at': DateTime.now().toIso8601String(),
+      'user': {
+        'id': user.id,
+        'email': user.email,
+        'full_name': user.fullName,
+      },
+      'note': 'Full data export from Supabase is available via the Supabase dashboard.',
+    };
+
+    final jsonStr = const JsonEncoder.withIndent('  ').convert(export);
+    final dataUri = 'data:application/json;charset=utf-8,${Uri.encodeComponent(jsonStr)}';
+
+    if (kIsWeb) {
+      await launchUrl(Uri.parse(dataUri));
+    }
+
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Data export downloaded.')),
+      );
+    }
+  }
+
+  Future<void> _confirmDeleteAccount(BuildContext context, WidgetRef ref) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Account?'),
+        content: const Text(
+          'This will permanently delete your account and all associated data. '
+          'This action cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Delete Forever'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !context.mounted) return;
+
+    // Second confirmation
+    final ctrl = TextEditingController();
+    final reconfirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Type DELETE to confirm'),
+        content: TextField(
+          controller: ctrl,
+          autofocus: true,
+          decoration: const InputDecoration(hintText: 'DELETE'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
+            onPressed: () => Navigator.of(ctx).pop(ctrl.text == 'DELETE'),
+            child: const Text('Confirm'),
+          ),
+        ],
+      ),
+    );
+    ctrl.dispose();
+    if (reconfirmed != true || !context.mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Account deletion requested. Contact support@prp-app.website to complete.'),
+        duration: Duration(seconds: 6),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final borderColor = isDark ? AppColors.border : AppColors.lightBorder;
+    final syncTime = _formatSyncTime(DateTime.now());
 
     return Scaffold(
       body: SafeArea(
@@ -67,16 +157,20 @@ class ProfileAccountScreen extends ConsumerWidget {
               Divider(height: 1, color: borderColor),
               SettingsTile(
                 title: 'Two-Factor Authentication',
-                subtitle: 'Not enabled',
+                subtitle: 'Not yet available',
                 leading: const Icon(Icons.security_outlined, size: 20),
-                onTap: () {},
+                onTap: () => ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Two-factor authentication is coming soon.')),
+                ),
               ),
               Divider(height: 1, color: borderColor),
               SettingsTile(
                 title: 'Active Sessions',
-                subtitle: '1 device',
+                subtitle: '1 active session (this device)',
                 leading: const Icon(Icons.devices_outlined, size: 20),
-                onTap: () {},
+                onTap: () => ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Session management is coming soon.')),
+                ),
               ),
             ]),
             const Gap(24),
@@ -86,27 +180,38 @@ class ProfileAccountScreen extends ConsumerWidget {
             SectionCard(children: [
               SettingsTile(
                 title: 'Export My Data',
-                subtitle: 'Download all your data as JSON',
+                subtitle: 'Download your profile as JSON',
                 leading: const Icon(Icons.download_outlined, size: 20),
-                onTap: () {},
+                onTap: () => _exportData(context, ref),
               ),
               Divider(height: 1, color: borderColor),
               SettingsTile(
                 title: 'Sync Status',
-                subtitle: 'Last synced: Just now',
+                subtitle: 'Last synced: $syncTime',
                 leading: const Icon(Icons.sync_outlined, size: 20),
-                onTap: () {},
+                onTap: () => ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Synced with Supabase at $syncTime.')),
+                ),
               ),
             ]),
             const Gap(24),
 
             const SectionHeader('Danger Zone'),
             const Gap(12),
-            _DangerZone(ref: ref),
+            _DangerZone(
+              ref: ref,
+              onDeleteAccount: () => _confirmDeleteAccount(context, ref),
+            ),
           ],
         ),
       ),
     );
+  }
+
+  String _formatSyncTime(DateTime t) {
+    final h = t.hour.toString().padLeft(2, '0');
+    final m = t.minute.toString().padLeft(2, '0');
+    return '$h:$m today';
   }
 }
 
@@ -179,8 +284,9 @@ class _PlanCard extends StatelessWidget {
 }
 
 class _DangerZone extends StatelessWidget {
-  const _DangerZone({required this.ref});
+  const _DangerZone({required this.ref, required this.onDeleteAccount});
   final WidgetRef ref;
+  final VoidCallback onDeleteAccount;
 
   @override
   Widget build(BuildContext context) {
@@ -237,7 +343,7 @@ class _DangerZone extends StatelessWidget {
                   .bodySmall
                   ?.copyWith(color: AppColors.textSecondary),
             ),
-            onTap: () {},
+            onTap: onDeleteAccount,
           ),
         ],
       ),

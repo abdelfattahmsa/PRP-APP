@@ -3,10 +3,24 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/placeholders.dart';
 import '../../../features/auth/providers/auth_provider.dart';
+
+const _prefDateFormat = 'date_format';
+const _dateFormats = ['DD/MM/YYYY', 'MM/DD/YYYY', 'YYYY-MM-DD'];
+const _currencies = ['EGP', 'USD', 'EUR', 'GBP', 'SAR', 'AED'];
+const _currencySymbols = {
+  'EGP': 'EGP (£)',
+  'USD': 'USD (\$)',
+  'EUR': 'EUR (€)',
+  'GBP': 'GBP (£)',
+  'SAR': 'SAR (﷼)',
+  'AED': 'AED (د.إ)',
+};
 
 Future<void> _showEditNameDialog(BuildContext context, WidgetRef ref, String? current) async {
   final ctrl = TextEditingController(text: current ?? '');
@@ -48,6 +62,35 @@ class ProfileSettingsScreen extends ConsumerStatefulWidget {
 
 class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
   bool _uploadingAvatar = false;
+  String _currency = 'EGP';
+  String _dateFormat = 'DD/MM/YYYY';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPrefs();
+  }
+
+  Future<void> _loadPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
+    setState(() {
+      _currency = prefs.getString(AppConstants.prefDefaultCurrency) ?? 'EGP';
+      _dateFormat = prefs.getString(_prefDateFormat) ?? 'DD/MM/YYYY';
+    });
+  }
+
+  Future<void> _saveCurrency(String val) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(AppConstants.prefDefaultCurrency, val);
+    if (mounted) setState(() => _currency = val);
+  }
+
+  Future<void> _saveDateFormat(String val) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_prefDateFormat, val);
+    if (mounted) setState(() => _dateFormat = val);
+  }
 
   Future<void> _pickAndUploadAvatar() async {
     final picker = ImagePicker();
@@ -77,6 +120,50 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
     }
   }
 
+  void _showInfo(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), duration: const Duration(seconds: 3)),
+    );
+  }
+
+  Future<void> _showCurrencyPicker() async {
+    final picked = await showDialog<String>(
+      context: context,
+      builder: (ctx) => SimpleDialog(
+        title: const Text('Default Currency'),
+        children: _currencies
+            .map((c) => ListTile(
+                  title: Text(_currencySymbols[c] ?? c),
+                  trailing: c == _currency
+                      ? const Icon(Icons.check_rounded, size: 18)
+                      : null,
+                  onTap: () => Navigator.of(ctx).pop(c),
+                ))
+            .toList(),
+      ),
+    );
+    if (picked != null) await _saveCurrency(picked);
+  }
+
+  Future<void> _showDateFormatPicker() async {
+    final picked = await showDialog<String>(
+      context: context,
+      builder: (ctx) => SimpleDialog(
+        title: const Text('Date Format'),
+        children: _dateFormats
+            .map((f) => ListTile(
+                  title: Text(f),
+                  trailing: f == _dateFormat
+                      ? const Icon(Icons.check_rounded, size: 18)
+                      : null,
+                  onTap: () => Navigator.of(ctx).pop(f),
+                ))
+            .toList(),
+      ),
+    );
+    if (picked != null) await _saveDateFormat(picked);
+  }
+
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(currentUserProvider);
@@ -86,6 +173,7 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
     final textSecondary =
         isDark ? AppColors.textSecondary : AppColors.lightTextSecondary;
     final accent = Theme.of(context).colorScheme.primary;
+    final tz = DateTime.now().timeZoneName;
 
     return Scaffold(
       body: SafeArea(
@@ -245,23 +333,23 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
               Divider(height: 1, color: borderColor),
               SettingsTile(
                 title: 'Email Address',
-                subtitle: 'Change your login email',
+                subtitle: user?.email ?? 'Not set',
                 leading: const Icon(Icons.email_outlined, size: 20),
-                onTap: () {},
+                onTap: () => _showInfo('To change your email, contact support at support@prp-app.website'),
               ),
               Divider(height: 1, color: borderColor),
               SettingsTile(
                 title: 'Phone Number',
-                subtitle: 'Not set',
+                subtitle: 'Not supported with email auth',
                 leading: const Icon(Icons.phone_outlined, size: 20),
-                onTap: () {},
+                onTap: () => _showInfo('Phone number login is not available. Use email & password to sign in.'),
               ),
               Divider(height: 1, color: borderColor),
               SettingsTile(
                 title: 'Timezone',
-                subtitle: 'UTC+3 (Cairo)',
+                subtitle: tz,
                 leading: const Icon(Icons.language_outlined, size: 20),
-                onTap: () {},
+                onTap: () => _showInfo('Timezone is detected automatically from your browser ($tz).'),
               ),
             ]),
             const Gap(24),
@@ -273,21 +361,21 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
                 title: 'Language',
                 subtitle: 'English',
                 leading: const Icon(Icons.translate_outlined, size: 20),
-                onTap: () {},
+                onTap: () => _showInfo('Arabic is coming soon. English is the only available language.'),
               ),
               Divider(height: 1, color: borderColor),
               SettingsTile(
                 title: 'Currency',
-                subtitle: 'USD (\$)',
+                subtitle: _currencySymbols[_currency] ?? _currency,
                 leading: const Icon(Icons.attach_money_outlined, size: 20),
-                onTap: () {},
+                onTap: _showCurrencyPicker,
               ),
               Divider(height: 1, color: borderColor),
               SettingsTile(
                 title: 'Date Format',
-                subtitle: 'DD/MM/YYYY',
+                subtitle: _dateFormat,
                 leading: const Icon(Icons.calendar_today_outlined, size: 20),
-                onTap: () {},
+                onTap: _showDateFormatPicker,
               ),
             ]),
             const Gap(24),
@@ -310,7 +398,7 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
                 title: 'Download for Windows',
                 subtitle: 'Coming soon',
                 leading: const Icon(Icons.computer_outlined, size: 20),
-                onTap: () {},
+                onTap: () => _showInfo('Windows desktop app is coming soon.'),
                 trailing: _ComingSoonBadge(),
               ),
               Divider(height: 1, color: borderColor),
@@ -318,13 +406,13 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
                 title: 'Android & iOS',
                 subtitle: 'Mobile apps — coming soon',
                 leading: const Icon(Icons.phone_android_outlined, size: 20),
-                onTap: () {},
+                onTap: () => _showInfo('Mobile apps are coming soon.'),
                 trailing: _ComingSoonBadge(),
               ),
               Divider(height: 1, color: borderColor),
               SettingsTile(
                 title: 'App Version',
-                subtitle: 'PRP v4.2.0',
+                subtitle: 'PRP v${AppConstants.appVersion}',
                 leading: const Icon(Icons.info_outline, size: 20),
                 onTap: () {},
               ),
