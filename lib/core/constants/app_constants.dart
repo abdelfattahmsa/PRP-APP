@@ -25,6 +25,7 @@ class AppConstants {
   static const prefDayStartHour = 'day_start_hour';
   static const prefFirstDayOfWeek = 'first_day_of_week';
   static const prefDefaultCurrency = 'default_currency';
+  static const prefAlphaVantageApiKey = 'alpha_vantage_api_key';
 
   // Default schedule modes
   static const scheduleModes = ['normal', 'fasting', 'friday', 'cairo'];

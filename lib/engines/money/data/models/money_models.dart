@@ -119,14 +119,20 @@ class Investment extends Equatable {
     required this.type,
     required this.amount,
     required this.unit,
+    this.ticker,
+    this.quantity,
+    this.purchasePrice,
     this.notes,
     this.purchaseDate,
   });
 
   final String id;
-  final String type;   // Gold, Silver, Stocks, etc.
-  final double amount;
-  final String unit;   // EGP, USD, g, oz, shares
+  final String type;          // Gold, Silver, Stocks, etc.
+  final double amount;        // Total value (manual or quantity × price)
+  final String unit;          // EGP, USD, g, oz, shares
+  final String? ticker;       // Stock/ETF ticker symbol e.g. "AAPL"
+  final double? quantity;     // Number of units/shares
+  final double? purchasePrice; // Price per unit at purchase
   final String? notes;
   final DateTime? purchaseDate;
 
@@ -135,6 +141,9 @@ class Investment extends Equatable {
         type: json['type'] as String,
         amount: (json['amount'] as num).toDouble(),
         unit: json['unit'] as String? ?? 'EGP',
+        ticker: json['ticker'] as String?,
+        quantity: (json['quantity'] as num?)?.toDouble(),
+        purchasePrice: (json['purchase_price'] as num?)?.toDouble(),
         notes: json['notes'] as String?,
         purchaseDate: json['purchase_date'] != null
             ? DateTime.parse(json['purchase_date'] as String)
@@ -146,6 +155,9 @@ class Investment extends Equatable {
         'type': type,
         'amount': amount,
         'unit': unit,
+        'ticker': ticker,
+        'quantity': quantity,
+        'purchase_price': purchasePrice,
         'notes': notes,
         'purchase_date': purchaseDate?.toIso8601String().split('T').first,
       };

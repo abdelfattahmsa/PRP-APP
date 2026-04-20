@@ -64,6 +64,47 @@ class _ProfileAppSettingsScreenState
     await fn(prefs);
   }
 
+  Future<void> _pickApiKey(BuildContext context) async {
+    final prefs = await SharedPreferences.getInstance();
+    final current = prefs.getString(AppConstants.prefAlphaVantageApiKey) ?? '';
+    final ctrl = TextEditingController(text: current);
+    final saved = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Alpha Vantage API Key'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Get a free key at alphavantage.co (25 req/day)',
+                style: TextStyle(fontSize: 12)),
+            const SizedBox(height: 12),
+            TextField(
+              controller: ctrl,
+              autofocus: true,
+              decoration: const InputDecoration(
+                hintText: 'Paste your API key here',
+                isDense: true,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancel')),
+          FilledButton(
+              onPressed: () => Navigator.pop(ctx, ctrl.text.trim()),
+              child: const Text('Save')),
+        ],
+      ),
+    );
+    ctrl.dispose();
+    if (saved != null) {
+      await prefs.setString(AppConstants.prefAlphaVantageApiKey, saved);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final themeMode = ref.watch(themeModeProvider);
@@ -283,10 +324,10 @@ class _ProfileAppSettingsScreenState
               ),
               Divider(height: 1, color: borderColor),
               SettingsTile(
-                title: 'Show Stock Prices',
-                subtitle: 'Live portfolio value in Investments tab',
+                title: 'Alpha Vantage API Key',
+                subtitle: 'For live stock prices in Investments',
                 leading: const Icon(Icons.show_chart_rounded, size: 20),
-                onTap: () {},
+                onTap: () => _pickApiKey(context),
               ),
             ]),
             const Gap(24),

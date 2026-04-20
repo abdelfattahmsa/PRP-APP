@@ -75,6 +75,10 @@ class AuthNotifier extends AsyncNotifier<void> {
     state = await AsyncValue.guard(
         () => SupabaseService.instance.updateUserName(fullName));
   }
+
+  Future<String> updateAvatar(List<int> bytes, String ext) async {
+    return SupabaseService.instance.uploadAvatar(bytes, ext);
+  }
 }
 
 final authNotifierProvider =

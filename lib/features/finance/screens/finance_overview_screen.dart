@@ -44,6 +44,29 @@ class FinanceOverviewScreen extends ConsumerWidget {
             return data;
           }();
 
+    // 6-month net cashflow (income − expenses per month)
+    final now = DateTime.now();
+    final months6 = List.generate(6, (i) {
+      final m = DateTime(now.year, now.month - (5 - i));
+      return m;
+    });
+    final monthLabels =
+        months6.map((m) => _monthAbbr(m.month)).toList();
+    final netCashflow = txAsync.value == null
+        ? List.filled(6, 0.0)
+        : months6.map((m) {
+            final monthTxs = txAsync.value!.where((t) =>
+                t.date.year == m.year && t.date.month == m.month);
+            final inc =
+                monthTxs.where((t) => t.isIncome).fold(0.0, (s, t) => s + t.amount);
+            final exp =
+                monthTxs.where((t) => !t.isIncome).fold(0.0, (s, t) => s + t.amount);
+            return inc - exp;
+          }).toList();
+    final cashflowColors = netCashflow
+        .map((v) => v >= 0 ? AppColors.success : AppColors.error)
+        .toList();
+
     return Scaffold(
       body: SafeArea(
         child: ListView(
@@ -102,6 +125,20 @@ class FinanceOverviewScreen extends ConsumerWidget {
                       data: spending30,
                       color: AppColors.error,
                       showGradient: true,
+                    ),
+            ),
+            const Gap(20),
+
+            // ── 6-Month Net Cashflow ──────────────────────────────
+            ChartCard(
+              title: '6-Month Net Cashflow',
+              height: 140,
+              child: txAsync.isLoading
+                  ? const Center(child: CircularProgressIndicator(strokeWidth: 2))
+                  : AppBarChart(
+                      data: netCashflow,
+                      labels: monthLabels,
+                      colors: cashflowColors,
                     ),
             ),
             const Gap(20),
@@ -216,6 +253,11 @@ class FinanceOverviewScreen extends ConsumerWidget {
       ),
     );
   }
+}
+
+String _monthAbbr(int month) {
+  const m = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return m[(month - 1).clamp(0, 11)];
 }
 
 class _SpendingDonut extends StatelessWidget {

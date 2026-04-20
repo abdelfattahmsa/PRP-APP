@@ -7,6 +7,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../engines/money/data/models/money_models.dart';
 import '../../../shared/models/all_providers.dart';
 import '../../../shared/widgets/app_card.dart';
+import '../../../engines/money/providers/money_providers.dart' show stockPriceProvider;
 
 import '../../../shared/widgets/placeholders.dart' show ScreenHeader, SectionHeader;
 
@@ -227,15 +228,18 @@ class _InvestmentTile extends ConsumerWidget {
                         fontWeight: FontWeight.w700, fontSize: 15),
                   ),
                   const Gap(2),
-                  Text(
-                    '${pct.toStringAsFixed(1)}% of portfolio',
-                    style: TextStyle(
-                        color: Theme.of(context).brightness ==
-                                Brightness.dark
-                            ? AppColors.textSecondary
-                            : AppColors.lightTextSecondary,
-                        fontSize: 11),
-                  ),
+                  if (inv.ticker != null)
+                    _LivePriceBadge(ticker: inv.ticker!)
+                  else
+                    Text(
+                      '${pct.toStringAsFixed(1)}% of portfolio',
+                      style: TextStyle(
+                          color: Theme.of(context).brightness ==
+                                  Brightness.dark
+                              ? AppColors.textSecondary
+                              : AppColors.lightTextSecondary,
+                          fontSize: 11),
+                    ),
                 ],
               ),
             ],
@@ -243,6 +247,33 @@ class _InvestmentTile extends ConsumerWidget {
         ),
         ),
       ),
+    );
+  }
+}
+
+class _LivePriceBadge extends ConsumerWidget {
+  const _LivePriceBadge({required this.ticker});
+  final String ticker;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final priceAsync = ref.watch(stockPriceProvider(ticker));
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final secondary = isDark ? AppColors.textSecondary : AppColors.lightTextSecondary;
+    return priceAsync.when(
+      loading: () => Text(ticker,
+          style: TextStyle(fontFamily: 'IBMPlexMono', fontSize: 10, color: secondary)),
+      error: (_, __) => Text(ticker,
+          style: TextStyle(fontFamily: 'IBMPlexMono', fontSize: 10, color: secondary)),
+      data: (price) => price != null
+          ? Text(
+              '\$$ticker  ${price.toStringAsFixed(2)}',
+              style: const TextStyle(
+                  fontFamily: 'IBMPlexMono', fontSize: 10,
+                  color: AppColors.success, fontWeight: FontWeight.w600),
+            )
+          : Text(ticker,
+              style: TextStyle(fontFamily: 'IBMPlexMono', fontSize: 10, color: secondary)),
     );
   }
 }
@@ -294,6 +325,9 @@ class _InvestmentSheet extends ConsumerStatefulWidget {
 class _InvestmentSheetState extends ConsumerState<_InvestmentSheet> {
   final _amountCtrl = TextEditingController();
   final _notesCtrl = TextEditingController();
+  final _tickerCtrl = TextEditingController();
+  final _quantityCtrl = TextEditingController();
+  final _purchasePriceCtrl = TextEditingController();
   String _type = _investmentTypes.first;
   String _unit = _units.first;
   bool _saving = false;
@@ -307,6 +341,9 @@ class _InvestmentSheetState extends ConsumerState<_InvestmentSheet> {
       _unit = _units.contains(inv.unit) ? inv.unit : _units.first;
       _amountCtrl.text = inv.amount.toString();
       _notesCtrl.text = inv.notes ?? '';
+      _tickerCtrl.text = inv.ticker ?? '';
+      if (inv.quantity != null) _quantityCtrl.text = inv.quantity.toString();
+      if (inv.purchasePrice != null) _purchasePriceCtrl.text = inv.purchasePrice.toString();
     }
   }
 
@@ -314,6 +351,9 @@ class _InvestmentSheetState extends ConsumerState<_InvestmentSheet> {
   void dispose() {
     _amountCtrl.dispose();
     _notesCtrl.dispose();
+    _tickerCtrl.dispose();
+    _quantityCtrl.dispose();
+    _purchasePriceCtrl.dispose();
     super.dispose();
   }
 
@@ -326,6 +366,9 @@ class _InvestmentSheetState extends ConsumerState<_InvestmentSheet> {
       type: _type,
       amount: amount,
       unit: _unit,
+      ticker: _tickerCtrl.text.trim().isEmpty ? null : _tickerCtrl.text.trim().toUpperCase(),
+      quantity: double.tryParse(_quantityCtrl.text.trim()),
+      purchasePrice: double.tryParse(_purchasePriceCtrl.text.trim()),
       notes: _notesCtrl.text.trim().isEmpty ? null : _notesCtrl.text.trim(),
       purchaseDate: widget.existing?.purchaseDate ?? DateTime.now(),
     );
@@ -427,6 +470,47 @@ class _InvestmentSheetState extends ConsumerState<_InvestmentSheet> {
             ),
             const Gap(12),
 
+            if (_type.toLowerCase().contains('stock') ||
+                _type.toLowerCase().contains('etf') ||
+                _type.toLowerCase().contains('crypto')) ...[
+              const Gap(12),
+              Row(children: [
+                Expanded(
+                  child: TextField(
+                    controller: _tickerCtrl,
+                    textCapitalization: TextCapitalization.characters,
+                    decoration: InputDecoration(
+                      labelText: 'Ticker (e.g. AAPL)',
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    ),
+                  ),
+                ),
+                const Gap(10),
+                Expanded(
+                  child: TextField(
+                    controller: _quantityCtrl,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    decoration: InputDecoration(
+                      labelText: 'Quantity',
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    ),
+                  ),
+                ),
+              ]),
+              const Gap(12),
+              TextField(
+                controller: _purchasePriceCtrl,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                decoration: InputDecoration(
+                  labelText: 'Purchase price per unit',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                ),
+              ),
+            ],
+            const Gap(12),
             TextField(
               controller: _notesCtrl,
               decoration: InputDecoration(

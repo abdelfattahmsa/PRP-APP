@@ -1,7 +1,11 @@
+import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 import '../data/models/money_models.dart';
 import '../data/repositories/money_repository.dart';
+import '../../../core/constants/app_constants.dart';
 
 const _uuid = Uuid();
 
@@ -130,6 +134,31 @@ class CashOnHandNotifier extends AsyncNotifier<double> {
 
 final cashOnHandProvider =
     AsyncNotifierProvider<CashOnHandNotifier, double>(CashOnHandNotifier.new);
+
+// ── Stock Price (Alpha Vantage) ──
+/// Returns the current price for [ticker] or null if unavailable/no API key.
+final stockPriceProvider =
+    FutureProvider.family<double?, String>((ref, ticker) async {
+  if (ticker.isEmpty) return null;
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    final apiKey =
+        prefs.getString(AppConstants.prefAlphaVantageApiKey) ?? '';
+    if (apiKey.isEmpty) return null;
+    final res = await http
+        .get(Uri.parse(
+          'https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=$ticker&apikey=$apiKey',
+        ))
+        .timeout(const Duration(seconds: 10));
+    if (res.statusCode == 200) {
+      final json = jsonDecode(res.body) as Map<String, dynamic>;
+      final quote = json['Global Quote'] as Map<String, dynamic>?;
+      final priceStr = quote?['05. price'] as String?;
+      return priceStr != null ? double.tryParse(priceStr) : null;
+    }
+  } catch (_) {}
+  return null;
+});
 
 // ── Finance Summary (computed) ──
 final financeSummaryProvider = Provider((ref) {

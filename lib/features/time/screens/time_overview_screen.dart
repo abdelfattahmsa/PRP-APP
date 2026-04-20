@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/router/app_router.dart';
+import '../../../core/constants/app_constants.dart';
 import '../../../shared/models/all_providers.dart';
 import '../../../shared/widgets/app_card.dart';
 import '../../../shared/widgets/app_chart.dart';
@@ -141,6 +142,36 @@ class TimeOverviewScreen extends ConsumerWidget {
                   : AppBarChart(data: focusData, labels: dayLabels),
             ),
             const Gap(20),
+
+            // ── Schedule Allocation ───────────────────────────────
+            if (scheduleAsync.hasValue && scheduleAsync.value!.isNotEmpty) ...[
+              Builder(builder: (_) {
+                final blocks = scheduleAsync.value!;
+                final Map<String, int> countByCategory = {};
+                for (final b in blocks) {
+                  countByCategory[b.categoryKey] =
+                      (countByCategory[b.categoryKey] ?? 0) + 1;
+                }
+                final sorted = countByCategory.entries.toList()
+                  ..sort((a, b) => b.value.compareTo(a.value));
+                final slices = sorted.map((e) => DonutSlice(
+                      label: categoryInfoMap[e.key]?.label ?? e.key,
+                      value: e.value.toDouble(),
+                      color: AppColors.categoryColor(e.key),
+                    )).toList();
+                return ChartCard(
+                  title: 'Schedule Allocation',
+                  height: 160,
+                  child: AppDonutChart(
+                    slices: slices,
+                    size: 130,
+                    strokeWidth: 20,
+                    centerLabel: '${blocks.length}\nblocks',
+                  ),
+                );
+              }),
+              const Gap(20),
+            ],
 
             // ── Today's Schedule ──────────────────────────────────
             BentoSectionHeader(

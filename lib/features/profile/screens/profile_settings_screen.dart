@@ -1,6 +1,8 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/placeholders.dart';
@@ -36,11 +38,47 @@ Future<void> _showEditNameDialog(BuildContext context, WidgetRef ref, String? cu
   }
 }
 
-class ProfileSettingsScreen extends ConsumerWidget {
+class ProfileSettingsScreen extends ConsumerStatefulWidget {
   const ProfileSettingsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ProfileSettingsScreen> createState() =>
+      _ProfileSettingsScreenState();
+}
+
+class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
+  bool _uploadingAvatar = false;
+
+  Future<void> _pickAndUploadAvatar() async {
+    final picker = ImagePicker();
+    final file = await picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 512,
+      maxHeight: 512,
+      imageQuality: 85,
+    );
+    if (file == null || !mounted) return;
+    setState(() => _uploadingAvatar = true);
+    try {
+      final bytes = await file.readAsBytes();
+      final ext = file.path.split('.').last.toLowerCase();
+      await ref.read(authNotifierProvider.notifier).updateAvatar(bytes, ext);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Upload failed: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _uploadingAvatar = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final user = ref.watch(currentUserProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final cardColor = isDark ? AppColors.card : AppColors.lightCard;
@@ -70,19 +108,80 @@ class ProfileSettingsScreen extends ConsumerWidget {
               ),
               child: Row(
                 children: [
-                  CircleAvatar(
-                    radius: 32,
-                    backgroundColor: accent.withValues(alpha: 0.15),
-                    child: Text(
-                      user?.fullName?.isNotEmpty == true
-                          ? user!.fullName![0].toUpperCase()
-                          : '?',
-                      style: TextStyle(
-                        fontFamily: 'PlayfairDisplay',
-                        fontSize: 28,
-                        fontWeight: FontWeight.w700,
-                        color: accent,
-                      ),
+                  GestureDetector(
+                    onTap: _pickAndUploadAvatar,
+                    child: Stack(
+                      children: [
+                        CircleAvatar(
+                          radius: 32,
+                          backgroundColor: accent.withValues(alpha: 0.15),
+                          child: user?.avatarUrl != null
+                              ? ClipOval(
+                                  child: CachedNetworkImage(
+                                    imageUrl: user!.avatarUrl!,
+                                    width: 64,
+                                    height: 64,
+                                    fit: BoxFit.cover,
+                                    placeholder: (_, __) => Text(
+                                      user.fullName?.isNotEmpty == true
+                                          ? user.fullName![0].toUpperCase()
+                                          : '?',
+                                      style: TextStyle(
+                                        fontFamily: 'PlayfairDisplay',
+                                        fontSize: 28,
+                                        fontWeight: FontWeight.w700,
+                                        color: accent,
+                                      ),
+                                    ),
+                                    errorWidget: (_, __, ___) => Icon(
+                                        Icons.person_rounded,
+                                        color: accent,
+                                        size: 28),
+                                  ),
+                                )
+                              : Text(
+                                  user?.fullName?.isNotEmpty == true
+                                      ? user!.fullName![0].toUpperCase()
+                                      : '?',
+                                  style: TextStyle(
+                                    fontFamily: 'PlayfairDisplay',
+                                    fontSize: 28,
+                                    fontWeight: FontWeight.w700,
+                                    color: accent,
+                                  ),
+                                ),
+                        ),
+                        if (_uploadingAvatar)
+                          Positioned.fill(
+                            child: CircleAvatar(
+                              radius: 32,
+                              backgroundColor: Colors.black38,
+                              child: const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white),
+                              ),
+                            ),
+                          ),
+                        Positioned(
+                          right: 0,
+                          bottom: 0,
+                          child: Container(
+                            width: 20,
+                            height: 20,
+                            decoration: BoxDecoration(
+                              color: accent,
+                              shape: BoxShape.circle,
+                              border:
+                                  Border.all(color: cardColor, width: 1.5),
+                            ),
+                            child: const Icon(Icons.camera_alt_rounded,
+                                size: 11, color: Colors.white),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   const Gap(Spacing.base),

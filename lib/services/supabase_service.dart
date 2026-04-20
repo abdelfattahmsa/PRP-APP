@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 import '../shared/models/models.dart';
@@ -99,6 +100,19 @@ class SupabaseService {
         .from('profiles')
         .update({'full_name': fullName})
         .eq('id', _uid);
+  }
+
+  Future<String> uploadAvatar(List<int> bytes, String ext) async {
+    final path = '$_uid/avatar.$ext';
+    await _db.storage.from('avatars').uploadBinary(
+      path,
+      Uint8List.fromList(bytes),
+      fileOptions: const FileOptions(upsert: true),
+    );
+    final url = _db.storage.from('avatars').getPublicUrl(path);
+    await _db.auth.updateUser(UserAttributes(data: {'avatar_url': url}));
+    await _db.from('profiles').update({'avatar_url': url}).eq('id', _uid);
+    return url;
   }
 
   // ── SCHEDULE ──────────────────────────────────────────────────
