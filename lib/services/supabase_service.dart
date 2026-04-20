@@ -311,6 +311,16 @@ class SupabaseService {
       .eq('id', id)
       .eq('user_id', _uid);
 
+  Future<void> updateFocusSession(FocusSession session) => _db
+      .from('focus_sessions')
+      .update({
+        'block_label': session.blockLabel,
+        'block_category_key': session.blockCategoryKey,
+        'note': session.note,
+      })
+      .eq('id', session.id)
+      .eq('user_id', _uid);
+
   // ── SEED DEFAULT DATA ─────────────────────────────────────────
   /// Called on first sign-up to populate default schedule blocks,
   /// calendar events, and habits.

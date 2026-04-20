@@ -5,13 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:uuid/uuid.dart';
 import 'package:intl/intl.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/models/models.dart';
 import '../../../shared/models/all_providers.dart';
-
-const _uuid = Uuid();
 
 class FocusScreen extends ConsumerStatefulWidget {
   const FocusScreen({super.key});
@@ -19,45 +16,9 @@ class FocusScreen extends ConsumerStatefulWidget {
   ConsumerState<FocusScreen> createState() => _FocusScreenState();
 }
 
+// Session saving + notifications on completion are handled in ShellScreen
+// (root-level listener) so they fire even when this screen is not active.
 class _FocusScreenState extends ConsumerState<FocusScreen> {
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _startTicker();
-    });
-  }
-
-  void _startTicker() {
-    Future.doWhile(() async {
-      await Future.delayed(const Duration(seconds: 1));
-      if (!mounted) return false;
-      ref.read(focusTimerProvider.notifier).tick();
-      final state = ref.read(focusTimerProvider);
-      if (state.secondsLeft == 0 && state.isRunning == false) {
-        _onTimerComplete(state);
-      }
-      return true;
-    });
-  }
-
-  void _onTimerComplete(FocusTimerState state) {
-    final elapsed = state.startedAt != null ? DateTime.now().difference(state.startedAt!).inSeconds : state.totalSeconds;
-    final session = FocusSession(
-      id: _uuid.v4(), date: DateTime.now(),
-      blockLabel: state.selectedBlockLabel.isEmpty ? 'Free session' : state.selectedBlockLabel,
-      blockCategoryKey: state.selectedBlockCategory,
-      plannedSeconds: state.totalSeconds,
-      actualSeconds: elapsed, completed: true,
-      note: state.note.isNotEmpty ? state.note : null,
-      startedAt: state.startedAt,
-    );
-    ref.read(focusSessionsProvider.notifier).add(session);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(state.mode == 'focus' ? '🍅 Focus session complete!' : '☕ Break over!')),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
@@ -229,35 +190,122 @@ class _FocusLogView extends ConsumerWidget {
     final sessAsync = ref.watch(focusSessionsProvider);
     return sessAsync.when(
       loading: () => const Center(child: CircularProgressIndicator(color: AppColors.gold)),
-      error: (e, _) => Center(child: Text('Unable to load sessions. Please try again.', style: const TextStyle(color: AppColors.error))),
+      error: (e, _) => const Center(child: Text('Unable to load sessions.', style: TextStyle(color: AppColors.error))),
       data: (sessions) => sessions.isEmpty
           ? const Center(child: Text('No sessions yet', style: TextStyle(color: AppColors.textSecondary, fontStyle: FontStyle.italic)))
           : ListView.builder(
               padding: const EdgeInsets.fromLTRB(14, 14, 14, 80),
               itemCount: sessions.length,
-              itemBuilder: (ctx, i) {
-                final s = sessions[i];
-                final color = AppColors.categoryColor(s.blockCategoryKey);
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 8),
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-                  decoration: BoxDecoration(color: AppColors.card, borderRadius: BorderRadius.circular(10), border: Border.all(color: AppColors.border)),
-                  child: Row(children: [
-                    Container(width: 4, height: 40, decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(2))),
-                    const Gap(12),
-                    Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Text(s.blockLabel, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
-                      Text('${DateFormat('d MMM · HH:mm').format(s.date)}${s.note != null ? ' · ${s.note}' : ''}', style: const TextStyle(fontFamily: 'IBMPlexMono', fontSize: 9.5, color: AppColors.textSecondary)),
-                    ])),
-                    Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-                      Text('${s.actualMinutes}m', style: TextStyle(fontFamily: 'IBMPlexMono', fontSize: 15, color: s.completed ? AppColors.deen : AppColors.fasting, fontWeight: FontWeight.w700)),
-                      Text(s.completed ? 'done' : 'stopped', style: const TextStyle(fontFamily: 'IBMPlexMono', fontSize: 9, color: AppColors.textSecondary)),
-                    ]),
-                  ]),
-                );
-              },
+              itemBuilder: (ctx, i) => _SessionLogTile(session: sessions[i]),
             ),
     );
+  }
+}
+
+class _SessionLogTile extends ConsumerWidget {
+  const _SessionLogTile({required this.session});
+  final FocusSession session;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final color = AppColors.categoryColor(session.blockCategoryKey);
+    return Dismissible(
+      key: ValueKey(session.id),
+      direction: DismissDirection.endToStart,
+      background: Container(
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 20),
+        margin: const EdgeInsets.only(bottom: 8),
+        decoration: BoxDecoration(
+          color: AppColors.error.withOpacity(0.12),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: const Icon(Icons.delete_rounded, color: AppColors.error),
+      ),
+      confirmDismiss: (_) => showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Delete session?'),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+            TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Delete', style: TextStyle(color: AppColors.error))),
+          ],
+        ),
+      ),
+      onDismissed: (_) => ref.read(focusSessionsProvider.notifier).delete(session.id),
+      child: GestureDetector(
+        onTap: () => _showEditDialog(context, ref),
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+          decoration: BoxDecoration(color: AppColors.card, borderRadius: BorderRadius.circular(10), border: Border.all(color: AppColors.border)),
+          child: Row(children: [
+            Container(width: 4, height: 40, decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(2))),
+            const Gap(12),
+            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(session.blockLabel, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
+              Text('${DateFormat('d MMM · HH:mm').format(session.date)}${session.note != null ? ' · ${session.note}' : ''}', style: const TextStyle(fontFamily: 'IBMPlexMono', fontSize: 9.5, color: AppColors.textSecondary)),
+            ])),
+            Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+              Text('${session.actualMinutes}m', style: TextStyle(fontFamily: 'IBMPlexMono', fontSize: 15, color: session.completed ? AppColors.deen : AppColors.fasting, fontWeight: FontWeight.w700)),
+              Text(session.completed ? 'done' : 'stopped', style: const TextStyle(fontFamily: 'IBMPlexMono', fontSize: 9, color: AppColors.textSecondary)),
+            ]),
+          ]),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showEditDialog(BuildContext context, WidgetRef ref) async {
+    final labelCtrl = TextEditingController(text: session.blockLabel);
+    final noteCtrl = TextEditingController(text: session.note ?? '');
+    String category = session.blockCategoryKey;
+    const cats = ['deen', 'pmp', 'study', 'health', 'kyb', 'work', 'rest', 'fast', 'com'];
+    const catLabels = ['Deen', 'PMP', 'Study', 'Health', 'Kyberia', 'Work', 'Rest', 'Fasting', 'Commute'];
+
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(builder: (ctx, setS) => AlertDialog(
+        title: const Text('Edit Session'),
+        content: Column(mainAxisSize: MainAxisSize.min, children: [
+          TextField(
+            controller: labelCtrl,
+            decoration: const InputDecoration(labelText: 'Label'),
+          ),
+          const Gap(12),
+          DropdownButtonFormField<String>(
+            value: cats.contains(category) ? category : 'rest',
+            decoration: const InputDecoration(labelText: 'Category'),
+            items: List.generate(cats.length, (i) =>
+              DropdownMenuItem(value: cats[i], child: Text(catLabels[i]))),
+            onChanged: (v) => setS(() => category = v!),
+          ),
+          const Gap(12),
+          TextField(
+            controller: noteCtrl,
+            decoration: const InputDecoration(labelText: 'Note (optional)'),
+          ),
+        ]),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          FilledButton(
+            onPressed: () {
+              final updated = session.copyWith(
+                blockLabel: labelCtrl.text.trim().isEmpty ? session.blockLabel : labelCtrl.text.trim(),
+                blockCategoryKey: category,
+                note: noteCtrl.text.trim().isEmpty ? null : noteCtrl.text.trim(),
+                clearNote: noteCtrl.text.trim().isEmpty,
+              );
+              ref.read(focusSessionsProvider.notifier).updateSession(updated);
+              Navigator.pop(ctx);
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      )),
+    );
+    labelCtrl.dispose();
+    noteCtrl.dispose();
   }
 }
 

@@ -57,6 +57,24 @@ class FocusSession extends Equatable {
         'started_at': startedAt?.toIso8601String(),
       };
 
+  FocusSession copyWith({
+    String? blockLabel,
+    String? blockCategoryKey,
+    String? note,
+    bool clearNote = false,
+  }) =>
+      FocusSession(
+        id: id,
+        date: date,
+        blockLabel: blockLabel ?? this.blockLabel,
+        blockCategoryKey: blockCategoryKey ?? this.blockCategoryKey,
+        plannedSeconds: plannedSeconds,
+        actualSeconds: actualSeconds,
+        completed: completed,
+        note: clearNote ? null : (note ?? this.note),
+        startedAt: startedAt,
+      );
+
   @override
   List<Object?> get props => [id, date, blockLabel, completed];
 }
@@ -73,6 +91,8 @@ class FocusTimerState {
     this.selectedBlockCategory = 'rest',
     this.note = '',
     this.startedAt,
+    this.previouslyElapsedSeconds = 0,
+    this.completedAt,
   });
 
   final int secondsLeft;
@@ -84,16 +104,22 @@ class FocusTimerState {
   final String selectedBlockCategory;
   final String note;
   final DateTime? startedAt;
+  final int previouslyElapsedSeconds;
+  /// Set when session completes; cleared on reset. Shell listener uses this.
+  final DateTime? completedAt;
 
   int get totalSeconds =>
       (mode == 'focus' ? focusDuration : breakDuration) * 60;
-  double get progress => 1.0 - (secondsLeft / totalSeconds);
+  double get progress =>
+      totalSeconds > 0 ? 1.0 - (secondsLeft / totalSeconds) : 0.0;
 
   FocusTimerState copyWith({
     int? secondsLeft, bool? isRunning, String? mode,
     int? focusDuration, int? breakDuration,
     String? selectedBlockLabel, String? selectedBlockCategory,
-    String? note, DateTime? startedAt,
+    String? note, DateTime? startedAt, bool clearStartedAt = false,
+    int? previouslyElapsedSeconds,
+    DateTime? completedAt, bool clearCompletedAt = false,
   }) =>
       FocusTimerState(
         secondsLeft: secondsLeft ?? this.secondsLeft,
@@ -104,6 +130,10 @@ class FocusTimerState {
         selectedBlockLabel: selectedBlockLabel ?? this.selectedBlockLabel,
         selectedBlockCategory: selectedBlockCategory ?? this.selectedBlockCategory,
         note: note ?? this.note,
-        startedAt: startedAt ?? this.startedAt,
+        startedAt: clearStartedAt ? null : (startedAt ?? this.startedAt),
+        previouslyElapsedSeconds:
+            previouslyElapsedSeconds ?? this.previouslyElapsedSeconds,
+        completedAt:
+            clearCompletedAt ? null : (completedAt ?? this.completedAt),
       );
 }

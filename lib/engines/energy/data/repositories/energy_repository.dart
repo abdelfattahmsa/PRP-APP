@@ -14,4 +14,6 @@ class EnergyRepository {
       _service.addFocusSession(session);
   Future<void> deleteFocusSession(String id) =>
       _service.deleteFocusSession(id);
+  Future<void> updateFocusSession(FocusSession session) =>
+      _service.updateFocusSession(session);
 }

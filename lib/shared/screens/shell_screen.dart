@@ -1,12 +1,20 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gap/gap.dart';
+import 'package:uuid/uuid.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/router/app_router.dart';
 import '../../core/constants/app_constants.dart';
 import '../../features/auth/providers/auth_provider.dart';
 import '../../engines/energy/providers/energy_providers.dart';
+import '../../engines/energy/data/models/energy_models.dart';
+import '../../shared/models/all_providers.dart';
+import '../../services/web_notif.dart';
+
+const _shellUuid = Uuid();
 
 // ══════════════════════════════════════════════════════════════
 // NAVIGATION MODEL
@@ -183,40 +191,84 @@ const kAppTabs = <AppTab>[
 // SHELL SCREEN
 // ══════════════════════════════════════════════════════════════
 
-class ShellScreen extends ConsumerWidget {
+class ShellScreen extends ConsumerStatefulWidget {
   const ShellScreen({super.key, required this.child, required this.location});
   final Widget child;
   final String location;
 
+  @override
+  ConsumerState<ShellScreen> createState() => _ShellScreenState();
+}
+
+class _ShellScreenState extends ConsumerState<ShellScreen> {
   int get _activeTabIndex {
     for (var i = 0; i < kAppTabs.length; i++) {
       final tab = kAppTabs[i];
       for (final sub in tab.subTabs) {
-        if (location.startsWith(sub.route)) return i;
+        if (widget.location.startsWith(sub.route)) return i;
       }
-      if (!tab.hasSubTabs && location.startsWith(tab.route)) return i;
+      if (!tab.hasSubTabs && widget.location.startsWith(tab.route)) return i;
     }
     return 0;
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
+    // Root-level timer completion handler — fires regardless of current screen
+    ref.listen<FocusTimerState>(focusTimerProvider, (prev, next) {
+      if (next.completedAt != null && prev?.completedAt == null) {
+        _onFocusComplete(next);
+      }
+    });
+
     final tabIndex = _activeTabIndex;
     final activeTab = kAppTabs[tabIndex];
 
     if (Breakpoints.isWide(context)) {
       return _DesktopShell(
-        location: location,
+        location: widget.location,
         tabIndex: tabIndex,
-        child: child,
+        child: widget.child,
       );
     }
     return _MobileShell(
-      location: location,
+      location: widget.location,
       activeTab: activeTab,
       tabIndex: tabIndex,
-      child: child,
+      child: widget.child,
     );
+  }
+
+  void _onFocusComplete(FocusTimerState state) {
+    final elapsed = state.startedAt != null
+        ? DateTime.now().difference(state.startedAt!).inSeconds
+        : state.totalSeconds;
+    final session = FocusSession(
+      id: _shellUuid.v4(),
+      date: DateTime.now(),
+      blockLabel: state.selectedBlockLabel.isEmpty
+          ? 'Free session'
+          : state.selectedBlockLabel,
+      blockCategoryKey: state.selectedBlockCategory,
+      plannedSeconds: state.totalSeconds,
+      actualSeconds: elapsed,
+      completed: true,
+      note: state.note.isNotEmpty ? state.note : null,
+      startedAt: state.startedAt,
+    );
+    ref.read(focusSessionsProvider.notifier).add(session);
+    final msg = state.mode == 'focus'
+        ? '🍅 Focus session complete!'
+        : '☕ Break over!';
+    showWebNotif(msg, body: 'Tap to return to PRP');
+    if (mounted) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(msg)));
+    }
+    // Auto-reset after 3 seconds
+    Timer(const Duration(seconds: 3), () {
+      ref.read(focusTimerProvider.notifier).reset();
+    });
   }
 }
 
