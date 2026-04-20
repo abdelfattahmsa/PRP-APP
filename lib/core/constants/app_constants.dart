@@ -3,7 +3,7 @@ class AppConstants {
   AppConstants._();
 
   static const appName = 'PRP';
-  static const appVersion = '4.1.0';
+  static const appVersion = '4.7.0';
 
   // Supabase
   static const supabaseUrl = 'https://qjqkmvlqrrkowvisvcmc.supabase.co';

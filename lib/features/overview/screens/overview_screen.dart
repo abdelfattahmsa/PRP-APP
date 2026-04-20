@@ -9,6 +9,7 @@ import '../../../features/auth/providers/auth_provider.dart';
 import '../../../shared/models/all_providers.dart';
 import '../../../shared/widgets/app_card.dart';
 import '../../../shared/widgets/app_states.dart';
+import '../../../core/providers/resource_scores_provider.dart';
 
 // Ticks every second for the live clock
 final _clockProvider = StreamProvider<DateTime>((ref) {
@@ -31,6 +32,7 @@ class OverviewScreen extends ConsumerWidget {
     final sessAsync = ref.watch(focusSessionsProvider);
     final goalsAsync = ref.watch(goalsProvider);
     final habitsAsync = ref.watch(habitsProvider);
+    final scores = ref.watch(resourceScoresProvider);
 
     // Computed today's focus minutes
     final todayStr = DateFormat('yyyy-MM-dd').format(DateTime.now());
@@ -107,6 +109,10 @@ class OverviewScreen extends ConsumerWidget {
                 ),
               ],
             ),
+            const Gap(24),
+
+            // ── Resource Score Dashboard ──────────────────────────
+            _ResourceScoreCard(scores: scores),
             const Gap(24),
 
             // ── Today's Habits ────────────────────────────────────
@@ -354,6 +360,171 @@ class _QuickActions extends StatelessWidget {
           ),
         );
       }).toList(),
+    );
+  }
+}
+
+// ── Resource Score Card ────────────────────────────────────────
+
+class _ResourceScoreCard extends StatelessWidget {
+  const _ResourceScoreCard({required this.scores});
+  final ResourceScores scores;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardColor = isDark ? AppColors.card : AppColors.lightCard;
+    final borderColor = isDark ? AppColors.border : AppColors.lightBorder;
+
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(
+                'Resource Score',
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+              ),
+              const Spacer(),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: _scoreColor(scores.overall).withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      '${scores.overall}',
+                      style: TextStyle(
+                        fontFamily: 'IBMPlexMono',
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                        color: _scoreColor(scores.overall),
+                      ),
+                    ),
+                    Text(
+                      ' / 100',
+                      style: TextStyle(
+                        fontFamily: 'IBMPlexMono',
+                        fontSize: 10,
+                        color: _scoreColor(scores.overall).withValues(alpha: 0.6),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const Gap(16),
+          Row(
+            children: [
+              _ScoreGauge(
+                label: 'Money',
+                icon: '💰',
+                score: scores.money,
+                color: AppColors.success,
+              ),
+              _ScoreGauge(
+                label: 'Time',
+                icon: '⏰',
+                score: scores.time,
+                color: AppColors.gold,
+              ),
+              _ScoreGauge(
+                label: 'Energy',
+                icon: '⚡',
+                score: scores.energy,
+                color: AppColors.warning,
+              ),
+              _ScoreGauge(
+                label: 'Health',
+                icon: '❤️',
+                score: scores.health,
+                color: AppColors.health,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Color _scoreColor(int score) {
+    if (score >= 75) return AppColors.success;
+    if (score >= 45) return AppColors.warning;
+    return AppColors.error;
+  }
+}
+
+class _ScoreGauge extends StatelessWidget {
+  const _ScoreGauge({
+    required this.label,
+    required this.icon,
+    required this.score,
+    required this.color,
+  });
+
+  final String label;
+  final String icon;
+  final int score;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textSecondary =
+        isDark ? AppColors.textSecondary : AppColors.lightTextSecondary;
+    final trackColor = isDark ? AppColors.border : AppColors.lightBorder;
+
+    return Expanded(
+      child: Column(
+        children: [
+          SizedBox(
+            width: 56,
+            height: 56,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                SizedBox.expand(
+                  child: CircularProgressIndicator(
+                    value: score / 100,
+                    strokeWidth: 5,
+                    backgroundColor: trackColor,
+                    valueColor: AlwaysStoppedAnimation(color),
+                    strokeCap: StrokeCap.round,
+                  ),
+                ),
+                Text(
+                  icon,
+                  style: const TextStyle(fontSize: 18),
+                ),
+              ],
+            ),
+          ),
+          const Gap(6),
+          Text(
+            '$score',
+            style: TextStyle(
+              fontFamily: 'IBMPlexMono',
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: color,
+            ),
+          ),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 10,
+              color: textSecondary,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
