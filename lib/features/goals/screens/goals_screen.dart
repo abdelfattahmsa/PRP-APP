@@ -212,24 +212,41 @@ class _GoalAddForm extends StatelessWidget {
   );
 }
 
-class _GoalTile extends ConsumerWidget {
+class _GoalTile extends ConsumerStatefulWidget {
   const _GoalTile({required this.goal, required this.index, this.faded = false});
   final Goal goal;
   final int index;
   final bool faded;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_GoalTile> createState() => _GoalTileState();
+}
+
+class _GoalTileState extends ConsumerState<_GoalTile> {
+  bool _expanded = false;
+  bool _addingSubtask = false;
+  final _subtaskCtrl = TextEditingController();
+
+  @override
+  void dispose() {
+    _subtaskCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final goal = widget.goal;
     final priColor = goal.priority == 'high' ? AppColors.error : goal.priority == 'medium' ? AppColors.gold : AppColors.deen;
     final daysLeft = goal.daysRemaining;
     final daysColor = daysLeft < 0 ? AppColors.error : daysLeft < 14 ? AppColors.fasting : AppColors.textSecondary;
+    final doneCount = goal.subtasks.where((s) => s.done).length;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: faded ? AppColors.card.withValues(alpha: 0.6) : AppColors.card,
+          color: widget.faded ? AppColors.card.withValues(alpha: 0.6) : AppColors.card,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(color: goal.status == 'done' ? AppColors.done.withValues(alpha: 0.3) : AppColors.border),
         ),
@@ -246,7 +263,7 @@ class _GoalTile extends ConsumerWidget {
             Text(daysLeft < 0 ? 'Overdue' : daysLeft == 0 ? 'Today!' : '${daysLeft}d left', style: TextStyle(fontFamily: 'IBMPlexMono', fontSize: 9, color: daysColor)),
           ]),
           const Gap(6),
-          Text(goal.title, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: faded ? AppColors.textSecondary : AppColors.textPrimary)),
+          Text(goal.title, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: widget.faded ? AppColors.textSecondary : AppColors.textPrimary)),
           if (goal.description != null && goal.description!.isNotEmpty) ...[
             const Gap(3),
             Text(goal.description!, style: const TextStyle(fontSize: 11.5, color: AppColors.textSecondary, fontStyle: FontStyle.italic)),
@@ -273,7 +290,101 @@ class _GoalTile extends ConsumerWidget {
               ),
             ])),
           ]),
-          const Gap(6),
+
+          // ── Subtasks toggle ──
+          GestureDetector(
+            onTap: () => setState(() => _expanded = !_expanded),
+            behavior: HitTestBehavior.opaque,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Row(children: [
+                Icon(_expanded ? Icons.expand_less : Icons.expand_more,
+                    size: 14, color: AppColors.textSecondary),
+                const Gap(4),
+                Text(
+                  goal.subtasks.isEmpty
+                      ? 'Subtasks'
+                      : '$doneCount/${goal.subtasks.length} done',
+                  style: const TextStyle(
+                      fontFamily: 'IBMPlexMono',
+                      fontSize: 9,
+                      color: AppColors.textSecondary),
+                ),
+              ]),
+            ),
+          ),
+
+          if (_expanded) ...[
+            const Gap(4),
+            ...goal.subtasks.map((sub) => Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Row(children: [
+                GestureDetector(
+                  onTap: () => ref.read(goalsProvider.notifier).toggleSubtask(goal.id, sub.id),
+                  child: Icon(
+                    sub.done ? Icons.check_box_rounded : Icons.check_box_outline_blank_rounded,
+                    size: 16,
+                    color: sub.done ? AppColors.deen : AppColors.textSecondary,
+                  ),
+                ),
+                const Gap(8),
+                Expanded(
+                  child: Text(
+                    sub.title,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: sub.done ? AppColors.textSecondary : AppColors.textPrimary,
+                      decoration: sub.done ? TextDecoration.lineThrough : null,
+                      decorationColor: AppColors.textSecondary,
+                    ),
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () => ref.read(goalsProvider.notifier).deleteSubtask(goal.id, sub.id),
+                  child: const Icon(Icons.close, size: 12, color: AppColors.textSecondary),
+                ),
+              ]),
+            )),
+            if (_addingSubtask)
+              Row(children: [
+                Expanded(
+                  child: TextField(
+                    controller: _subtaskCtrl,
+                    autofocus: true,
+                    style: const TextStyle(fontSize: 12),
+                    decoration: const InputDecoration(
+                      hintText: 'Add subtask…',
+                      isDense: true,
+                      contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                    ),
+                    onSubmitted: (v) {
+                      if (v.trim().isNotEmpty) {
+                        ref.read(goalsProvider.notifier).addSubtask(goal.id, v.trim());
+                      }
+                      _subtaskCtrl.clear();
+                      setState(() => _addingSubtask = false);
+                    },
+                  ),
+                ),
+                const Gap(6),
+                GestureDetector(
+                  onTap: () => setState(() => _addingSubtask = false),
+                  child: const Icon(Icons.close, size: 14, color: AppColors.textSecondary),
+                ),
+              ])
+            else
+              GestureDetector(
+                onTap: () => setState(() => _addingSubtask = true),
+                child: Row(children: const [
+                  Icon(Icons.add, size: 12, color: AppColors.textSecondary),
+                  Gap(4),
+                  Text('Add subtask', style: TextStyle(fontFamily: 'IBMPlexMono', fontSize: 9, color: AppColors.textSecondary)),
+                ]),
+              ),
+            const Gap(6),
+          ],
+
+          const Gap(2),
           Row(children: [
             Text(DateFormat('d MMM yy').format(goal.targetDate), style: const TextStyle(fontFamily: 'IBMPlexMono', fontSize: 9, color: AppColors.textSecondary)),
             const Spacer(),
@@ -293,7 +404,7 @@ class _GoalTile extends ConsumerWidget {
             ),
           ]),
         ]),
-      ).animate(delay: (index * 40).ms).fadeIn(duration: 200.ms),
+      ).animate(delay: (widget.index * 40).ms).fadeIn(duration: 200.ms),
     );
   }
 }

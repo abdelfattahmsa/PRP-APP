@@ -1,5 +1,29 @@
 import 'package:equatable/equatable.dart';
 
+// ══ GOAL SUBTASK ══════════════════════════════════════════════════
+class GoalSubtask {
+  const GoalSubtask({
+    required this.id,
+    required this.title,
+    this.done = false,
+  });
+
+  final String id;
+  final String title;
+  final bool done;
+
+  factory GoalSubtask.fromJson(Map<String, dynamic> j) => GoalSubtask(
+        id: j['id'] as String,
+        title: j['title'] as String,
+        done: j['done'] as bool? ?? false,
+      );
+
+  Map<String, dynamic> toJson() => {'id': id, 'title': title, 'done': done};
+
+  GoalSubtask copyWith({String? title, bool? done}) =>
+      GoalSubtask(id: id, title: title ?? this.title, done: done ?? this.done);
+}
+
 // ══ GOAL ══════════════════════════════════════════════════════════
 class Goal extends Equatable {
   const Goal({
@@ -11,6 +35,7 @@ class Goal extends Equatable {
     this.status = 'active',
     this.progress = 0,
     this.milestones = const [],
+    this.subtasks = const [],
     this.linkedCalendarEventIds = const [],
     this.createdAt,
   });
@@ -23,6 +48,7 @@ class Goal extends Equatable {
   final String status;      // active | done | paused
   final int progress;       // 0-100
   final List<String> milestones;
+  final List<GoalSubtask> subtasks;
   final List<String> linkedCalendarEventIds;
   final DateTime? createdAt;
 
@@ -41,6 +67,9 @@ class Goal extends Equatable {
         status: json['status'] as String? ?? 'active',
         progress: json['progress'] as int? ?? 0,
         milestones: List<String>.from(json['milestones'] as List? ?? []),
+        subtasks: (json['subtasks'] as List? ?? [])
+            .map((s) => GoalSubtask.fromJson(s as Map<String, dynamic>))
+            .toList(),
         linkedCalendarEventIds:
             List<String>.from(json['linked_event_ids'] as List? ?? []),
         createdAt: json['created_at'] != null
@@ -57,6 +86,7 @@ class Goal extends Equatable {
         'status': status,
         'progress': progress,
         'milestones': milestones,
+        'subtasks': subtasks.map((s) => s.toJson()).toList(),
         'linked_event_ids': linkedCalendarEventIds,
       };
 
@@ -68,6 +98,7 @@ class Goal extends Equatable {
     String? status,
     int? progress,
     List<String>? milestones,
+    List<GoalSubtask>? subtasks,
   }) =>
       Goal(
         id: id,
@@ -78,6 +109,7 @@ class Goal extends Equatable {
         status: status ?? this.status,
         progress: progress ?? this.progress,
         milestones: milestones ?? this.milestones,
+        subtasks: subtasks ?? this.subtasks,
         linkedCalendarEventIds: linkedCalendarEventIds,
         createdAt: createdAt,
       );

@@ -106,6 +106,12 @@ class FinanceOverviewScreen extends ConsumerWidget {
             ),
             const Gap(20),
 
+            // ── Spending by Category ──────────────────────────────
+            if ((txAsync.value ?? []).where((t) => !t.isIncome).isNotEmpty)
+              _SpendingDonut(transactions: txAsync.value!),
+            if ((txAsync.value ?? []).where((t) => !t.isIncome).isNotEmpty)
+              const Gap(20),
+
             // ── Accounts ─────────────────────────────────────────
             BentoSectionHeader(
               'Accounts',
@@ -207,6 +213,63 @@ class FinanceOverviewScreen extends ConsumerWidget {
         backgroundColor: accent,
         foregroundColor: Colors.white,
         child: const Icon(Icons.add_rounded),
+      ),
+    );
+  }
+}
+
+class _SpendingDonut extends StatelessWidget {
+  const _SpendingDonut({required this.transactions});
+  final List<Transaction> transactions;
+
+  static const _catColors = {
+    'Food': AppColors.fasting,
+    'Transport': AppColors.pmp,
+    'Shopping': AppColors.fasting,
+    'Health': AppColors.health,
+    'Entertainment': AppColors.kyberia,
+    'Bills': AppColors.warning,
+    'Education': AppColors.gold,
+    'Personal': AppColors.rest,
+    'Investment': AppColors.success,
+    'Other': AppColors.textSecondary,
+    'General': AppColors.textSecondary,
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    final now = DateTime.now();
+    final expenses = transactions.where((t) =>
+        !t.isIncome && now.difference(t.date).inDays < 30).toList();
+
+    final Map<String, double> byCategory = {};
+    for (final tx in expenses) {
+      byCategory[tx.category] =
+          (byCategory[tx.category] ?? 0) + tx.amount;
+    }
+
+    final sorted = byCategory.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+
+    final defaultColors = [
+      AppColors.error, AppColors.warning, AppColors.pmp,
+      AppColors.kyberia, AppColors.cfi, AppColors.health,
+    ];
+
+    final slices = sorted.asMap().entries.map((e) {
+      final color = _catColors[e.value.key] ??
+          defaultColors[e.key % defaultColors.length];
+      return DonutSlice(label: e.value.key, value: e.value.value, color: color);
+    }).toList();
+
+    return ChartCard(
+      title: 'Spending by Category (30d)',
+      height: 160,
+      child: AppDonutChart(
+        slices: slices,
+        size: 130,
+        strokeWidth: 20,
+        centerLabel: 'Tap\nslice',
       ),
     );
   }

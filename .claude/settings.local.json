@@ -64,7 +64,9 @@
       "Bash(cat .github/workflows/*.yml)",
       "Bash(ls -la build/web/main.dart.js)",
       "Bash(stat -c \"%y\" build/web/main.dart.js)",
-      "Bash(gh run *)"
+      "Bash(gh run *)",
+      "Bash(VERCEL_ORG_ID=team_jT5YL7PZUJ1VUBgSwKmyOhNl VERCEL_PROJECT_ID=prj_YImCAwGMkF27S0sDxDp17FhpPxhd npx vercel deploy --prod --yes)",
+      "Bash(grep -v \"//.*notif\")"
     ]
   }
 }

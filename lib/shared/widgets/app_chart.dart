@@ -1,6 +1,7 @@
 import 'dart:math' show max;
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:gap/gap.dart';
 import '../../core/theme/app_theme.dart';
 
 // ══════════════════════════════════════════════════════════════
@@ -284,6 +285,229 @@ class AppRingChart extends StatelessWidget {
             ),
         ],
       ),
+    );
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+// APP DONUT CHART — pie/donut for category breakdowns
+// ══════════════════════════════════════════════════════════════
+
+class DonutSlice {
+  const DonutSlice({required this.label, required this.value, required this.color});
+  final String label;
+  final double value;
+  final Color color;
+}
+
+class AppDonutChart extends StatefulWidget {
+  const AppDonutChart({
+    super.key,
+    required this.slices,
+    this.size = 140,
+    this.strokeWidth = 22,
+    this.centerLabel,
+  });
+
+  final List<DonutSlice> slices;
+  final double size;
+  final double strokeWidth;
+  final String? centerLabel;
+
+  @override
+  State<AppDonutChart> createState() => _AppDonutChartState();
+}
+
+class _AppDonutChartState extends State<AppDonutChart> {
+  int? _touched;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final total = widget.slices.fold(0.0, (s, e) => s + e.value);
+    if (total == 0) return const SizedBox.shrink();
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        SizedBox(
+          width: widget.size,
+          height: widget.size,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              PieChart(
+                PieChartData(
+                  sections: List.generate(widget.slices.length, (i) {
+                    final s = widget.slices[i];
+                    final isTouched = _touched == i;
+                    return PieChartSectionData(
+                      value: s.value,
+                      color: s.color,
+                      radius: isTouched
+                          ? widget.strokeWidth + 6
+                          : widget.strokeWidth,
+                      title: '',
+                      showTitle: false,
+                    );
+                  }),
+                  centerSpaceRadius: widget.size / 2 - widget.strokeWidth - 4,
+                  sectionsSpace: 2,
+                  pieTouchData: PieTouchData(
+                    touchCallback: (event, response) {
+                      setState(() {
+                        _touched = response?.touchedSection?.touchedSectionIndex;
+                      });
+                    },
+                  ),
+                ),
+              ),
+              if (_touched != null && _touched! < widget.slices.length)
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      '${(widget.slices[_touched!].value / total * 100).round()}%',
+                      style: TextStyle(
+                        fontFamily: 'IBMPlexMono',
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: widget.slices[_touched!].color,
+                      ),
+                    ),
+                    Text(
+                      widget.slices[_touched!].label,
+                      style: TextStyle(
+                        fontFamily: 'IBMPlexMono',
+                        fontSize: 8,
+                        color: isDark ? AppColors.textSecondary : AppColors.lightTextSecondary,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                )
+              else if (widget.centerLabel != null)
+                Text(
+                  widget.centerLabel!,
+                  style: TextStyle(
+                    fontFamily: 'IBMPlexMono',
+                    fontSize: 10,
+                    color: isDark ? AppColors.textSecondary : AppColors.lightTextSecondary,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+            ],
+          ),
+        ),
+        const Gap(16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: widget.slices.take(6).map((s) {
+              final pct = (s.value / total * 100).round();
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: Row(children: [
+                  Container(
+                    width: 8, height: 8,
+                    decoration: BoxDecoration(color: s.color, shape: BoxShape.circle),
+                  ),
+                  const Gap(6),
+                  Expanded(
+                    child: Text(
+                      s.label,
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: isDark ? AppColors.textSecondary : AppColors.lightTextSecondary,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  Text(
+                    '$pct%',
+                    style: TextStyle(
+                      fontFamily: 'IBMPlexMono',
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: s.color,
+                    ),
+                  ),
+                ]),
+              );
+            }).toList(),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+// HABIT HEATMAP — 28-day grid (4 weeks × 7 days)
+// ══════════════════════════════════════════════════════════════
+
+class HabitHeatmap extends StatelessWidget {
+  const HabitHeatmap({super.key, required this.dailyRates});
+
+  /// List of 28 values, each 0.0–1.0 (completion rate for that day).
+  /// Index 0 = oldest day (27 days ago), index 27 = today.
+  final List<double> dailyRates;
+
+  static const _days = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final emptyColor = isDark
+        ? AppColors.border.withValues(alpha: 0.5)
+        : AppColors.lightBorder;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: List.generate(7, (i) => Expanded(
+            child: Center(
+              child: Text(
+                _days[i],
+                style: TextStyle(
+                  fontFamily: 'IBMPlexMono',
+                  fontSize: 9,
+                  color: isDark ? AppColors.textMuted : AppColors.lightTextSecondary,
+                ),
+              ),
+            ),
+          )),
+        ),
+        const Gap(4),
+        ...List.generate(4, (week) => Padding(
+          padding: const EdgeInsets.only(bottom: 4),
+          child: Row(
+            children: List.generate(7, (day) {
+              final idx = week * 7 + day;
+              final rate = idx < dailyRates.length ? dailyRates[idx] : 0.0;
+              final color = rate == 0
+                  ? emptyColor
+                  : AppColors.health.withValues(alpha: 0.2 + rate * 0.8);
+              return Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 2),
+                  child: AspectRatio(
+                    aspectRatio: 1,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: color,
+                        borderRadius: BorderRadius.circular(3),
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }),
+          ),
+        )),
+      ],
     );
   }
 }

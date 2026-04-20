@@ -42,6 +42,19 @@ class HealthOverviewScreen extends ConsumerWidget {
       return (done / activeHabits.length * 100).roundToDouble();
     }).toList();
 
+    // 28-day heatmap (Mon–Sun aligned)
+    final today = DateTime.now();
+    final weekday = today.weekday; // 1=Mon … 7=Sun
+    // Align to the last Monday
+    final gridStart = today.subtract(Duration(days: weekday - 1 + 21));
+    final heatmapRates = List.generate(28, (i) {
+      final day = gridStart.add(Duration(days: i));
+      final key = DateFormat('yyyy-MM-dd').format(day);
+      if (activeHabits.isEmpty) return 0.0;
+      final done = activeHabits.where((h) => h.history[key] == true).length;
+      return done / activeHabits.length;
+    });
+
     // Fasting display
     final elapsed = fasting.elapsed;
     final elapsedH = elapsed.inHours;
@@ -118,6 +131,12 @@ class HealthOverviewScreen extends ConsumerWidget {
                   labels: dayLabels,
                   colors: List.filled(7, AppColors.health),
                 ),
+              ),
+              const Gap(20),
+              ChartCard(
+                title: '28-Day Habit Heatmap',
+                height: 110,
+                child: HabitHeatmap(dailyRates: heatmapRates),
               ),
               const Gap(20),
             ],
