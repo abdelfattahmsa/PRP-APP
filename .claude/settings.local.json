@@ -66,7 +66,17 @@
       "Bash(stat -c \"%y\" build/web/main.dart.js)",
       "Bash(gh run *)",
       "Bash(VERCEL_ORG_ID=team_jT5YL7PZUJ1VUBgSwKmyOhNl VERCEL_PROJECT_ID=prj_YImCAwGMkF27S0sDxDp17FhpPxhd npx vercel deploy --prod --yes)",
-      "Bash(grep -v \"//.*notif\")"
+      "Bash(grep -v \"//.*notif\")",
+      "WebFetch(domain:21st.dev)",
+      "Bash(sed -i 's/const AuthGlassCard\\({required this.child}\\);/const AuthGlassCard\\({super.key, required this.child}\\);/' lib/features/auth/screens/login_screen.dart)",
+      "Bash(sed -i '/class AuthDivider/,/^  @override/{s/AuthDivider\\(\\)$/AuthDivider\\({super.key}\\)/}' lib/features/auth/screens/login_screen.dart)",
+      "Bash(flutter config *)",
+      "Bash(flutter doctor *)",
+      "Bash(Remove-Item -Recurse -Force 'C:\\\\Users\\\\abdel\\\\Documents\\\\PRP APP\\\\build\\\\windows' -ErrorAction SilentlyContinue)",
+      "Bash(Write-Host \"Done\")",
+      "Bash('C:/Program Files \\(x86\\)/Windows Kits/10/bin/10.0.26100.0/x64/signtool.exe' sign /fd certHash /f 'C:/Users/abdel/Documents/PRP APP/build/KyberiaLabs.pfx' /p KyberiaLabs2026! /d 'PRP — Personal Resource Planner' /du https://prp-app.website /tr http://timestamp.digicert.com /td SHA256 'C:/Users/abdel/Documents/PRP APP/build/windows/x64/runner/Release/PRP.exe')",
+      "Bash(echo \"Exit: $?\")",
+      "Bash(powershell -Command ' *)"
     ]
   }
 }
