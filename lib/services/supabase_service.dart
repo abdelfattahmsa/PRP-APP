@@ -104,10 +104,16 @@ class SupabaseService {
 
   Future<String> uploadAvatar(List<int> bytes, String ext) async {
     final path = '$_uid/avatar.$ext';
+    final mimeType = switch (ext) {
+      'png'  => 'image/png',
+      'gif'  => 'image/gif',
+      'webp' => 'image/webp',
+      _      => 'image/jpeg',
+    };
     await _db.storage.from('avatars').uploadBinary(
       path,
       Uint8List.fromList(bytes),
-      fileOptions: const FileOptions(upsert: true),
+      fileOptions: FileOptions(upsert: true, contentType: mimeType),
     );
     final url = _db.storage.from('avatars').getPublicUrl(path);
     await _db.auth.updateUser(UserAttributes(data: {'avatar_url': url}));

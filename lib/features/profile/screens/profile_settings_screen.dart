@@ -104,7 +104,11 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
     setState(() => _uploadingAvatar = true);
     try {
       final bytes = await file.readAsBytes();
-      final ext = file.path.split('.').last.toLowerCase();
+      // On Flutter web, file.path is a blob URL — use file.name for the extension
+      final name = file.name.isNotEmpty ? file.name : file.path;
+      final ext = name.contains('.')
+          ? name.split('.').last.toLowerCase()
+          : 'jpg';
       await ref.read(authNotifierProvider.notifier).updateAvatar(bytes, ext);
     } catch (e) {
       if (mounted) {
