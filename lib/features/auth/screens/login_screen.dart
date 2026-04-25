@@ -8,6 +8,51 @@ import '../providers/auth_provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/router/app_router.dart';
 
+// ── Error parser ───────────────────────────────────────────────
+String friendlyAuthError(Object? error) {
+  final raw = error?.toString() ?? '';
+  final lower = raw.toLowerCase();
+  if (lower.contains('invalid login') ||
+      lower.contains('invalid_credentials') ||
+      lower.contains('invalid credentials')) {
+    return 'Incorrect email or password. Please try again.';
+  }
+  if (lower.contains('email not confirmed') || lower.contains('not confirmed')) {
+    return 'Please confirm your email address before signing in.';
+  }
+  if (lower.contains('user already registered') ||
+      lower.contains('already registered') ||
+      lower.contains('already exists')) {
+    return 'An account with this email already exists. Try signing in instead.';
+  }
+  if (lower.contains('rate limit') || lower.contains('too many')) {
+    return 'Too many attempts. Please wait a moment and try again.';
+  }
+  if (lower.contains('network') ||
+      lower.contains('socket') ||
+      lower.contains('connection')) {
+    return 'Connection error. Check your internet and try again.';
+  }
+  if (lower.contains('weak password') || lower.contains('password should')) {
+    return 'Password is too weak. Use at least 8 characters with mixed case and numbers.';
+  }
+  if (lower.contains('invalid email') ||
+      lower.contains('invalid format') ||
+      lower.contains('unable to validate email')) {
+    return 'Please enter a valid email address.';
+  }
+  final match = RegExp(r'(?:message:\s*)([^,\n)]+)').firstMatch(raw);
+  if (match != null) {
+    final extracted = match.group(1)?.trim() ?? '';
+    if (extracted.isNotEmpty && extracted.length < 120) return extracted;
+  }
+  return 'Something went wrong. Please try again.';
+}
+
+// ══════════════════════════════════════════════════════════════
+// LOGIN SCREEN
+// ══════════════════════════════════════════════════════════════
+
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
   @override
@@ -19,6 +64,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _passCtrl = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool _obscure = true;
+  String? _errorMessage;
 
   @override
   void dispose() {
@@ -28,6 +74,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Future<void> _submit() async {
+    setState(() => _errorMessage = null);
     if (!_formKey.currentState!.validate()) return;
     await ref.read(authNotifierProvider.notifier).signIn(
           email: _emailCtrl.text.trim(),
@@ -35,12 +82,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         );
     final state = ref.read(authNotifierProvider);
     if (state.hasError && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(state.error.toString()),
-          backgroundColor: AppColors.error,
-        ),
-      );
+      setState(() => _errorMessage = friendlyAuthError(state.error));
     }
   }
 
@@ -136,6 +178,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 ),
                               ),
                             ),
+                            if (_errorMessage != null) ...[
+                              const Gap(14),
+                              AuthErrorBanner(_errorMessage!),
+                            ],
                             const Gap(20),
                             AuthGradientButton(
                               label: 'Sign In',
@@ -195,56 +241,39 @@ class AuthBlobs extends StatelessWidget {
     return SizedBox.expand(
       child: Stack(
         children: [
-          // Top-right green glow
           Positioned(
-            top: -120,
-            right: -120,
+            top: -120, right: -120,
             child: Container(
-              width: 480,
-              height: 480,
+              width: 480, height: 480,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
-                  colors: [
-                    AppColors.accent.withValues(alpha: 0.18),
-                    Colors.transparent,
-                  ],
+                  colors: [AppColors.accent.withValues(alpha: 0.18), Colors.transparent],
                 ),
               ),
             ),
           ),
-          // Bottom-left indigo glow
           Positioned(
-            bottom: -160,
-            left: -120,
+            bottom: -160, left: -120,
             child: Container(
-              width: 520,
-              height: 520,
+              width: 520, height: 520,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
-                  colors: [
-                    const Color(0xFF6C63FF).withValues(alpha: 0.14),
-                    Colors.transparent,
-                  ],
+                  colors: [const Color(0xFF6C63FF).withValues(alpha: 0.14), Colors.transparent],
                 ),
               ),
             ),
           ),
-          // Center-ish gold whisper
           Positioned(
             top: MediaQuery.of(context).size.height * 0.35,
             left: MediaQuery.of(context).size.width * 0.1,
             child: Container(
-              width: 260,
-              height: 260,
+              width: 260, height: 260,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
-                  colors: [
-                    AppColors.gold.withValues(alpha: 0.07),
-                    Colors.transparent,
-                  ],
+                  colors: [AppColors.gold.withValues(alpha: 0.07), Colors.transparent],
                 ),
               ),
             ),
@@ -260,41 +289,11 @@ class AuthLogo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Container(
-          width: 60,
-          height: 60,
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [AppColors.accent, AppColors.accentDim],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.accent.withValues(alpha: 0.35),
-                blurRadius: 24,
-                spreadRadius: 2,
-                offset: const Offset(0, 6),
-              ),
-            ],
-          ),
-          child: const Center(
-            child: Text(
-              'PRP',
-              style: TextStyle(
-                color: Colors.white,
-                fontFamily: 'PlayfairDisplay',
-                fontSize: 18,
-                fontWeight: FontWeight.w900,
-                letterSpacing: -0.5,
-              ),
-            ),
-          ),
-        ),
-      ],
+    return Image.asset(
+      'assets/images/prp_logo.png',
+      width: 110,
+      height: 110,
+      fit: BoxFit.contain,
     );
   }
 }
@@ -321,10 +320,7 @@ class AuthGlassCard extends StatelessWidget {
                 Colors.white.withValues(alpha: 0.03),
               ],
             ),
-            border: Border.all(
-              color: Colors.white.withValues(alpha: 0.10),
-              width: 1,
-            ),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
           ),
           child: child,
         ),
@@ -374,17 +370,10 @@ class AuthField extends StatelessWidget {
           obscureText: obscureText,
           keyboardType: keyboardType,
           validator: validator,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 14,
-            fontFamily: 'Roboto',
-          ),
+          style: const TextStyle(color: Colors.white, fontSize: 14, fontFamily: 'Roboto'),
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: TextStyle(
-              color: Colors.white.withValues(alpha: 0.25),
-              fontSize: 14,
-            ),
+            hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.25), fontSize: 14),
             prefixIcon: Icon(icon, size: 16, color: Colors.white.withValues(alpha: 0.35)),
             suffixIcon: suffixIcon,
             filled: true,
@@ -456,12 +445,8 @@ class AuthGradientButton extends StatelessWidget {
         child: Center(
           child: isLoading
               ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Colors.white,
-                  ),
+                  width: 20, height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                 )
               : Text(
                   label,
@@ -486,16 +471,41 @@ class AuthDivider extends StatelessWidget {
         Expanded(child: Divider(color: Colors.white.withValues(alpha: 0.10), thickness: 1)),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12),
-          child: Text(
-            'or',
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.white.withValues(alpha: 0.3),
-            ),
-          ),
+          child: Text('or', style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.3))),
         ),
         Expanded(child: Divider(color: Colors.white.withValues(alpha: 0.10), thickness: 1)),
       ],
+    );
+  }
+}
+
+/// Inline error banner shown inside the auth glass card.
+class AuthErrorBanner extends StatelessWidget {
+  const AuthErrorBanner(this.message, {super.key});
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: AppColors.error.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: AppColors.error.withValues(alpha: 0.35)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.error_outline_rounded, size: 16, color: AppColors.error),
+          const Gap(8),
+          Expanded(
+            child: Text(
+              message,
+              style: const TextStyle(color: AppColors.error, fontSize: 13, height: 1.4),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

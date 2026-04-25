@@ -6,7 +6,7 @@ import 'package:gap/gap.dart';
 import '../providers/auth_provider.dart';
 import '../../../core/theme/app_theme.dart';
 import 'login_screen.dart'
-    show AuthBlobs, AuthLogo, AuthGlassCard, AuthField, AuthGradientButton, AuthDivider;
+    show AuthBlobs, AuthLogo, AuthGlassCard, AuthField, AuthGradientButton, AuthDivider, AuthErrorBanner, friendlyAuthError;
 
 // ══════════════════════════════════════════════════════════════
 // SIGN UP
@@ -25,6 +25,16 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   final _confirmCtrl = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool _obscure = true;
+  String? _errorMessage;
+  String _passText = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _passCtrl.addListener(() {
+      if (mounted) setState(() => _passText = _passCtrl.text);
+    });
+  }
 
   @override
   void dispose() {
@@ -36,6 +46,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   }
 
   Future<void> _submit() async {
+    setState(() => _errorMessage = null);
     if (!_formKey.currentState!.validate()) return;
     await ref.read(authNotifierProvider.notifier).signUp(
           email: _emailCtrl.text.trim(),
@@ -44,18 +55,14 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
         );
     final state = ref.read(authNotifierProvider);
     if (state.hasError && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(state.error.toString()),
-          backgroundColor: AppColors.error,
-        ),
-      );
+      setState(() => _errorMessage = friendlyAuthError(state.error));
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final isLoading = ref.watch(authNotifierProvider).isLoading;
+    final showRequirements = _passText.isNotEmpty;
 
     return Scaffold(
       backgroundColor: const Color(0xFF050510),
@@ -91,10 +98,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                       const Gap(6),
                       Text(
                         'Start planning your resources today',
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.45),
-                          fontSize: 14,
-                        ),
+                        style: TextStyle(color: Colors.white.withValues(alpha: 0.45), fontSize: 14),
                       ).animate().fadeIn(delay: 250.ms, duration: 400.ms),
                       const Gap(32),
 
@@ -135,9 +139,18 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                                 ),
                                 onPressed: () => setState(() => _obscure = !_obscure),
                               ),
-                              validator: (v) =>
-                                  v != null && v.length >= 8 ? null : 'Min 8 characters',
+                              validator: (v) {
+                                if (v == null || v.length < 8) return 'Min 8 characters';
+                                if (!v.contains(RegExp(r'[A-Z]'))) return 'Add an uppercase letter';
+                                if (!v.contains(RegExp(r'[a-z]'))) return 'Add a lowercase letter';
+                                if (!v.contains(RegExp(r'[0-9]'))) return 'Add a number';
+                                return null;
+                              },
                             ),
+                            if (showRequirements) ...[
+                              const Gap(10),
+                              _PasswordRequirements(_passText),
+                            ],
                             const Gap(14),
                             AuthField(
                               controller: _confirmCtrl,
@@ -145,10 +158,13 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                               hint: '••••••••',
                               icon: Icons.lock_outline_rounded,
                               obscureText: _obscure,
-                              validator: (v) => v == _passCtrl.text
-                                  ? null
-                                  : 'Passwords do not match',
+                              validator: (v) =>
+                                  v == _passCtrl.text ? null : 'Passwords do not match',
                             ),
+                            if (_errorMessage != null) ...[
+                              const Gap(14),
+                              AuthErrorBanner(_errorMessage!),
+                            ],
                             const Gap(22),
                             AuthGradientButton(
                               label: 'Create Account',
@@ -196,6 +212,82 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   }
 }
 
+// ── Password requirements live checker ─────────────────────────
+
+class _PasswordRequirements extends StatelessWidget {
+  const _PasswordRequirements(this.password);
+  final String password;
+
+  @override
+  Widget build(BuildContext context) {
+    final checks = [
+      ('At least 8 characters', password.length >= 8),
+      ('Contains uppercase letter', password.contains(RegExp(r'[A-Z]'))),
+      ('Contains lowercase letter', password.contains(RegExp(r'[a-z]'))),
+      ('Contains a number', password.contains(RegExp(r'[0-9]'))),
+    ];
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.04),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Password requirements',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+              color: Colors.white.withValues(alpha: 0.4),
+              letterSpacing: 0.3,
+            ),
+          ),
+          const Gap(8),
+          ...checks.map((c) => _RequirementRow(c.$1, c.$2)),
+        ],
+      ),
+    );
+  }
+}
+
+class _RequirementRow extends StatelessWidget {
+  const _RequirementRow(this.label, this.met);
+  final String label;
+  final bool met;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 5),
+      child: Row(
+        children: [
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 200),
+            child: Icon(
+              met ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
+              key: ValueKey(met),
+              size: 14,
+              color: met ? AppColors.success : Colors.white.withValues(alpha: 0.25),
+            ),
+          ),
+          const Gap(7),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              color: met ? AppColors.success : Colors.white.withValues(alpha: 0.4),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 // ══════════════════════════════════════════════════════════════
 // FORGOT PASSWORD
 // ══════════════════════════════════════════════════════════════
@@ -210,6 +302,7 @@ class ForgotPasswordScreen extends ConsumerStatefulWidget {
 class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   final _emailCtrl = TextEditingController();
   bool _sent = false;
+  String? _errorMessage;
 
   @override
   void dispose() {
@@ -218,10 +311,13 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   }
 
   Future<void> _submit() async {
-    await ref
-        .read(authNotifierProvider.notifier)
-        .resetPassword(_emailCtrl.text.trim());
-    if (mounted) setState(() => _sent = true);
+    setState(() => _errorMessage = null);
+    try {
+      await ref.read(authNotifierProvider.notifier).resetPassword(_emailCtrl.text.trim());
+      if (mounted) setState(() => _sent = true);
+    } catch (e) {
+      if (mounted) setState(() => _errorMessage = friendlyAuthError(e));
+    }
   }
 
   @override
@@ -260,10 +356,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                       _sent
                           ? 'A reset link was sent to ${_emailCtrl.text}'
                           : "Enter your email and we'll send a reset link",
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.45),
-                        fontSize: 14,
-                      ),
+                      style: TextStyle(color: Colors.white.withValues(alpha: 0.45), fontSize: 14),
                       textAlign: TextAlign.center,
                     ).animate().fadeIn(delay: 250.ms),
                     const Gap(32),
@@ -272,8 +365,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                           ? Column(
                               children: [
                                 Container(
-                                  width: 56,
-                                  height: 56,
+                                  width: 56, height: 56,
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
                                     color: AppColors.success.withValues(alpha: 0.12),
@@ -285,9 +377,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                                   ),
                                 ),
                                 const Gap(16),
-                                Text(
+                                const Text(
                                   'Reset link sent!',
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     color: Colors.white,
                                     fontWeight: FontWeight.w600,
                                     fontSize: 16,
@@ -295,7 +387,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                                 ),
                                 const Gap(6),
                                 Text(
-                                  'Check your spam folder if you don\'t see it.',
+                                  "Check your spam folder if you don't see it.",
                                   style: TextStyle(
                                     fontSize: 12,
                                     color: Colors.white.withValues(alpha: 0.4),
@@ -319,6 +411,10 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                                   icon: Icons.mail_outline_rounded,
                                   keyboardType: TextInputType.emailAddress,
                                 ),
+                                if (_errorMessage != null) ...[
+                                  const Gap(14),
+                                  AuthErrorBanner(_errorMessage!),
+                                ],
                                 const Gap(20),
                                 AuthGradientButton(
                                   label: 'Send Reset Link',

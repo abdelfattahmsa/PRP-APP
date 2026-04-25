@@ -578,28 +578,12 @@ class _SidebarBrand extends StatelessWidget {
         child: Row(
           children: [
             // Logo mark
-            Container(
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [AppColors.accent, AppColors.accentDim],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Center(
-                child: Text(
-                  'PRP',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontFamily: 'PlayfairDisplay',
-                    fontSize: 10,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: -0.5,
-                  ),
-                ),
+            SizedBox(
+              width: 36,
+              height: 36,
+              child: Image.asset(
+                'assets/images/prp_logo.png',
+                fit: BoxFit.contain,
               ),
             ),
             if (expanded) ...[
