@@ -179,7 +179,7 @@ class HealthOverviewScreen extends ConsumerWidget {
                             value: fastPct,
                             minHeight: 6,
                             backgroundColor:
-                                AppColors.warning.withOpacity(0.15),
+                                AppColors.warning.withValues(alpha: 0.15),
                             valueColor: AlwaysStoppedAnimation(
                                 fasting.active?.goalReached == true
                                     ? AppColors.success
@@ -305,7 +305,7 @@ class _HabitStreakTile extends StatelessWidget {
             width: 32,
             height: 32,
             decoration: BoxDecoration(
-              color: AppColors.health.withOpacity(0.15),
+              color: AppColors.health.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Center(
@@ -332,7 +332,7 @@ class _HabitStreakTile extends StatelessWidget {
             padding:
                 const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
-              color: AppColors.health.withOpacity(0.15),
+              color: AppColors.health.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(

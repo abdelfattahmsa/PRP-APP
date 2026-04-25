@@ -331,6 +331,7 @@ class AuthGlassCard extends StatelessWidget {
 
 class AuthField extends StatelessWidget {
   const AuthField({
+    super.key,
     required this.controller,
     required this.label,
     required this.hint,
@@ -405,6 +406,7 @@ class AuthField extends StatelessWidget {
 
 class AuthGradientButton extends StatelessWidget {
   const AuthGradientButton({
+    super.key,
     required this.label,
     required this.onPressed,
     this.isLoading = false,
@@ -464,6 +466,8 @@ class AuthGradientButton extends StatelessWidget {
 }
 
 class AuthDivider extends StatelessWidget {
+  const AuthDivider({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Row(

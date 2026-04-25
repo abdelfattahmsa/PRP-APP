@@ -9,7 +9,6 @@ import '../../../features/auth/providers/auth_provider.dart';
 import '../../../shared/models/all_providers.dart';
 import '../../../shared/widgets/app_card.dart';
 import '../../../shared/widgets/app_states.dart';
-import '../../../core/providers/resource_scores_provider.dart';
 
 // Ticks every second for the live clock
 final _clockProvider = StreamProvider<DateTime>((ref) {
@@ -372,10 +371,6 @@ class _ResourceScoreCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardColor = isDark ? AppColors.card : AppColors.lightCard;
-    final borderColor = isDark ? AppColors.border : AppColors.lightBorder;
-
     return AppCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

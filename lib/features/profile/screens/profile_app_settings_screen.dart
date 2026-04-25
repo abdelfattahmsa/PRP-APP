@@ -66,6 +66,7 @@ class _ProfileAppSettingsScreenState
 
   Future<void> _pickApiKey(BuildContext context) async {
     final prefs = await SharedPreferences.getInstance();
+    if (!context.mounted) return;
     final current = prefs.getString(AppConstants.prefAlphaVantageApiKey) ?? '';
     final ctrl = TextEditingController(text: current);
     final saved = await showDialog<String>(

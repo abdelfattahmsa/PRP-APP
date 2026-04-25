@@ -178,7 +178,7 @@ class _HabitTile extends ConsumerWidget {
       background: Container(
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 20),
-        color: AppColors.error.withOpacity(0.12),
+        color: AppColors.error.withValues(alpha: 0.12),
         child: const Icon(Icons.delete_rounded, color: AppColors.error),
       ),
       confirmDismiss: (_) async => await showDialog<bool>(

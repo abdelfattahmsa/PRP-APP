@@ -299,7 +299,7 @@ class _AddIdeaDialogState extends ConsumerState<_AddIdeaDialog> {
             ),
             const Gap(12),
             DropdownButtonFormField<String>(
-              value: _status,
+              initialValue: _status,
               decoration: const InputDecoration(labelText: 'Status'),
               items: _statusLabels.entries
                   .map((e) => DropdownMenuItem(

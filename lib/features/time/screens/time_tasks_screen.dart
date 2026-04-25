@@ -179,7 +179,7 @@ class _FilterChip extends StatelessWidget {
         padding:
             const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
         decoration: BoxDecoration(
-          color: selected ? active.withOpacity(0.15) : Colors.transparent,
+          color: selected ? active.withValues(alpha: 0.15) : Colors.transparent,
           border: Border.all(
               color: selected ? active : AppColors.border, width: 1.5),
           borderRadius: BorderRadius.circular(20),
@@ -252,7 +252,7 @@ class _GoalTaskCard extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
-                      color: _priorityColor().withOpacity(0.15),
+                      color: _priorityColor().withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
@@ -274,7 +274,7 @@ class _GoalTaskCard extends StatelessWidget {
                   Text(
                     overdue
                         ? '⚠️ ${-daysLeft}d overdue'
-                        : '${fmt.format(goal.targetDate as DateTime)}',
+                        : fmt.format(goal.targetDate as DateTime),
                     style: TextStyle(
                         color: overdue ? AppColors.error : textSecondary,
                         fontSize: 12,
@@ -302,7 +302,7 @@ class _GoalTaskCard extends StatelessWidget {
                         value: progress / 100,
                         minHeight: 5,
                         backgroundColor:
-                            AppColors.pmp.withOpacity(0.15),
+                            AppColors.pmp.withValues(alpha: 0.15),
                         valueColor: const AlwaysStoppedAnimation<Color>(
                             AppColors.pmp),
                       ),
@@ -356,7 +356,7 @@ class _HabitTaskCard extends StatelessWidget {
                 height: 28,
                 decoration: BoxDecoration(
                   color: isDone
-                      ? AppColors.health.withOpacity(0.2)
+                      ? AppColors.health.withValues(alpha: 0.2)
                       : Colors.transparent,
                   border: Border.all(
                       color: isDone
@@ -388,7 +388,7 @@ class _HabitTaskCard extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(
                       horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: AppColors.health.withOpacity(0.12),
+                    color: AppColors.health.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(

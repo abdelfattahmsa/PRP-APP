@@ -133,6 +133,7 @@ class _FocusTimerView extends ConsumerWidget {
           const Text('Link to block:', style: TextStyle(fontSize: 10, color: AppColors.textSecondary, fontFamily: 'IBMPlexMono')),
           const Gap(6),
           DropdownButtonFormField<String>(
+            // ignore: deprecated_member_use
             value: state.selectedBlockLabel.isEmpty ? null : state.selectedBlockLabel,
             hint: const Text('— Select schedule block —', style: TextStyle(fontSize: 12, color: AppColors.textSecondary, fontFamily: 'IBMPlexMono')),
             dropdownColor: AppColors.card,
@@ -217,7 +218,7 @@ class _SessionLogTile extends ConsumerWidget {
         padding: const EdgeInsets.only(right: 20),
         margin: const EdgeInsets.only(bottom: 8),
         decoration: BoxDecoration(
-          color: AppColors.error.withOpacity(0.12),
+          color: AppColors.error.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(10),
         ),
         child: const Icon(Icons.delete_rounded, color: AppColors.error),
@@ -274,7 +275,7 @@ class _SessionLogTile extends ConsumerWidget {
           ),
           const Gap(12),
           DropdownButtonFormField<String>(
-            value: cats.contains(category) ? category : 'rest',
+            initialValue: cats.contains(category) ? category : 'rest',
             decoration: const InputDecoration(labelText: 'Category'),
             items: List.generate(cats.length, (i) =>
               DropdownMenuItem(value: cats[i], child: Text(catLabels[i]))),

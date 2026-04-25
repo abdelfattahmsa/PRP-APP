@@ -7,7 +7,6 @@ import '../../../core/theme/app_theme.dart';
 import '../../../engines/money/data/models/money_models.dart';
 import '../../../shared/models/all_providers.dart';
 import '../../../shared/widgets/app_card.dart';
-import '../../../engines/money/providers/money_providers.dart' show stockPriceProvider;
 
 import '../../../shared/widgets/placeholders.dart' show ScreenHeader, SectionHeader;
 
@@ -153,7 +152,7 @@ class _InvestmentTile extends ConsumerWidget {
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 20),
         decoration: BoxDecoration(
-          color: AppColors.error.withOpacity(0.15),
+          color: AppColors.error.withValues(alpha: 0.15),
           borderRadius: BorderRadius.circular(12),
         ),
         child: const Icon(Icons.delete_rounded, color: AppColors.error),
@@ -190,7 +189,7 @@ class _InvestmentTile extends ConsumerWidget {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: _colorFor(inv.type).withOpacity(0.15),
+                  color: _colorFor(inv.type).withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(_iconFor(inv.type),
@@ -399,7 +398,7 @@ class _InvestmentSheetState extends ConsumerState<_InvestmentSheet> {
                 width: 36,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: AppColors.textSecondary.withOpacity(0.3),
+                  color: AppColors.textSecondary.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -414,7 +413,7 @@ class _InvestmentSheetState extends ConsumerState<_InvestmentSheet> {
 
             // Type dropdown
             DropdownButtonFormField<String>(
-              value: _type,
+              initialValue: _type,
               decoration: InputDecoration(
                 labelText: 'Investment Type',
                 border: OutlineInputBorder(
@@ -451,7 +450,7 @@ class _InvestmentSheetState extends ConsumerState<_InvestmentSheet> {
                 Expanded(
                   flex: 2,
                   child: DropdownButtonFormField<String>(
-                    value: _unit,
+                    initialValue: _unit,
                     decoration: InputDecoration(
                       labelText: 'Unit',
                       border: OutlineInputBorder(

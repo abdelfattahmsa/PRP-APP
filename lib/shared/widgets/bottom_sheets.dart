@@ -298,7 +298,7 @@ class _AddTransactionSheetState extends ConsumerState<_AddTransactionSheet> {
 
             // Category
             DropdownButtonFormField<String>(
-              value: txCats.any((c) => c.storageKey == _category) ? _category : txCats.first.storageKey,
+              initialValue: txCats.any((c) => c.storageKey == _category) ? _category : txCats.first.storageKey,
               decoration: const InputDecoration(labelText: 'Category'),
               items: txCats
                   .map((c) => DropdownMenuItem(
@@ -313,7 +313,7 @@ class _AddTransactionSheetState extends ConsumerState<_AddTransactionSheet> {
             // Account
             if (accounts.isNotEmpty)
               DropdownButtonFormField<String>(
-                value: _accountName,
+                initialValue: _accountName,
                 decoration: const InputDecoration(labelText: 'Account'),
                 hint: const Text('Select account'),
                 items: [
@@ -709,7 +709,7 @@ class _AddScheduleBlockSheetState
 
             // Category
             DropdownButtonFormField<String>(
-              value: scheduleCats.any((c) => c.storageKey == _category) ? _category : scheduleCats.first.storageKey,
+              initialValue: scheduleCats.any((c) => c.storageKey == _category) ? _category : scheduleCats.first.storageKey,
               decoration: const InputDecoration(labelText: 'Category'),
               items: scheduleCats
                   .map((c) => DropdownMenuItem(
@@ -723,7 +723,7 @@ class _AddScheduleBlockSheetState
 
             // Schedule mode
             DropdownButtonFormField<String>(
-              value: _scheduleMode,
+              initialValue: _scheduleMode,
               decoration: const InputDecoration(labelText: 'Schedule mode'),
               items: AppConstants.scheduleModes
                   .map((m) => DropdownMenuItem(
