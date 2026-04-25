@@ -312,7 +312,8 @@ class _GoalTaskCard extends StatelessWidget {
                   Text('$progress%',
                       style: TextStyle(
                           color: textSecondary,
-                          fontSize: 11)),
+                          fontSize: 11,
+                          fontFamily: 'Roboto')),
                 ],
               ),
             ],

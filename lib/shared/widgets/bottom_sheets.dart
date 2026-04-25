@@ -243,6 +243,7 @@ class _AddTransactionSheetState extends ConsumerState<_AddTransactionSheet> {
                           child: Text(
                             entry.$2,
                             style: TextStyle(
+                              fontFamily: 'Roboto',
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
                               color: _isIncome == entry.$1
@@ -280,6 +281,7 @@ class _AddTransactionSheetState extends ConsumerState<_AddTransactionSheet> {
                 labelText: 'Amount *',
                 prefixText: 'EGP  ',
                 prefixStyle: TextStyle(
+                  fontFamily: 'Roboto',
                   fontSize: 13,
                   color: _isIncome ? AppColors.success : AppColors.error,
                   fontWeight: FontWeight.w600,
@@ -342,7 +344,7 @@ class _AddTransactionSheetState extends ConsumerState<_AddTransactionSheet> {
                   '${_date.day.toString().padLeft(2, '0')} / '
                   '${_date.month.toString().padLeft(2, '0')} / '
                   '${_date.year}',
-                  style: const TextStyle(fontSize: 13),
+                  style: const TextStyle(fontFamily: 'Roboto', fontSize: 13),
                 ),
               ),
             ),
@@ -476,6 +478,7 @@ class _AddHabitSheetState extends ConsumerState<_AddHabitSheet> {
             Text(
               'Pick an icon',
               style: TextStyle(
+                fontFamily: 'Roboto',
                 fontSize: 10,
                 color: isDark ? AppColors.textSecondary : AppColors.lightTextSecondary,
                 letterSpacing: 1,
@@ -678,7 +681,7 @@ class _AddScheduleBlockSheetState
                 child: Text(
                   _timeStr,
                   style: const TextStyle(
-                      fontSize: 13),
+                      fontFamily: 'Roboto', fontSize: 13),
                 ),
               ),
             ),

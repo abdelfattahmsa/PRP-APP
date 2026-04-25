@@ -837,7 +837,7 @@ class _CategoryManagerSheetState
                       subtitle: cat.key != null
                           ? Text('key: ${cat.key}',
                               style: const TextStyle(
-                                  fontSize: 10))
+                                  fontSize: 10, fontFamily: 'Roboto'))
                           : null,
                       trailing: IconButton(
                         icon: Icon(Icons.delete_outline_rounded,

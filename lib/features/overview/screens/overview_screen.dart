@@ -269,6 +269,7 @@ class OverviewScreen extends ConsumerWidget {
                                   Text(
                                     '${active[i].progress}%',
                                     style: TextStyle(
+                                      fontFamily: 'Roboto',
                                       fontSize: 13,
                                       color: AppColors.accent,
                                       fontWeight: FontWeight.w700,
@@ -395,6 +396,7 @@ class _ResourceScoreCard extends StatelessWidget {
                     Text(
                       '${scores.overall}',
                       style: TextStyle(
+                        fontFamily: 'Roboto',
                         fontSize: 15,
                         fontWeight: FontWeight.w800,
                         color: _scoreColor(scores.overall),
@@ -403,6 +405,7 @@ class _ResourceScoreCard extends StatelessWidget {
                     Text(
                       ' / 100',
                       style: TextStyle(
+                        fontFamily: 'Roboto',
                         fontSize: 10,
                         color: _scoreColor(scores.overall).withValues(alpha: 0.6),
                       ),
@@ -502,6 +505,7 @@ class _ScoreGauge extends StatelessWidget {
           Text(
             '$score',
             style: TextStyle(
+              fontFamily: 'Roboto',
               fontSize: 14,
               fontWeight: FontWeight.w700,
               color: color,
@@ -577,6 +581,7 @@ class _GreetingHeader extends StatelessWidget {
             Text(
               timeFmt.format(now),
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontFamily: 'Roboto',
                     fontWeight: FontWeight.w600,
                     color: AppColors.accent,
                   ),
@@ -592,7 +597,8 @@ class _GreetingHeader extends StatelessWidget {
                 tz,
                 style: Theme.of(context).textTheme.labelSmall?.copyWith(
                       color: AppColors.accent,
-                      ),
+                      fontFamily: 'Roboto',
+                    ),
               ),
             ),
           ],

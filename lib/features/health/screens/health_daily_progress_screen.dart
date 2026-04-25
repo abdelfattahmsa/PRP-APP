@@ -148,7 +148,8 @@ class HealthDailyProgressScreen extends ConsumerWidget {
                                   .headlineLarge
                                   ?.copyWith(
                                     color: AppColors.error,
-                                    ),
+                                    fontFamily: 'Roboto',
+                                  ),
                             ),
                             Text(
                               'days',

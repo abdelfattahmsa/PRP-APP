@@ -621,6 +621,7 @@ class _MobileSubTabItem extends StatelessWidget {
                   Text(
                     sub.label,
                     style: TextStyle(
+                      fontFamily: 'Roboto',
                       fontSize: 11,
                       fontWeight:
                           active ? FontWeight.w600 : FontWeight.w400,
@@ -965,6 +966,7 @@ class _SidebarProfileFooter extends StatelessWidget {
                       initial,
                       style: TextStyle(
                         color: accent,
+                        fontFamily: 'Roboto',
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
                       ),
@@ -1019,6 +1021,7 @@ class _SidebarProfileFooter extends StatelessWidget {
                         initial,
                         style: TextStyle(
                           color: accent,
+                          fontFamily: 'Roboto',
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
                         ),
@@ -1047,7 +1050,8 @@ class _SidebarProfileFooter extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 8,
                               color: textSecondary,
-                              ),
+                              fontFamily: 'Roboto',
+                            ),
                             overflow: TextOverflow.ellipsis,
                           ),
                         ],
@@ -1169,6 +1173,7 @@ class _FocusTimerBanner extends ConsumerWidget {
               Text(
                 '$label — $mins:$secs',
                 style: TextStyle(
+                  fontFamily: 'Roboto',
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                   color: color,

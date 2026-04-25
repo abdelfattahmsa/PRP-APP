@@ -106,6 +106,7 @@ class AppLineChart extends StatelessWidget {
                   child: Text(
                     lbls[i],
                     style: TextStyle(
+                      fontFamily: 'Roboto',
                       fontSize: 9,
                       color: isDark
                           ? AppColors.textMuted
@@ -205,6 +206,7 @@ class AppBarChart extends StatelessWidget {
                   child: Text(
                     lbls[i],
                     style: TextStyle(
+                      fontFamily: 'Roboto',
                       fontSize: 9,
                       color: isDark
                           ? AppColors.textMuted
@@ -274,6 +276,7 @@ class AppRingChart extends StatelessWidget {
             Text(
               label!,
               style: TextStyle(
+                fontFamily: 'Roboto',
                 fontSize: size * 0.18,
                 fontWeight: FontWeight.w700,
                 color: isDark ? AppColors.textPrimary : AppColors.lightTextPrimary,
@@ -366,6 +369,7 @@ class _AppDonutChartState extends State<AppDonutChart> {
                     Text(
                       '${(widget.slices[_touched!].value / total * 100).round()}%',
                       style: TextStyle(
+                        fontFamily: 'Roboto',
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
                         color: widget.slices[_touched!].color,
@@ -374,6 +378,7 @@ class _AppDonutChartState extends State<AppDonutChart> {
                     Text(
                       widget.slices[_touched!].label,
                       style: TextStyle(
+                        fontFamily: 'Roboto',
                         fontSize: 8,
                         color: isDark ? AppColors.textSecondary : AppColors.lightTextSecondary,
                       ),
@@ -385,6 +390,7 @@ class _AppDonutChartState extends State<AppDonutChart> {
                 Text(
                   widget.centerLabel!,
                   style: TextStyle(
+                    fontFamily: 'Roboto',
                     fontSize: 10,
                     color: isDark ? AppColors.textSecondary : AppColors.lightTextSecondary,
                   ),
@@ -421,6 +427,7 @@ class _AppDonutChartState extends State<AppDonutChart> {
                   Text(
                     '$pct%',
                     style: TextStyle(
+                      fontFamily: 'Roboto',
                       fontSize: 10,
                       fontWeight: FontWeight.w600,
                       color: s.color,
@@ -465,6 +472,7 @@ class HabitHeatmap extends StatelessWidget {
               child: Text(
                 _days[i],
                 style: TextStyle(
+                  fontFamily: 'Roboto',
                   fontSize: 9,
                   color: isDark ? AppColors.textMuted : AppColors.lightTextSecondary,
                 ),

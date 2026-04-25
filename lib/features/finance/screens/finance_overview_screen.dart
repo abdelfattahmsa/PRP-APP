@@ -358,7 +358,8 @@ class _AccountTile extends StatelessWidget {
                     'CC: ${fmt.format(bank.creditCardBalance)} / ${fmt.format(bank.creditCardLimit)}',
                     style: TextStyle(
                         fontSize: 11,
-                        color: textSecondary),
+                        color: textSecondary,
+                        fontFamily: 'Roboto'),
                   ),
               ],
             ),
@@ -366,6 +367,7 @@ class _AccountTile extends StatelessWidget {
           Text(
             'EGP ${fmt.format(total)}',
             style: TextStyle(
+              fontFamily: 'Roboto',
               fontSize: 14,
               fontWeight: FontWeight.w700,
               color: total >= 0 ? AppColors.success : AppColors.error,
@@ -417,13 +419,15 @@ class _RecentTxTile extends StatelessWidget {
                 Text(tx.category,
                     style: TextStyle(
                         fontSize: 10,
-                        color: textSecondary)),
+                        color: textSecondary,
+                        fontFamily: 'Roboto')),
               ],
             ),
           ),
           Text(
             '${tx.isIncome ? '+' : '−'}${fmt.format(tx.amount)}',
             style: TextStyle(
+              fontFamily: 'Roboto',
               fontSize: 12,
               fontWeight: FontWeight.w700,
               color: tx.isIncome ? AppColors.success : AppColors.error,

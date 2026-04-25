@@ -147,6 +147,7 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
+      fontFamily: 'Roboto', // global fallback for any TextStyle without explicit fontFamily
       scaffoldBackgroundColor: AppColors.bg,
       colorScheme: const ColorScheme.dark(
         primary: AppColors.accent,
@@ -350,6 +351,7 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
+      fontFamily: 'Roboto', // global fallback for any TextStyle without explicit fontFamily
       scaffoldBackgroundColor: AppColors.lightBg,
       colorScheme: const ColorScheme.light(
         primary: AppColors.accent,

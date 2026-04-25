@@ -154,6 +154,7 @@ class _FinanceTransactionsScreenState
                                   child: Text(
                                     dateKey,
                                     style: TextStyle(
+                                      fontFamily: 'Roboto',
                                       fontSize: 10,
                                       fontWeight: FontWeight.w600,
                                       letterSpacing: 1,
@@ -250,7 +251,8 @@ class _TxTile extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 11,
                     color: textSecondary,
-                    ),
+                    fontFamily: 'Roboto',
+                  ),
                 ),
               ],
             ),
@@ -258,6 +260,7 @@ class _TxTile extends StatelessWidget {
           Text(
             '${tx.isIncome ? '+' : '−'}EGP ${fmt.format(tx.amount)}',
             style: TextStyle(
+              fontFamily: 'Roboto',
               fontSize: 13,
               fontWeight: FontWeight.w700,
               color: tx.isIncome ? AppColors.success : AppColors.error,

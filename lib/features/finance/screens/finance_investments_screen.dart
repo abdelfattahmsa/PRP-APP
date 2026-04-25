@@ -261,18 +261,18 @@ class _LivePriceBadge extends ConsumerWidget {
     final secondary = isDark ? AppColors.textSecondary : AppColors.lightTextSecondary;
     return priceAsync.when(
       loading: () => Text(ticker,
-          style: TextStyle(fontSize: 10, color: secondary)),
+          style: TextStyle(fontFamily: 'Roboto', fontSize: 10, color: secondary)),
       error: (_, __) => Text(ticker,
-          style: TextStyle(fontSize: 10, color: secondary)),
+          style: TextStyle(fontFamily: 'Roboto', fontSize: 10, color: secondary)),
       data: (price) => price != null
           ? Text(
               '\$$ticker  ${price.toStringAsFixed(2)}',
               style: const TextStyle(
-                  fontSize: 10,
+                  fontFamily: 'Roboto', fontSize: 10,
                   color: AppColors.success, fontWeight: FontWeight.w600),
             )
           : Text(ticker,
-              style: TextStyle(fontSize: 10, color: secondary)),
+              style: TextStyle(fontFamily: 'Roboto', fontSize: 10, color: secondary)),
     );
   }
 }

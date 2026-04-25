@@ -177,12 +177,14 @@ class _FastTimerCard extends ConsumerWidget {
             style: Theme.of(context).textTheme.titleSmall?.copyWith(
                   color: fasting.isFasting ? accent : textSecondary,
                   letterSpacing: 1.0,
-                  ),
+                  fontFamily: 'Roboto',
+                ),
           ),
           const Gap(16),
           Text(
             fasting.isFasting ? _fmt(fasting.elapsed) : '00:00:00',
             style: TextStyle(
+              fontFamily: 'Roboto',
               fontSize: 48,
               fontWeight: FontWeight.w700,
               color: fasting.isFasting ? accent : textSecondary,
@@ -299,6 +301,7 @@ class _ProtocolSelector extends ConsumerWidget {
                     Text(
                       '$h:${24 - h}',
                       style: TextStyle(
+                        fontFamily: 'Roboto',
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
                         color: selected ? accent : null,
@@ -307,6 +310,7 @@ class _ProtocolSelector extends ConsumerWidget {
                     Text(
                       '${h}h fast',
                       style: TextStyle(
+                        fontFamily: 'Roboto',
                         fontSize: 9,
                         color: selected
                             ? accent
@@ -372,7 +376,8 @@ class _FastHistoryTile extends StatelessWidget {
                   '${record.endTime != null ? ' · Ended ${DateFormat('HH:mm').format(record.endTime!)}' : ''}',
                   style: TextStyle(
                       fontSize: 11,
-                      color: textSecondary),
+                      color: textSecondary,
+                      fontFamily: 'Roboto'),
                 ),
               ],
             ),
@@ -383,6 +388,7 @@ class _FastHistoryTile extends StatelessWidget {
               Text(
                 _fmtDur(record.duration),
                 style: TextStyle(
+                  fontFamily: 'Roboto',
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
                   color: reached ? AppColors.success : textSecondary,
@@ -392,7 +398,8 @@ class _FastHistoryTile extends StatelessWidget {
                 '${record.goalHours}h goal',
                 style: TextStyle(
                     fontSize: 10,
-                    color: textSecondary),
+                    color: textSecondary,
+                    fontFamily: 'Roboto'),
               ),
             ],
           ),
