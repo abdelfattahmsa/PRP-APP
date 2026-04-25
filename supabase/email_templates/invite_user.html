@@ -6,50 +6,63 @@
   <title>You're invited to PRP</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { background: #0F1117; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    body { background: #0A0A0A; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
     .wrapper { max-width: 560px; margin: 40px auto; padding: 0 16px; }
-    .card { background: #1A1D2E; border-radius: 16px; overflow: hidden; border: 1px solid #2A2D3E; }
-    .header { background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%); padding: 40px 32px 32px; text-align: center; }
-    .logo { font-size: 28px; font-weight: 800; color: #fff; letter-spacing: -0.5px; }
-    .logo span { color: rgba(255,255,255,0.6); font-weight: 400; font-size: 13px; display: block; margin-top: 4px; letter-spacing: 2px; text-transform: uppercase; }
-    .badge { display: inline-block; background: rgba(255,255,255,0.2); color: #fff; font-size: 11px; font-weight: 600; padding: 4px 12px; border-radius: 20px; margin-top: 12px; letter-spacing: 1px; text-transform: uppercase; }
+    .card { background: #1A1A1A; border-radius: 16px; overflow: hidden; border: 1px solid #2A2A2A; }
+    /* Gold header for invite — special occasion */
+    .header { background: #111111; border-bottom: 2px solid #C8A050; padding: 36px 32px 28px; text-align: center; }
+    .logo-mark { display: inline-block; width: 48px; height: 48px; background: #C8A050; border-radius: 12px; line-height: 48px; font-size: 20px; font-weight: 900; color: #0A0A0A; margin-bottom: 14px; }
+    .logo-name { font-size: 24px; font-weight: 800; color: #E8E8E8; letter-spacing: -0.5px; }
+    .logo-sub { color: #888888; font-weight: 400; font-size: 11px; display: block; margin-top: 3px; letter-spacing: 2.5px; text-transform: uppercase; }
+    .badge { display: inline-block; background: rgba(200,160,80,0.12); border: 1px solid rgba(200,160,80,0.3); color: #C8A050; font-size: 10px; font-weight: 700; padding: 4px 12px; border-radius: 20px; margin-top: 12px; letter-spacing: 1.5px; text-transform: uppercase; }
     .body { padding: 36px 32px; }
-    h1 { font-size: 22px; font-weight: 700; color: #F1F5F9; margin-bottom: 12px; }
-    p { font-size: 15px; color: #94A3B8; line-height: 1.6; margin-bottom: 16px; }
-    .features { list-style: none; margin-bottom: 24px; }
-    .features li { font-size: 14px; color: #94A3B8; padding: 6px 0; padding-left: 24px; position: relative; }
-    .features li::before { content: '✦'; position: absolute; left: 0; color: #8B5CF6; font-size: 10px; top: 8px; }
-    .btn { display: block; background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%); color: #fff; text-decoration: none; font-size: 15px; font-weight: 600; padding: 14px 32px; border-radius: 10px; text-align: center; margin: 28px 0; }
-    .divider { border: none; border-top: 1px solid #2A2D3E; margin: 24px 0; }
-    .link-fallback { font-size: 12px; color: #64748B; word-break: break-all; }
-    .footer { padding: 20px 32px; text-align: center; }
-    .footer p { font-size: 12px; color: #475569; }
+    h1 { font-size: 22px; font-weight: 700; color: #E8E8E8; margin-bottom: 10px; }
+    .accent-line { width: 32px; height: 3px; background: #C8A050; border-radius: 2px; margin-bottom: 20px; }
+    p { font-size: 14px; color: #888888; line-height: 1.7; margin-bottom: 14px; }
+    p strong { color: #E8E8E8; }
+    .features { list-style: none; margin: 16px 0 24px; border: 1px solid #2A2A2A; border-radius: 8px; overflow: hidden; }
+    .features li { font-size: 13px; color: #888888; padding: 11px 16px; border-bottom: 1px solid #2A2A2A; display: flex; align-items: center; gap: 12px; }
+    .features li:last-child { border-bottom: none; }
+    .features li .dot { width: 6px; height: 6px; background: #22C55E; border-radius: 50%; flex-shrink: 0; }
+    .btn-wrap { text-align: center; margin: 28px 0; }
+    .btn { display: inline-block; background: #22C55E; color: #0A0A0A; text-decoration: none; font-size: 14px; font-weight: 700; padding: 14px 36px; border-radius: 8px; }
+    .divider { border: none; border-top: 1px solid #2A2A2A; margin: 24px 0; }
+    .label { font-size: 10px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: #444444; margin-bottom: 8px; }
+    .link-fallback { font-size: 11px; color: #888888; word-break: break-all; font-family: monospace; background: #111111; border: 1px solid #2A2A2A; border-radius: 6px; padding: 10px 12px; }
+    .footer { background: #111111; padding: 20px 32px; text-align: center; border-top: 1px solid #2A2A2A; }
+    .footer p { font-size: 11px; color: #444444; }
+    .footer a { color: #22C55E; text-decoration: none; }
   </style>
 </head>
 <body>
   <div class="wrapper">
     <div class="card">
       <div class="header">
-        <div class="logo">PRP<span>Personal Resource Planner</span></div>
+        <div class="logo-mark">P</div>
+        <div class="logo-name">PRP<span class="logo-sub">Personal Resource Planner</span></div>
         <div class="badge">Alpha Access</div>
       </div>
       <div class="body">
         <h1>You're invited to PRP</h1>
-        <p>You've been invited to join PRP — a personal productivity system built around the four resources that define your life: <strong style="color:#F1F5F9;">Money, Time, Energy, and Health</strong>.</p>
+        <div class="accent-line"></div>
+        <p>You've been selected for early access to PRP — a system built around the four resources that define your life: <strong>Money, Time, Energy, and Health</strong>.</p>
         <ul class="features">
-          <li>Track your finances — accounts, investments, liabilities</li>
-          <li>Build daily habits and monitor your streaks</li>
-          <li>Time-block your schedule across multiple modes</li>
-          <li>Monitor your energy through fasting, sleep, and focus</li>
+          <li><span class="dot"></span>Track finances — accounts, investments, debts, transactions</li>
+          <li><span class="dot"></span>Build daily habits and monitor streaks over time</li>
+          <li><span class="dot"></span>Time-block your schedule across multiple life modes</li>
+          <li><span class="dot"></span>Track energy — fasting, sleep, and focus sessions</li>
+          <li><span class="dot"></span>Set goals with milestones and subtasks</li>
         </ul>
-        <a href="{{ .ConfirmationURL }}" class="btn">Accept Invitation</a>
+        <div class="btn-wrap">
+          <a href="{{ .ConfirmationURL }}" class="btn">Accept Invitation →</a>
+        </div>
         <hr class="divider" />
-        <p>If the button doesn't work, copy and paste this link into your browser:</p>
-        <p class="link-fallback">{{ .ConfirmationURL }}</p>
-        <p style="margin-top:16px;">This invitation expires in 24 hours.</p>
+        <p class="label">Or copy this link</p>
+        <div class="link-fallback">{{ .ConfirmationURL }}</div>
+        <p style="margin-top:16px; font-size:12px;">This invitation expires in <strong>24 hours</strong>.</p>
       </div>
       <div class="footer">
-        <p>© 2026 PRP · Kyberia · All rights reserved</p>
+        <p>© 2026 PRP · <a href="https://prp-app.website">prp-app.website</a> · Built by Kyberia</p>
       </div>
     </div>
   </div>

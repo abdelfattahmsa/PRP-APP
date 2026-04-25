@@ -6,38 +6,55 @@
   <title>Phone number changed — PRP</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { background: #0F1117; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    body { background: #0A0A0A; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
     .wrapper { max-width: 560px; margin: 40px auto; padding: 0 16px; }
-    .card { background: #1A1D2E; border-radius: 16px; overflow: hidden; border: 1px solid #2A2D3E; }
-    .header { background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%); padding: 40px 32px 32px; text-align: center; }
-    .logo { font-size: 28px; font-weight: 800; color: #fff; letter-spacing: -0.5px; }
-    .logo span { color: rgba(255,255,255,0.6); font-weight: 400; font-size: 13px; display: block; margin-top: 4px; letter-spacing: 2px; text-transform: uppercase; }
+    .card { background: #1A1A1A; border-radius: 16px; overflow: hidden; border: 1px solid #2A2A2A; }
+    /* Warning orange for security alerts */
+    .header { background: #111111; border-bottom: 2px solid #E08840; padding: 36px 32px 28px; text-align: center; }
+    .logo-mark { display: inline-block; width: 48px; height: 48px; background: #E08840; border-radius: 12px; line-height: 48px; font-size: 20px; font-weight: 900; color: #fff; margin-bottom: 14px; }
+    .logo-name { font-size: 24px; font-weight: 800; color: #E8E8E8; }
+    .logo-sub { color: #888888; font-weight: 400; font-size: 11px; display: block; margin-top: 3px; letter-spacing: 2.5px; text-transform: uppercase; }
     .body { padding: 36px 32px; }
-    h1 { font-size: 22px; font-weight: 700; color: #F1F5F9; margin-bottom: 12px; }
-    p { font-size: 15px; color: #94A3B8; line-height: 1.6; margin-bottom: 16px; }
-    .info-box { background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.2); border-radius: 10px; padding: 14px 16px; margin-bottom: 20px; }
-    .info-box p { margin: 0; font-size: 14px; color: #FDE68A; }
-    .footer { padding: 20px 32px; text-align: center; }
-    .footer p { font-size: 12px; color: #475569; }
+    h1 { font-size: 22px; font-weight: 700; color: #E8E8E8; margin-bottom: 10px; }
+    .accent-line { width: 32px; height: 3px; background: #E08840; border-radius: 2px; margin-bottom: 20px; }
+    p { font-size: 14px; color: #888888; line-height: 1.7; margin-bottom: 14px; }
+    p strong { color: #E8E8E8; }
+    .info-box { background: rgba(224,136,64,0.06); border: 1px solid rgba(224,136,64,0.2); border-left: 3px solid #E08840; border-radius: 8px; padding: 14px 16px; margin: 16px 0; }
+    .info-box p { margin: 0; font-size: 13px; color: #E08840; }
+    .account-box { background: #111111; border: 1px solid #2A2A2A; border-radius: 8px; padding: 14px 16px; }
+    .account-box .label { font-size: 10px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: #888888; margin-bottom: 4px; }
+    .account-box .value { font-size: 13px; color: #E8E8E8; }
+    .danger-box { background: rgba(224,80,80,0.06); border: 1px solid rgba(224,80,80,0.2); border-radius: 8px; padding: 12px 16px; margin-top: 16px; }
+    .danger-box p { margin: 0; font-size: 12px; color: #E05050; }
+    .footer { background: #111111; padding: 20px 32px; text-align: center; border-top: 1px solid #2A2A2A; }
+    .footer p { font-size: 11px; color: #444444; }
+    .footer a { color: #22C55E; text-decoration: none; }
   </style>
 </head>
 <body>
   <div class="wrapper">
     <div class="card">
       <div class="header">
-        <div class="logo">PRP<span>Personal Resource Planner</span></div>
+        <div class="logo-mark">📱</div>
+        <div class="logo-name">PRP<span class="logo-sub">Personal Resource Planner</span></div>
       </div>
       <div class="body">
         <h1>Phone number updated</h1>
+        <div class="accent-line"></div>
         <div class="info-box">
           <p>📱 The phone number on your PRP account has been changed.</p>
         </div>
-        <p>This is a security notification for your account (<strong style="color:#F1F5F9;">{{ .Email }}</strong>).</p>
-        <p>If you made this change, no action is needed.</p>
-        <p>If you did <strong style="color:#F1F5F9;">not</strong> make this change, please secure your account immediately by resetting your password or contacting support.</p>
+        <div class="account-box">
+          <div class="label">Account</div>
+          <div class="value">{{ .Email }}</div>
+        </div>
+        <p style="margin-top:16px;">If you made this change, no action is needed — your account is secure.</p>
+        <div class="danger-box">
+          <p>⚠️ If you did <strong>not</strong> make this change, please secure your account immediately by resetting your password, or contact our support team.</p>
+        </div>
       </div>
       <div class="footer">
-        <p>© 2026 PRP · Kyberia · All rights reserved</p>
+        <p>© 2026 PRP · <a href="https://prp-app.website">prp-app.website</a> · Built by Kyberia</p>
       </div>
     </div>
   </div>
