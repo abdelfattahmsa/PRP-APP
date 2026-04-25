@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
@@ -9,6 +10,7 @@ import '../../../core/providers/theme_provider.dart';
 import '../../../shared/models/all_providers.dart';
 import '../../../shared/widgets/placeholders.dart';
 import '../../../engines/categories/data/models/user_category_model.dart';
+import '../../../services/web_notif.dart';
 
 const _uuid = Uuid();
 
@@ -189,6 +191,10 @@ class _ProfileAppSettingsScreenState
             const SectionHeader('Notifications'),
             const Gap(12),
             SectionCard(children: [
+              if (kIsWeb)
+                _NotifPermissionTile(borderColor: borderColor),
+              if (kIsWeb)
+                Divider(height: 1, color: borderColor),
               SettingsSwitchTile(
                 title: 'Focus Reminders',
                 subtitle: 'Remind to start focus sessions',
@@ -495,6 +501,93 @@ class _ThemeOption extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+// NOTIFICATION PERMISSION TILE (web only)
+// ══════════════════════════════════════════════════════════════
+
+class _NotifPermissionTile extends StatefulWidget {
+  const _NotifPermissionTile({required this.borderColor});
+  final Color borderColor;
+
+  @override
+  State<_NotifPermissionTile> createState() => _NotifPermissionTileState();
+}
+
+class _NotifPermissionTileState extends State<_NotifPermissionTile> {
+  bool _requesting = false;
+
+  Future<void> _request() async {
+    setState(() => _requesting = true);
+    await requestWebNotifPermission();
+    if (mounted) {
+      // Reset the banner dismissed flag so it won't re-appear
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('notif_banner_dismissed', true);
+      setState(() => _requesting = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final granted = webNotifsGranted;
+    final accent = Theme.of(context).colorScheme.primary;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
+        children: [
+          Icon(
+            granted ? Icons.notifications_active_rounded : Icons.notifications_off_outlined,
+            size: 20,
+            color: granted ? AppColors.success : AppColors.warning,
+          ),
+          const Gap(14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Browser Notifications',
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyMedium
+                      ?.copyWith(fontWeight: FontWeight.w500),
+                ),
+                const Gap(2),
+                Text(
+                  granted ? 'Granted — notifications are active' : 'Not granted — tap to enable',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: granted ? AppColors.success : AppColors.warning,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (!granted)
+            _requesting
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : TextButton(
+                    onPressed: _request,
+                    style: TextButton.styleFrom(
+                      foregroundColor: accent,
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    child: const Text('Enable', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                  ),
+          if (granted)
+            Icon(Icons.check_circle_rounded, size: 18, color: AppColors.success),
+        ],
       ),
     );
   }

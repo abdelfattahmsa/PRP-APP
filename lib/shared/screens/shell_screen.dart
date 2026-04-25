@@ -1,17 +1,19 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gap/gap.dart';
 import 'package:uuid/uuid.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/router/app_router.dart';
 import '../../core/constants/app_constants.dart';
 import '../../features/auth/providers/auth_provider.dart';
-import '../../engines/energy/providers/energy_providers.dart';
 import '../../engines/energy/data/models/energy_models.dart';
 import '../../shared/models/all_providers.dart';
+import '../../services/notification_service.dart';
 import '../../services/web_notif.dart';
 
 const _shellUuid = Uuid();
@@ -201,6 +203,50 @@ class ShellScreen extends ConsumerStatefulWidget {
 }
 
 class _ShellScreenState extends ConsumerState<ShellScreen> {
+  bool _showNotifBanner = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkNotifBanner();
+  }
+
+  Future<void> _checkNotifBanner() async {
+    if (!kIsWeb) return;
+    if (webNotifsGranted) return;
+    final prefs = await SharedPreferences.getInstance();
+    final dismissed = prefs.getBool('notif_banner_dismissed') ?? false;
+    if (!dismissed && mounted) setState(() => _showNotifBanner = true);
+  }
+
+  Future<void> _enableNotifications() async {
+    final granted = await requestWebNotifPermission();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('notif_banner_dismissed', true);
+    if (!mounted) return;
+    setState(() => _showNotifBanner = false);
+    if (granted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('✓ Notifications enabled')),
+      );
+    }
+  }
+
+  Future<void> _dismissNotifBanner() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('notif_banner_dismissed', true);
+    if (mounted) setState(() => _showNotifBanner = false);
+  }
+
+  /// Unified notify — web browser notification on web, flutter_local_notifications on desktop/mobile.
+  void _notify(String title, {String? body}) {
+    if (kIsWeb) {
+      showWebNotif(title, body: body);
+    } else {
+      NotificationService.instance.showInstant(title: title, body: body ?? '');
+    }
+  }
+
   int get _activeTabIndex {
     for (var i = 0; i < kAppTabs.length; i++) {
       final tab = kAppTabs[i];
@@ -214,28 +260,77 @@ class _ShellScreenState extends ConsumerState<ShellScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Root-level timer completion handler — fires regardless of current screen
+    // ── Focus timer completion ─────────────────────────────────
     ref.listen<FocusTimerState>(focusTimerProvider, (prev, next) {
       if (next.completedAt != null && prev?.completedAt == null) {
         _onFocusComplete(next);
       }
     });
 
+    // ── Fasting events ─────────────────────────────────────────
+    ref.listen<FastingState>(fastingProvider, (prev, next) {
+      if (!mounted) return;
+      // Fast just started
+      if (prev?.isFasting == false && next.isFasting == true) {
+        _notify('⏱ Fast started',
+            body: 'Your ${next.active!.goalHours}h fast has begun. Stay strong!');
+      }
+      // Goal just reached
+      if (prev?.active?.goalReached == false && next.active?.goalReached == true) {
+        _notify('🌟 Fasting goal reached!',
+            body: "You've hit your ${next.active!.goalHours}h goal. Keep going!");
+      }
+      // Fast just ended
+      if (prev?.isFasting == true && next.isFasting == false) {
+        final last = next.history.isNotEmpty ? next.history.last : null;
+        if (last != null) {
+          final h = last.duration.inHours;
+          final m = last.duration.inMinutes % 60;
+          _notify('✅ Fast complete!',
+              body: 'You fasted for ${h}h ${m}m. Great work!');
+        }
+      }
+    });
+
+    // ── All habits done today ──────────────────────────────────
+    ref.listen<({int done, int total, double pct})>(
+        habitsTodayProvider, (prev, next) {
+      if (!mounted) return;
+      if ((prev?.pct ?? 0) < 1.0 && next.pct >= 1.0 && next.total > 0) {
+        _notify('🎉 All habits done!',
+            body: 'You completed all ${next.total} habits for today!');
+      }
+    });
+
     final tabIndex = _activeTabIndex;
     final activeTab = kAppTabs[tabIndex];
 
+    Widget shell;
     if (Breakpoints.isWide(context)) {
-      return _DesktopShell(
+      shell = _DesktopShell(
         location: widget.location,
         tabIndex: tabIndex,
         child: widget.child,
       );
+    } else {
+      shell = _MobileShell(
+        location: widget.location,
+        activeTab: activeTab,
+        tabIndex: tabIndex,
+        child: widget.child,
+      );
     }
-    return _MobileShell(
-      location: widget.location,
-      activeTab: activeTab,
-      tabIndex: tabIndex,
-      child: widget.child,
+
+    if (!_showNotifBanner) return shell;
+
+    return Column(
+      children: [
+        _NotifPermissionBanner(
+          onEnable: _enableNotifications,
+          onDismiss: _dismissNotifBanner,
+        ),
+        Expanded(child: shell),
+      ],
     );
   }
 
@@ -260,7 +355,7 @@ class _ShellScreenState extends ConsumerState<ShellScreen> {
     final msg = state.mode == 'focus'
         ? '🍅 Focus session complete!'
         : '☕ Break over!';
-    showWebNotif(msg, body: 'Tap to return to PRP');
+    _notify(msg, body: 'Tap to return to PRP');
     if (mounted) {
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(msg)));
@@ -979,6 +1074,73 @@ class _SidebarProfileFooter extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+// NOTIFICATION PERMISSION BANNER
+// ══════════════════════════════════════════════════════════════
+
+class _NotifPermissionBanner extends StatelessWidget {
+  const _NotifPermissionBanner({
+    required this.onEnable,
+    required this.onDismiss,
+  });
+  final VoidCallback onEnable;
+  final VoidCallback onDismiss;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final accent = Theme.of(context).colorScheme.primary;
+    final bg = accent.withValues(alpha: isDark ? 0.09 : 0.07);
+    final border = isDark ? AppColors.border : AppColors.lightBorder;
+    final textColor = isDark ? AppColors.textSecondary : AppColors.lightTextSecondary;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
+      decoration: BoxDecoration(
+        color: bg,
+        border: Border(bottom: BorderSide(color: border, width: 0.5)),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.notifications_outlined, size: 15, color: accent),
+          const Gap(10),
+          Expanded(
+            child: Text(
+              'Enable notifications for focus, fasting & habit reminders',
+              style: TextStyle(fontSize: 12, color: textColor),
+            ),
+          ),
+          const Gap(10),
+          GestureDetector(
+            onTap: onEnable,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+              decoration: BoxDecoration(
+                color: accent,
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: const Text(
+                'Enable',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+          const Gap(8),
+          GestureDetector(
+            onTap: onDismiss,
+            child: Icon(Icons.close_rounded, size: 16, color: textColor),
+          ),
+        ],
+      ),
     );
   }
 }

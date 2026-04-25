@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import '../shared/models/models.dart';
@@ -12,7 +13,7 @@ class NotificationService {
   bool _initialized = false;
 
   Future<void> init() async {
-    if (_initialized) return;
+    if (_initialized || kIsWeb) return;
     const android = AndroidInitializationSettings('@mipmap/ic_launcher');
     const darwin = DarwinInitializationSettings(
       requestAlertPermission: true,
@@ -20,9 +21,9 @@ class NotificationService {
       requestSoundPermission: true,
     );
     const windows = WindowsInitializationSettings(
-      appName: 'Life Plan',
-      appUserModelId: 'com.kyberia.lifeplan',
-      guid: 'a8b9c0d1-e2f3-4567-890a-bcdef1234567',
+      appName: 'PRP',
+      appUserModelId: 'com.kyberia.prp',
+      guid: 'b7c3e1f2-d4a5-4890-b12c-def456789abc',
     );
     await _plugin.initialize(
       settings: const InitializationSettings(
@@ -36,6 +37,7 @@ class NotificationService {
   }
 
   Future<void> requestPermission() async {
+    if (kIsWeb) return;
     await _plugin
         .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin>()
@@ -47,6 +49,7 @@ class NotificationService {
   }
 
   /// Schedule notifications for all blocks in a schedule mode
+  // Web is not supported by flutter_local_notifications.
   Future<void> scheduleBlockNotifications(
     List<ScheduleBlock> blocks,
     String timezone,
