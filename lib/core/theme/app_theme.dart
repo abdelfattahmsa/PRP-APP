@@ -159,7 +159,6 @@ class AppTheme {
         outline: AppColors.border,
         outlineVariant: AppColors.borderLight,
       ),
-      fontFamily: 'IBMPlexMono',
       textTheme: _darkTextTheme,
       cardTheme: CardThemeData(
         color: AppColors.card,
@@ -208,7 +207,6 @@ class AppTheme {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 13),
           textStyle: const TextStyle(
-            fontFamily: 'IBMPlexMono',
             fontSize: 12,
             fontWeight: FontWeight.w600,
             letterSpacing: 0.5,
@@ -223,7 +221,6 @@ class AppTheme {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 13),
           textStyle: const TextStyle(
-            fontFamily: 'IBMPlexMono',
             fontSize: 12,
             fontWeight: FontWeight.w500,
           ),
@@ -234,7 +231,6 @@ class AppTheme {
           foregroundColor: AppColors.accent,
           minimumSize: const Size(0, 44),
           textStyle: const TextStyle(
-            fontFamily: 'IBMPlexMono',
             fontSize: 12,
             fontWeight: FontWeight.w500,
           ),
@@ -260,15 +256,13 @@ class AppTheme {
             return const TextStyle(
               color: AppColors.accent,
               fontSize: 9,
-              fontFamily: 'IBMPlexMono',
               fontWeight: FontWeight.w600,
             );
           }
           return const TextStyle(
             color: AppColors.textSecondary,
             fontSize: 9,
-            fontFamily: 'IBMPlexMono',
-          );
+            );
         }),
         surfaceTintColor: Colors.transparent,
         shadowColor: Colors.transparent,
@@ -315,7 +309,6 @@ class AppTheme {
         backgroundColor: AppColors.card,
         side: const BorderSide(color: AppColors.border),
         labelStyle: const TextStyle(
-          fontFamily: 'IBMPlexMono',
           fontSize: 10,
           color: AppColors.textSecondary,
         ),
@@ -347,8 +340,7 @@ class AppTheme {
         textStyle: const TextStyle(
           color: AppColors.textPrimary,
           fontSize: 11,
-          fontFamily: 'IBMPlexMono',
-        ),
+          ),
       ),
     );
   }
@@ -370,7 +362,6 @@ class AppTheme {
         outline: AppColors.lightBorder,
         outlineVariant: AppColors.lightBorderStrong,
       ),
-      fontFamily: 'IBMPlexMono',
       textTheme: _lightTextTheme,
       cardTheme: CardThemeData(
         color: AppColors.lightCard,
@@ -420,7 +411,6 @@ class AppTheme {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 13),
           textStyle: const TextStyle(
-            fontFamily: 'IBMPlexMono',
             fontSize: 12,
             fontWeight: FontWeight.w600,
             letterSpacing: 0.5,
@@ -435,7 +425,6 @@ class AppTheme {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 13),
           textStyle: const TextStyle(
-            fontFamily: 'IBMPlexMono',
             fontSize: 12,
             fontWeight: FontWeight.w500,
           ),
@@ -446,7 +435,6 @@ class AppTheme {
           foregroundColor: AppColors.accent,
           minimumSize: const Size(0, 44),
           textStyle: const TextStyle(
-            fontFamily: 'IBMPlexMono',
             fontSize: 12,
             fontWeight: FontWeight.w500,
           ),
@@ -473,15 +461,13 @@ class AppTheme {
             return const TextStyle(
               color: AppColors.accent,
               fontSize: 9,
-              fontFamily: 'IBMPlexMono',
               fontWeight: FontWeight.w600,
             );
           }
           return const TextStyle(
             color: AppColors.lightTextSecondary,
             fontSize: 9,
-            fontFamily: 'IBMPlexMono',
-          );
+            );
         }),
         surfaceTintColor: Colors.transparent,
         shadowColor: Colors.transparent,
@@ -528,7 +514,6 @@ class AppTheme {
         backgroundColor: AppColors.lightCard,
         side: const BorderSide(color: AppColors.lightBorder),
         labelStyle: const TextStyle(
-          fontFamily: 'IBMPlexMono',
           fontSize: 10,
           color: AppColors.lightTextSecondary,
         ),
@@ -560,8 +545,7 @@ class AppTheme {
         textStyle: const TextStyle(
           color: AppColors.lightTextPrimary,
           fontSize: 11,
-          fontFamily: 'IBMPlexMono',
-        ),
+          ),
       ),
     );
   }
@@ -607,13 +591,11 @@ class AppTheme {
       color: AppColors.textPrimary,
     ),
     titleMedium: TextStyle(
-      fontFamily: 'IBMPlexMono',
       fontSize: 13,
       fontWeight: FontWeight.w600,
       color: AppColors.textPrimary,
     ),
     titleSmall: TextStyle(
-      fontFamily: 'IBMPlexMono',
       fontSize: 11,
       fontWeight: FontWeight.w600,
       color: AppColors.textSecondary,
@@ -638,19 +620,16 @@ class AppTheme {
       height: 1.4,
     ),
     labelLarge: TextStyle(
-      fontFamily: 'IBMPlexMono',
       fontSize: 12,
       fontWeight: FontWeight.w600,
       letterSpacing: 0.5,
     ),
     labelMedium: TextStyle(
-      fontFamily: 'IBMPlexMono',
       fontSize: 10,
       fontWeight: FontWeight.w500,
       letterSpacing: 0.8,
     ),
     labelSmall: TextStyle(
-      fontFamily: 'IBMPlexMono',
       fontSize: 9,
       fontWeight: FontWeight.w400,
       letterSpacing: 1.5,
@@ -697,13 +676,11 @@ class AppTheme {
       color: AppColors.lightTextPrimary,
     ),
     titleMedium: TextStyle(
-      fontFamily: 'IBMPlexMono',
       fontSize: 13,
       fontWeight: FontWeight.w600,
       color: AppColors.lightTextPrimary,
     ),
     titleSmall: TextStyle(
-      fontFamily: 'IBMPlexMono',
       fontSize: 11,
       fontWeight: FontWeight.w600,
       color: AppColors.lightTextSecondary,
@@ -728,21 +705,18 @@ class AppTheme {
       height: 1.4,
     ),
     labelLarge: TextStyle(
-      fontFamily: 'IBMPlexMono',
       fontSize: 12,
       fontWeight: FontWeight.w600,
       letterSpacing: 0.5,
       color: AppColors.lightTextPrimary,
     ),
     labelMedium: TextStyle(
-      fontFamily: 'IBMPlexMono',
       fontSize: 10,
       fontWeight: FontWeight.w500,
       letterSpacing: 0.8,
       color: AppColors.lightTextPrimary,
     ),
     labelSmall: TextStyle(
-      fontFamily: 'IBMPlexMono',
       fontSize: 9,
       fontWeight: FontWeight.w400,
       letterSpacing: 1.5,

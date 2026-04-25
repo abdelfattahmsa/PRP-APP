@@ -86,7 +86,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       dropdownColor: AppColors.card,
                       underline: const SizedBox.shrink(),
                       style: const TextStyle(
-                        fontFamily: 'IBMPlexMono',
                         fontSize: 12,
                         color: AppColors.gold,
                       ),

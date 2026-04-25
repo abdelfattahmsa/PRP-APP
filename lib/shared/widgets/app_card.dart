@@ -216,7 +216,6 @@ class KpiCard extends StatelessWidget {
                         trend!,
                         style: TextStyle(
                           fontSize: 10,
-                          fontFamily: 'IBMPlexMono',
                           color: up ? AppColors.success : AppColors.error,
                           fontWeight: FontWeight.w600,
                         ),
@@ -243,8 +242,7 @@ class KpiCard extends StatelessWidget {
               color: color,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.4,
-              fontFamily: 'IBMPlexMono',
-            ),
+              ),
           ),
           if (subtitle != null)
             Text(
@@ -287,7 +285,6 @@ class ChartCard extends StatelessWidget {
               Text(
                 title.toUpperCase(),
                 style: const TextStyle(
-                  fontFamily: 'IBMPlexMono',
                   fontSize: 10,
                   fontWeight: FontWeight.w600,
                   letterSpacing: 1.2,
@@ -339,7 +336,6 @@ class ListCard extends StatelessWidget {
                 Text(
                   title.toUpperCase(),
                   style: const TextStyle(
-                    fontFamily: 'IBMPlexMono',
                     fontSize: 10,
                     fontWeight: FontWeight.w600,
                     letterSpacing: 1.2,
@@ -378,7 +374,6 @@ class BentoSectionHeader extends StatelessWidget {
         Text(
           title.toUpperCase(),
           style: TextStyle(
-            fontFamily: 'IBMPlexMono',
             fontSize: 10,
             fontWeight: FontWeight.w600,
             letterSpacing: 1.5,

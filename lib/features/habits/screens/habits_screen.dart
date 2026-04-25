@@ -61,7 +61,7 @@ class _HabitsScreenState extends ConsumerState<HabitsScreen> {
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
                   Text("Today's Habits", style: Theme.of(context).textTheme.titleLarge),
-                  Text('${progress.done}/${progress.total}', style: TextStyle(fontFamily: 'IBMPlexMono', fontSize: 20, fontWeight: FontWeight.w700, color: progress.pct == 1.0 ? AppColors.deen : AppColors.gold)),
+                  Text('${progress.done}/${progress.total}', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: progress.pct == 1.0 ? AppColors.deen : AppColors.gold)),
                 ]),
                 const Gap(10),
                 ClipRRect(
@@ -73,7 +73,7 @@ class _HabitsScreenState extends ConsumerState<HabitsScreen> {
                   ),
                 ),
                 const Gap(6),
-                Text(DateFormat('EEEE, d MMMM yyyy').format(DateTime.now()), style: const TextStyle(fontFamily: 'IBMPlexMono', fontSize: 10, color: AppColors.textSecondary)),
+                Text(DateFormat('EEEE, d MMMM yyyy').format(DateTime.now()), style: const TextStyle(fontSize: 10, color: AppColors.textSecondary)),
               ]),
             ).animate().fadeIn(duration: 300.ms),
             const Gap(14),
@@ -156,14 +156,14 @@ class _HabitTile extends ConsumerWidget {
               const Gap(2),
               Row(children: [
                 if (habit.streak > 0) ...[
-                  Text('🔥 ${habit.streak} day streak', style: const TextStyle(fontFamily: 'IBMPlexMono', fontSize: 10, color: AppColors.gold)),
+                  Text('🔥 ${habit.streak} day streak', style: const TextStyle(fontSize: 10, color: AppColors.gold)),
                   const Gap(8),
                 ] else ...[
-                  const Text('No streak yet', style: TextStyle(fontFamily: 'IBMPlexMono', fontSize: 10, color: AppColors.textSecondary)),
+                  const Text('No streak yet', style: TextStyle(fontSize: 10, color: AppColors.textSecondary)),
                   const Gap(8),
                 ],
                 if (habit.longestStreak > 0)
-                  Text('best: ${habit.longestStreak}', style: const TextStyle(fontFamily: 'IBMPlexMono', fontSize: 9, color: AppColors.textSecondary)),
+                  Text('best: ${habit.longestStreak}', style: const TextStyle(fontSize: 9, color: AppColors.textSecondary)),
               ]),
             ])),
             GestureDetector(

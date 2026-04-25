@@ -226,7 +226,6 @@ class _HabitTile extends ConsumerWidget {
                       '🔥 ${habit.streak}d streak',
                       style: const TextStyle(
                         fontSize: 11,
-                        fontFamily: 'IBMPlexMono',
                         color: AppColors.error,
                       ),
                     ),

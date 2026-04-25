@@ -621,7 +621,6 @@ class _MobileSubTabItem extends StatelessWidget {
                   Text(
                     sub.label,
                     style: TextStyle(
-                      fontFamily: 'IBMPlexMono',
                       fontSize: 11,
                       fontWeight:
                           active ? FontWeight.w600 : FontWeight.w400,
@@ -966,7 +965,6 @@ class _SidebarProfileFooter extends StatelessWidget {
                       initial,
                       style: TextStyle(
                         color: accent,
-                        fontFamily: 'IBMPlexMono',
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
                       ),
@@ -1021,7 +1019,6 @@ class _SidebarProfileFooter extends StatelessWidget {
                         initial,
                         style: TextStyle(
                           color: accent,
-                          fontFamily: 'IBMPlexMono',
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
                         ),
@@ -1050,8 +1047,7 @@ class _SidebarProfileFooter extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 8,
                               color: textSecondary,
-                              fontFamily: 'IBMPlexMono',
-                            ),
+                              ),
                             overflow: TextOverflow.ellipsis,
                           ),
                         ],
@@ -1173,7 +1169,6 @@ class _FocusTimerBanner extends ConsumerWidget {
               Text(
                 '$label — $mins:$secs',
                 style: TextStyle(
-                  fontFamily: 'IBMPlexMono',
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                   color: color,

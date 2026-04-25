@@ -269,7 +269,6 @@ class OverviewScreen extends ConsumerWidget {
                                   Text(
                                     '${active[i].progress}%',
                                     style: TextStyle(
-                                      fontFamily: 'IBMPlexMono',
                                       fontSize: 13,
                                       color: AppColors.accent,
                                       fontWeight: FontWeight.w700,
@@ -396,7 +395,6 @@ class _ResourceScoreCard extends StatelessWidget {
                     Text(
                       '${scores.overall}',
                       style: TextStyle(
-                        fontFamily: 'IBMPlexMono',
                         fontSize: 15,
                         fontWeight: FontWeight.w800,
                         color: _scoreColor(scores.overall),
@@ -405,7 +403,6 @@ class _ResourceScoreCard extends StatelessWidget {
                     Text(
                       ' / 100',
                       style: TextStyle(
-                        fontFamily: 'IBMPlexMono',
                         fontSize: 10,
                         color: _scoreColor(scores.overall).withValues(alpha: 0.6),
                       ),
@@ -505,7 +502,6 @@ class _ScoreGauge extends StatelessWidget {
           Text(
             '$score',
             style: TextStyle(
-              fontFamily: 'IBMPlexMono',
               fontSize: 14,
               fontWeight: FontWeight.w700,
               color: color,
@@ -581,7 +577,6 @@ class _GreetingHeader extends StatelessWidget {
             Text(
               timeFmt.format(now),
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontFamily: 'IBMPlexMono',
                     fontWeight: FontWeight.w600,
                     color: AppColors.accent,
                   ),
@@ -597,8 +592,7 @@ class _GreetingHeader extends StatelessWidget {
                 tz,
                 style: Theme.of(context).textTheme.labelSmall?.copyWith(
                       color: AppColors.accent,
-                      fontFamily: 'IBMPlexMono',
-                    ),
+                      ),
               ),
             ),
           ],

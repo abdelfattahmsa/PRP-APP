@@ -232,7 +232,6 @@ class EnergyOverviewScreen extends ConsumerWidget {
                                   Text(
                                     '${activeGoals[i].progress}%',
                                     style: TextStyle(
-                                      fontFamily: 'IBMPlexMono',
                                       fontSize: 12,
                                       color: AppColors.accent,
                                       fontWeight: FontWeight.w700,
@@ -303,8 +302,7 @@ class _SessionTile extends StatelessWidget {
                   DateFormat('d MMM · HH:mm').format(session.date),
                   style: TextStyle(
                       fontSize: 11,
-                      color: textSecondary,
-                      fontFamily: 'IBMPlexMono'),
+                      color: textSecondary),
                 ),
               ],
             ),
@@ -312,7 +310,6 @@ class _SessionTile extends StatelessWidget {
           Text(
             '${session.actualMinutes}m',
             style: TextStyle(
-              fontFamily: 'IBMPlexMono',
               fontSize: 14,
               fontWeight: FontWeight.w700,
               color: session.completed ? AppColors.success : textSecondary,

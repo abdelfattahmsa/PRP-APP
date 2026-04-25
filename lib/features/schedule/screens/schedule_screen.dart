@@ -80,7 +80,7 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(color: active ? m.$3.withValues(alpha: 0.4) : Colors.transparent),
                   ),
-                  child: Center(child: Text(m.$2, style: TextStyle(fontFamily: 'IBMPlexMono', fontSize: 11, fontWeight: active ? FontWeight.w700 : FontWeight.w400, color: active ? m.$3 : AppColors.textSecondary))),
+                  child: Center(child: Text(m.$2, style: TextStyle(fontSize: 11, fontWeight: active ? FontWeight.w700 : FontWeight.w400, color: active ? m.$3 : AppColors.textSecondary))),
                 ),
               ),
             );
@@ -192,7 +192,7 @@ class _BlockTile extends ConsumerWidget {
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               child: Row(children: [
-                SizedBox(width: 44, child: Text(block.time, style: TextStyle(fontFamily: 'IBMPlexMono', fontSize: 10.5, fontWeight: FontWeight.w600, color: color))),
+                SizedBox(width: 44, child: Text(block.time, style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w600, color: color))),
                 Container(width: 8, height: 8, decoration: BoxDecoration(color: color, shape: BoxShape.circle, boxShadow: isCurrent ? [BoxShadow(color: color.withValues(alpha: 0.6), blurRadius: 6)] : null)),
                 const Gap(10),
                 Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -201,7 +201,7 @@ class _BlockTile extends ConsumerWidget {
                     if (isCurrent) Container(
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(color: color.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(4), border: Border.all(color: color.withValues(alpha: 0.4))),
-                      child: Text('NOW', style: TextStyle(fontFamily: 'IBMPlexMono', fontSize: 8, fontWeight: FontWeight.w700, color: color)),
+                      child: Text('NOW', style: TextStyle(fontSize: 8, fontWeight: FontWeight.w700, color: color)),
                     ),
                   ]),
                   if (block.note != null) ...[const Gap(2), Text(block.note!, style: const TextStyle(fontSize: 11, color: AppColors.textSecondary, fontStyle: FontStyle.italic))],
@@ -211,7 +211,7 @@ class _BlockTile extends ConsumerWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                     decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(4), border: Border.all(color: color.withValues(alpha: 0.3))),
-                    child: Text(block.duration!, style: TextStyle(fontFamily: 'IBMPlexMono', fontSize: 9, color: color)),
+                    child: Text(block.duration!, style: TextStyle(fontSize: 9, color: color)),
                   ),
                 ],
                 const Gap(8),
@@ -327,7 +327,7 @@ class _EditBlockState extends ConsumerState<EditBlockScreen> {
             Expanded(child: AppTextField(controller: _dur, label: 'Duration', hint: '30m or 1hr')),
           ]),
           const Gap(14),
-          const Text('Category', style: TextStyle(fontSize: 10, color: AppColors.textSecondary, fontFamily: 'IBMPlexMono', letterSpacing: 0.5)),
+          const Text('Category', style: TextStyle(fontSize: 10, color: AppColors.textSecondary, letterSpacing: 0.5)),
           const Gap(6),
           Wrap(
             spacing: 6, runSpacing: 6,
@@ -345,7 +345,7 @@ class _EditBlockState extends ConsumerState<EditBlockScreen> {
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(color: sel ? color.withValues(alpha: 0.5) : AppColors.border),
                   ),
-                  child: Text('${info?.emoji ?? ''} ${info?.label ?? k}', style: TextStyle(fontFamily: 'IBMPlexMono', fontSize: 11, color: sel ? color : AppColors.textSecondary, fontWeight: sel ? FontWeight.w600 : FontWeight.w400)),
+                  child: Text('${info?.emoji ?? ''} ${info?.label ?? k}', style: TextStyle(fontSize: 11, color: sel ? color : AppColors.textSecondary, fontWeight: sel ? FontWeight.w600 : FontWeight.w400)),
                 ),
               );
             }).toList(),

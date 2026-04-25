@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign in to PRP</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0F1117; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    .wrapper { max-width: 560px; margin: 40px auto; padding: 0 16px; }
+    .card { background: #1A1D2E; border-radius: 16px; overflow: hidden; border: 1px solid #2A2D3E; }
+    .header { background: linear-gradient(135deg, #0EA5E9 0%, #6366F1 100%); padding: 40px 32px 32px; text-align: center; }
+    .logo { font-size: 28px; font-weight: 800; color: #fff; letter-spacing: -0.5px; }
+    .logo span { color: rgba(255,255,255,0.6); font-weight: 400; font-size: 13px; display: block; margin-top: 4px; letter-spacing: 2px; text-transform: uppercase; }
+    .body { padding: 36px 32px; }
+    h1 { font-size: 22px; font-weight: 700; color: #F1F5F9; margin-bottom: 12px; }
+    p { font-size: 15px; color: #94A3B8; line-height: 1.6; margin-bottom: 16px; }
+    .btn { display: block; background: linear-gradient(135deg, #0EA5E9 0%, #6366F1 100%); color: #fff; text-decoration: none; font-size: 15px; font-weight: 600; padding: 14px 32px; border-radius: 10px; text-align: center; margin: 28px 0; }
+    .divider { border: none; border-top: 1px solid #2A2D3E; margin: 24px 0; }
+    .link-fallback { font-size: 12px; color: #64748B; word-break: break-all; }
+    .footer { padding: 20px 32px; text-align: center; }
+    .footer p { font-size: 12px; color: #475569; }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="card">
+      <div class="header">
+        <div class="logo">PRP<span>Personal Resource Planner</span></div>
+      </div>
+      <div class="body">
+        <h1>Your sign-in link</h1>
+        <p>Click the button below to sign in to your PRP account. No password needed.</p>
+        <a href="{{ .ConfirmationURL }}" class="btn">Sign In to PRP</a>
+        <hr class="divider" />
+        <p>If the button doesn't work, copy and paste this link into your browser:</p>
+        <p class="link-fallback">{{ .ConfirmationURL }}</p>
+        <p style="margin-top:16px;">This link is single-use and expires in 1 hour. If you didn't request this, you can safely ignore this email.</p>
+      </div>
+      <div class="footer">
+        <p>© 2026 PRP · Kyberia · All rights reserved</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

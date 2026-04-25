@@ -273,7 +273,7 @@ class _PlanCard extends StatelessWidget {
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               minimumSize: Size.zero,
-              textStyle: const TextStyle(fontSize: 11, fontFamily: 'IBMPlexMono'),
+              textStyle: const TextStyle(fontSize: 11),
             ),
             child: const Text('Upgrade'),
           ),

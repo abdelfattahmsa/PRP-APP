@@ -62,7 +62,6 @@ class AppTextField extends StatelessWidget {
           enabled: enabled,
           autofocus: autofocus,
           style: const TextStyle(
-            fontFamily: 'IBMPlexMono',
             fontSize: 13,
             color: AppColors.textPrimary,
           ),
@@ -137,7 +136,6 @@ class AppButton extends StatelessWidget {
           side: BorderSide(color: bg),
           padding: padding,
           textStyle: TextStyle(
-            fontFamily: 'IBMPlexMono',
             fontSize: small ? 11 : 12,
             fontWeight: FontWeight.w600,
           ),
@@ -153,7 +151,6 @@ class AppButton extends StatelessWidget {
         foregroundColor: fg,
         padding: padding,
         textStyle: TextStyle(
-          fontFamily: 'IBMPlexMono',
           fontSize: small ? 11 : 12,
           fontWeight: FontWeight.w600,
         ),
@@ -306,7 +303,6 @@ class StatCard extends StatelessWidget {
             value,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   color: valueColor ?? AppColors.gold,
-                  fontFamily: 'IBMPlexMono',
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
                 ),

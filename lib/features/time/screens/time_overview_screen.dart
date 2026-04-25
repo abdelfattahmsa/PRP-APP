@@ -308,8 +308,7 @@ class _BlockTile extends StatelessWidget {
                   block.time as String,
                   style: TextStyle(
                       fontSize: 11,
-                      color: textSecondary,
-                      fontFamily: 'IBMPlexMono'),
+                      color: textSecondary),
                 ),
               ],
             ),
@@ -324,7 +323,6 @@ class _BlockTile extends StatelessWidget {
               child: Text(
                 block.duration as String,
                 style: TextStyle(
-                    fontFamily: 'IBMPlexMono',
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
                     color: color),

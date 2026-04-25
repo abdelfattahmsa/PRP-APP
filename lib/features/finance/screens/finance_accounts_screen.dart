@@ -289,7 +289,6 @@ class _AccountDetailTile extends StatelessWidget {
                 Text(
                   'EGP ${fmt.format(total)}',
                   style: TextStyle(
-                    fontFamily: 'IBMPlexMono',
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
                     color: total >= 0
@@ -354,8 +353,7 @@ class _AccountDetailTile extends StatelessWidget {
                           'EGP ${fmt.format(bank.creditCardBalance)} / ${fmt.format(bank.creditCardLimit)}',
                           style: TextStyle(
                               fontSize: 10,
-                              color: textSecondary,
-                              fontFamily: 'IBMPlexMono'),
+                              color: textSecondary),
                         ),
                       ],
                     ),
@@ -365,8 +363,7 @@ class _AccountDetailTile extends StatelessWidget {
                         'Min. payment: EGP ${fmt.format(bank.minimumPayment)}  ·  Remaining limit: EGP ${fmt.format(bank.remainingCreditLimit)}',
                         style: TextStyle(
                             fontSize: 10,
-                            color: textSecondary,
-                            fontFamily: 'IBMPlexMono'),
+                            color: textSecondary),
                       ),
                     ],
                   ],
@@ -398,7 +395,6 @@ class _BalancePill extends StatelessWidget {
       child: Text(
         '$label: $value',
         style: TextStyle(
-            fontFamily: 'IBMPlexMono',
             fontSize: 9,
             color: color,
             fontWeight: FontWeight.w600),
@@ -665,7 +661,6 @@ class _MiniTxTile extends StatelessWidget {
           Text(
             '${isIncome ? '+' : '−'}${fmt.format(tx.amount)}',
             style: TextStyle(
-              fontFamily: 'IBMPlexMono',
               fontSize: 12,
               fontWeight: FontWeight.w700,
               color: isIncome ? AppColors.success : AppColors.error,

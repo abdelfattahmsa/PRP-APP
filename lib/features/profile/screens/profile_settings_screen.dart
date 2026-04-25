@@ -305,7 +305,7 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
-                            'Free Plan',
+                            AppConstants.appStage,
                             style: Theme.of(context)
                                 .textTheme
                                 .labelSmall

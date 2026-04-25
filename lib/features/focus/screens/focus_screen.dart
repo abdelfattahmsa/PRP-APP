@@ -29,7 +29,7 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
           bottom: const TabBar(
             indicatorColor: AppColors.gold, labelColor: AppColors.gold,
             unselectedLabelColor: AppColors.textSecondary,
-            labelStyle: TextStyle(fontFamily: 'IBMPlexMono', fontSize: 11, fontWeight: FontWeight.w600),
+            labelStyle: TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
             tabs: [Tab(text: 'TIMER'), Tab(text: 'LOG'), Tab(text: 'ANALYTICS')],
           ),
         ),
@@ -75,7 +75,7 @@ class _FocusTimerView extends ConsumerWidget {
                     borderRadius: BorderRadius.circular(7),
                     border: Border.all(color: state.mode == m.$1 ? color.withValues(alpha: 0.4) : Colors.transparent),
                   ),
-                  child: Center(child: Text(m.$2, style: TextStyle(fontFamily: 'IBMPlexMono', fontSize: 11, color: state.mode == m.$1 ? color : AppColors.textSecondary, fontWeight: state.mode == m.$1 ? FontWeight.w700 : FontWeight.w400))),
+                  child: Center(child: Text(m.$2, style: TextStyle(fontSize: 11, color: state.mode == m.$1 ? color : AppColors.textSecondary, fontWeight: state.mode == m.$1 ? FontWeight.w700 : FontWeight.w400))),
                 ),
               )),
             ]
@@ -97,10 +97,10 @@ class _FocusTimerView extends ConsumerWidget {
             ),
             Column(mainAxisAlignment: MainAxisAlignment.center, children: [
               if (state.selectedBlockLabel.isNotEmpty)
-                Text(state.selectedBlockLabel, style: const TextStyle(fontFamily: 'IBMPlexMono', fontSize: 10, color: AppColors.textSecondary), textAlign: TextAlign.center),
+                Text(state.selectedBlockLabel, style: const TextStyle(fontSize: 10, color: AppColors.textSecondary), textAlign: TextAlign.center),
               const Gap(4),
-              Text('$mm:$ss', style: TextStyle(fontFamily: 'IBMPlexMono', fontSize: 52, fontWeight: FontWeight.w700, color: state.isRunning ? color : AppColors.textPrimary)),
-              Text(state.mode == 'focus' ? 'FOCUS' : 'BREAK', style: const TextStyle(fontFamily: 'IBMPlexMono', fontSize: 10, color: AppColors.textSecondary, letterSpacing: 2)),
+              Text('$mm:$ss', style: TextStyle(fontSize: 52, fontWeight: FontWeight.w700, color: state.isRunning ? color : AppColors.textPrimary)),
+              Text(state.mode == 'focus' ? 'FOCUS' : 'BREAK', style: const TextStyle(fontSize: 10, color: AppColors.textSecondary, letterSpacing: 2)),
             ]),
           ]),
         ),
@@ -130,22 +130,22 @@ class _FocusTimerView extends ConsumerWidget {
 
         // Block selector
         if (blocks.isNotEmpty) Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const Text('Link to block:', style: TextStyle(fontSize: 10, color: AppColors.textSecondary, fontFamily: 'IBMPlexMono')),
+          const Text('Link to block:', style: TextStyle(fontSize: 10, color: AppColors.textSecondary)),
           const Gap(6),
           DropdownButtonFormField<String>(
             // ignore: deprecated_member_use
             value: state.selectedBlockLabel.isEmpty ? null : state.selectedBlockLabel,
-            hint: const Text('— Select schedule block —', style: TextStyle(fontSize: 12, color: AppColors.textSecondary, fontFamily: 'IBMPlexMono')),
+            hint: const Text('— Select schedule block —', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
             dropdownColor: AppColors.card,
-            items: blocks.map((b) => DropdownMenuItem(value: b.label, child: Text('${b.time} · ${b.label}', style: const TextStyle(fontSize: 11, fontFamily: 'IBMPlexMono')))).toList(),
+            items: blocks.map((b) => DropdownMenuItem(value: b.label, child: Text('${b.time} · ${b.label}', style: const TextStyle(fontSize: 11)))).toList(),
             onChanged: (v) { if (v != null) { final b = blocks.firstWhere((b) => b.label == v); notifier.selectBlock(b.label, b.categoryKey); } },
             decoration: const InputDecoration(contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10), isDense: true),
           ),
           const Gap(12),
           TextField(
             onChanged: (v) => notifier.setNote(v),
-            maxLines: 2, style: const TextStyle(fontFamily: 'IBMPlexMono', fontSize: 12),
-            decoration: const InputDecoration(hintText: 'Session note (optional)...', hintStyle: TextStyle(color: AppColors.textMuted, fontSize: 12, fontFamily: 'IBMPlexMono'), contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10), isDense: true),
+            maxLines: 2, style: const TextStyle(fontSize: 12),
+            decoration: const InputDecoration(hintText: 'Session note (optional)...', hintStyle: TextStyle(color: AppColors.textMuted, fontSize: 12), contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10), isDense: true),
           ),
         ]),
       ]),
@@ -162,7 +162,7 @@ class _TimerBtn extends StatelessWidget {
     child: Container(
       padding: EdgeInsets.symmetric(horizontal: large ? 32 : 20, vertical: large ? 14 : 10),
       decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(10), border: Border.all(color: color.withValues(alpha: 0.4))),
-      child: Text(label, style: TextStyle(fontFamily: 'IBMPlexMono', fontSize: large ? 15 : 12, fontWeight: FontWeight.w700, color: color)),
+      child: Text(label, style: TextStyle(fontSize: large ? 15 : 12, fontWeight: FontWeight.w700, color: color)),
     ),
   );
 }
@@ -175,10 +175,10 @@ class _DurControl extends StatelessWidget {
     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
     decoration: BoxDecoration(color: AppColors.card, borderRadius: BorderRadius.circular(8), border: Border.all(color: AppColors.border)),
     child: Row(children: [
-      Text('$label:', style: TextStyle(fontFamily: 'IBMPlexMono', fontSize: 10, color: color)),
+      Text('$label:', style: TextStyle(fontSize: 10, color: color)),
       const Spacer(),
       IconButton(icon: const Icon(Icons.remove, size: 14), onPressed: () => onChange(value > 1 ? value - 1 : 1), padding: EdgeInsets.zero, constraints: const BoxConstraints()),
-      Text(' $value min ', style: TextStyle(fontFamily: 'IBMPlexMono', fontSize: 12, fontWeight: FontWeight.w600, color: color)),
+      Text(' $value min ', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: color)),
       IconButton(icon: const Icon(Icons.add, size: 14), onPressed: () => onChange(value + 1), padding: EdgeInsets.zero, constraints: const BoxConstraints()),
     ]),
   ));
@@ -245,11 +245,11 @@ class _SessionLogTile extends ConsumerWidget {
             const Gap(12),
             Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(session.blockLabel, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
-              Text('${DateFormat('d MMM · HH:mm').format(session.date)}${session.note != null ? ' · ${session.note}' : ''}', style: const TextStyle(fontFamily: 'IBMPlexMono', fontSize: 9.5, color: AppColors.textSecondary)),
+              Text('${DateFormat('d MMM · HH:mm').format(session.date)}${session.note != null ? ' · ${session.note}' : ''}', style: const TextStyle(fontSize: 9.5, color: AppColors.textSecondary)),
             ])),
             Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-              Text('${session.actualMinutes}m', style: TextStyle(fontFamily: 'IBMPlexMono', fontSize: 15, color: session.completed ? AppColors.deen : AppColors.fasting, fontWeight: FontWeight.w700)),
-              Text(session.completed ? 'done' : 'stopped', style: const TextStyle(fontFamily: 'IBMPlexMono', fontSize: 9, color: AppColors.textSecondary)),
+              Text('${session.actualMinutes}m', style: TextStyle(fontSize: 15, color: session.completed ? AppColors.deen : AppColors.fasting, fontWeight: FontWeight.w700)),
+              Text(session.completed ? 'done' : 'stopped', style: const TextStyle(fontSize: 9, color: AppColors.textSecondary)),
             ]),
           ]),
         ),
@@ -347,12 +347,12 @@ class _FocusAnalyticsView extends ConsumerWidget {
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(color: AppColors.card, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppColors.border)),
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                const Text('LAST 7 DAYS · FOCUS MINUTES', style: TextStyle(fontFamily: 'IBMPlexMono', fontSize: 9, color: AppColors.gold, letterSpacing: 1.5)),
+                const Text('LAST 7 DAYS · FOCUS MINUTES', style: TextStyle(fontSize: 9, color: AppColors.gold, letterSpacing: 1.5)),
                 const Gap(14),
                 Row(crossAxisAlignment: CrossAxisAlignment.end, children: byDay.map((d) => Expanded(child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 3),
                   child: Column(children: [
-                    Text('${d.mins}', style: const TextStyle(fontFamily: 'IBMPlexMono', fontSize: 9, color: AppColors.textSecondary)),
+                    Text('${d.mins}', style: const TextStyle(fontSize: 9, color: AppColors.textSecondary)),
                     const Gap(3),
                     Container(
                       height: 60,
@@ -367,7 +367,7 @@ class _FocusAnalyticsView extends ConsumerWidget {
                       ),
                     ),
                     const Gap(4),
-                    Text(DateFormat('EEE').format(d.d).substring(0, 2), style: const TextStyle(fontFamily: 'IBMPlexMono', fontSize: 8, color: AppColors.textSecondary)),
+                    Text(DateFormat('EEE').format(d.d).substring(0, 2), style: const TextStyle(fontSize: 8, color: AppColors.textSecondary)),
                   ]),
                 ))).toList()),
               ]),
@@ -378,7 +378,7 @@ class _FocusAnalyticsView extends ConsumerWidget {
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(color: AppColors.card, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppColors.border)),
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                const Text('TIME BY CATEGORY', style: TextStyle(fontFamily: 'IBMPlexMono', fontSize: 9, color: AppColors.gold, letterSpacing: 1.5)),
+                const Text('TIME BY CATEGORY', style: TextStyle(fontSize: 9, color: AppColors.gold, letterSpacing: 1.5)),
                 const Gap(12),
                 ...catEntries.take(6).map((e) {
                   final color = AppColors.categoryColor(e.key);
@@ -389,7 +389,7 @@ class _FocusAnalyticsView extends ConsumerWidget {
                         Container(width: 8, height: 8, decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(2))),
                         const Gap(8),
                         Expanded(child: Text(e.key, style: const TextStyle(fontSize: 11, color: AppColors.textPrimary))),
-                        Text('${e.value}m', style: TextStyle(fontFamily: 'IBMPlexMono', fontSize: 10, color: color, fontWeight: FontWeight.w600)),
+                        Text('${e.value}m', style: TextStyle(fontSize: 10, color: color, fontWeight: FontWeight.w600)),
                       ]),
                       const Gap(4),
                       ClipRRect(borderRadius: BorderRadius.circular(3),
@@ -416,7 +416,7 @@ class _FocusAnalyticsView extends ConsumerWidget {
                     padding: const EdgeInsets.symmetric(vertical: 7),
                     child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
                       Text(row[0], style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
-                      Text(row[1], style: const TextStyle(fontFamily: 'IBMPlexMono', fontSize: 13, color: AppColors.textPrimary, fontWeight: FontWeight.w600)),
+                      Text(row[1], style: const TextStyle(fontSize: 13, color: AppColors.textPrimary, fontWeight: FontWeight.w600)),
                     ]),
                   ),
                   const Divider(height: 1),

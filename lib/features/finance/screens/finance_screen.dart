@@ -32,7 +32,7 @@ class FinanceScreen extends ConsumerWidget {
             indicatorColor: AppColors.gold,
             labelColor: AppColors.gold,
             unselectedLabelColor: AppColors.textSecondary,
-            labelStyle: TextStyle(fontFamily: 'IBMPlexMono', fontSize: 11, fontWeight: FontWeight.w600),
+            labelStyle: TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
             tabs: [
               Tab(text: 'OVERVIEW'),
               Tab(text: 'BANKS'),
@@ -73,15 +73,15 @@ class _OverviewTab extends StatelessWidget {
           ),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-              const Text('Total Debt', style: TextStyle(fontFamily: 'IBMPlexMono', fontSize: 10, color: AppColors.textSecondary, letterSpacing: 1)),
+              const Text('Total Debt', style: TextStyle(fontSize: 10, color: AppColors.textSecondary, letterSpacing: 1)),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(color: AppColors.error.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(5), border: Border.all(color: AppColors.error.withValues(alpha: 0.3))),
-                child: const Text('TARGET ≤ 100K · SEP 2026', style: TextStyle(fontFamily: 'IBMPlexMono', fontSize: 8, color: AppColors.error, fontWeight: FontWeight.w600)),
+                child: const Text('TARGET ≤ 100K · SEP 2026', style: TextStyle(fontSize: 8, color: AppColors.error, fontWeight: FontWeight.w600)),
               ),
             ]),
             const Gap(8),
-            Text(egp(summary.totalDebt), style: const TextStyle(fontFamily: 'IBMPlexMono', fontSize: 28, fontWeight: FontWeight.w700, color: AppColors.error)),
+            Text(egp(summary.totalDebt), style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: AppColors.error)),
             const Gap(12),
             ClipRRect(
               borderRadius: BorderRadius.circular(4),
@@ -94,9 +94,9 @@ class _OverviewTab extends StatelessWidget {
             ),
             const Gap(6),
             Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-              Text(egp(summary.totalDebt), style: const TextStyle(fontFamily: 'IBMPlexMono', fontSize: 10, color: AppColors.textSecondary)),
-              Text('${((1 - debtProgress) * 100).toStringAsFixed(0)}% to target', style: const TextStyle(fontFamily: 'IBMPlexMono', fontSize: 10, color: AppColors.textSecondary)),
-              const Text('100K', style: TextStyle(fontFamily: 'IBMPlexMono', fontSize: 10, color: AppColors.textSecondary)),
+              Text(egp(summary.totalDebt), style: const TextStyle(fontSize: 10, color: AppColors.textSecondary)),
+              Text('${((1 - debtProgress) * 100).toStringAsFixed(0)}% to target', style: const TextStyle(fontSize: 10, color: AppColors.textSecondary)),
+              const Text('100K', style: TextStyle(fontSize: 10, color: AppColors.textSecondary)),
             ]),
           ]),
         ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.05),
@@ -133,9 +133,9 @@ class _SummaryCard extends StatelessWidget {
         border: Border.all(color: AppColors.border),
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.center, children: [
-        Text(label, style: const TextStyle(fontFamily: 'IBMPlexMono', fontSize: 9, color: AppColors.textSecondary, letterSpacing: 0.5)),
+        Text(label, style: const TextStyle(fontSize: 9, color: AppColors.textSecondary, letterSpacing: 0.5)),
         const Gap(4),
-        Text(value, style: TextStyle(fontFamily: 'IBMPlexMono', fontSize: 14, fontWeight: FontWeight.w700, color: color)),
+        Text(value, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: color)),
       ]),
     );
   }
@@ -279,7 +279,7 @@ class _BankCardState extends ConsumerState<_BankCard> {
             ),
           ),
           const Gap(4),
-          Text('Limit: ${egp(widget.bank.creditCardLimit)}', style: const TextStyle(fontFamily: 'IBMPlexMono', fontSize: 9, color: AppColors.textSecondary)),
+          Text('Limit: ${egp(widget.bank.creditCardLimit)}', style: const TextStyle(fontSize: 9, color: AppColors.textSecondary)),
         ],
       ]),
     ).animate(delay: (widget.index * 60).ms).fadeIn(duration: 250.ms).slideY(begin: 0.05);
@@ -292,10 +292,10 @@ class _NumField extends StatelessWidget {
   final String label;
   @override
   Widget build(BuildContext context) => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-    Text(label, style: const TextStyle(fontSize: 9, color: AppColors.textSecondary, fontFamily: 'IBMPlexMono')),
+    Text(label, style: const TextStyle(fontSize: 9, color: AppColors.textSecondary)),
     const Gap(3),
     TextField(controller: ctrl, keyboardType: TextInputType.number, textAlign: TextAlign.right,
-        style: const TextStyle(fontFamily: 'IBMPlexMono', fontSize: 12, color: AppColors.textPrimary),
+        style: const TextStyle(fontSize: 12, color: AppColors.textPrimary),
         decoration: const InputDecoration(isDense: true, contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8))),
   ]);
 }
@@ -306,9 +306,9 @@ class _BankStat extends StatelessWidget {
   final Color color;
   @override
   Widget build(BuildContext context) => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-    Text(label, style: const TextStyle(fontFamily: 'IBMPlexMono', fontSize: 8.5, color: AppColors.textSecondary)),
+    Text(label, style: const TextStyle(fontSize: 8.5, color: AppColors.textSecondary)),
     const Gap(3),
-    Text(value, style: TextStyle(fontFamily: 'IBMPlexMono', fontSize: 11, fontWeight: FontWeight.w600, color: color)),
+    Text(value, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: color)),
   ]);
 }
 
@@ -353,8 +353,8 @@ class _CashCardState extends ConsumerState<_CashCard> {
         const Gap(10),
         const Expanded(child: Text('Cash on Hand', style: TextStyle(fontFamily: 'PlayfairDisplay', fontSize: 14, fontWeight: FontWeight.w700))),
         _editing
-            ? SizedBox(width: 100, child: TextField(controller: _ctrl, keyboardType: TextInputType.number, textAlign: TextAlign.right, autofocus: true, style: const TextStyle(fontFamily: 'IBMPlexMono', fontSize: 13, color: AppColors.textPrimary), decoration: const InputDecoration(isDense: true, contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 6)), onSubmitted: (_) => _save()))
-            : Text('EGP ${_fmt.format(cash)}', style: const TextStyle(fontFamily: 'IBMPlexMono', fontSize: 13, color: AppColors.gold, fontWeight: FontWeight.w600)),
+            ? SizedBox(width: 100, child: TextField(controller: _ctrl, keyboardType: TextInputType.number, textAlign: TextAlign.right, autofocus: true, style: const TextStyle(fontSize: 13, color: AppColors.textPrimary), decoration: const InputDecoration(isDense: true, contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 6)), onSubmitted: (_) => _save()))
+            : Text('EGP ${_fmt.format(cash)}', style: const TextStyle(fontSize: 13, color: AppColors.gold, fontWeight: FontWeight.w600)),
         const Gap(8),
         IconButton(
           icon: Icon(_editing ? Icons.check : Icons.edit_outlined, size: 16, color: AppColors.gold),
@@ -405,7 +405,7 @@ class _DebtsTabState extends ConsumerState<_DebtsTab> {
               decoration: BoxDecoration(color: AppColors.card, borderRadius: BorderRadius.circular(10), border: Border.all(color: AppColors.border)),
               child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
                 const Text('Total External Debt', style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
-                Text(egp(total), style: const TextStyle(fontFamily: 'IBMPlexMono', fontSize: 16, color: AppColors.error, fontWeight: FontWeight.w700)),
+                Text(egp(total), style: const TextStyle(fontSize: 16, color: AppColors.error, fontWeight: FontWeight.w700)),
               ]),
             ),
             const Gap(10),
@@ -459,7 +459,7 @@ class _DebtTile extends ConsumerWidget {
         Text(debt.source, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
         if (debt.notes != null) Text(debt.notes!, style: const TextStyle(fontSize: 11, color: AppColors.textSecondary, fontStyle: FontStyle.italic)),
       ])),
-      Text(egp(debt.amount), style: const TextStyle(fontFamily: 'IBMPlexMono', fontSize: 14, color: AppColors.error, fontWeight: FontWeight.w600)),
+      Text(egp(debt.amount), style: const TextStyle(fontSize: 14, color: AppColors.error, fontWeight: FontWeight.w600)),
       const Gap(8),
       IconButton(icon: const Icon(Icons.delete_outline, size: 16, color: AppColors.error), onPressed: () => ref.read(debtsProvider.notifier).delete(debt.id), padding: EdgeInsets.zero, constraints: const BoxConstraints()),
     ]),
@@ -533,7 +533,7 @@ class _TxTabState extends ConsumerState<_TransactionsTab> {
                     backgroundColor: AppColors.card,
                     selectedColor: AppColors.gold.withValues(alpha: 0.15),
                     side: BorderSide(color: sel ? AppColors.gold.withValues(alpha: 0.5) : AppColors.border),
-                    labelStyle: TextStyle(fontFamily: 'IBMPlexMono', fontSize: 10, color: sel ? AppColors.gold : AppColors.textSecondary, fontWeight: sel ? FontWeight.w600 : FontWeight.w400),
+                    labelStyle: TextStyle(fontSize: 10, color: sel ? AppColors.gold : AppColors.textSecondary, fontWeight: sel ? FontWeight.w600 : FontWeight.w400),
                     showCheckmark: false, padding: const EdgeInsets.symmetric(horizontal: 4),
                   ),
                 );
@@ -550,7 +550,7 @@ class _TxTabState extends ConsumerState<_TransactionsTab> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(color: AppColors.card, borderRadius: BorderRadius.circular(8), border: Border.all(color: AppColors.border)),
-                  child: Text(egp(total), style: const TextStyle(fontFamily: 'IBMPlexMono', fontSize: 12, color: AppColors.error, fontWeight: FontWeight.w600)),
+                  child: Text(egp(total), style: const TextStyle(fontSize: 12, color: AppColors.error, fontWeight: FontWeight.w600)),
                 ),
               ],
             ]),
@@ -592,23 +592,23 @@ class _AddTxForm extends StatelessWidget {
         Expanded(child: AppTextField(controller: amt, label: 'Amount (EGP)', hint: '250', keyboardType: TextInputType.number)),
         const Gap(10),
         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const Text('Account', style: TextStyle(fontSize: 10, color: AppColors.textSecondary, fontFamily: 'IBMPlexMono')),
+          const Text('Account', style: TextStyle(fontSize: 10, color: AppColors.textSecondary)),
           const Gap(5),
           DropdownButtonFormField<String>(
             initialValue: acct, onChanged: (v) => onAcctChange(v!),
             dropdownColor: AppColors.card,
-            items: accounts.map((a) => DropdownMenuItem(value: a, child: Text(a, style: const TextStyle(fontSize: 12, fontFamily: 'IBMPlexMono')))).toList(),
+            items: accounts.map((a) => DropdownMenuItem(value: a, child: Text(a, style: const TextStyle(fontSize: 12)))).toList(),
             decoration: const InputDecoration(contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8), isDense: true),
           ),
         ])),
       ]),
       const Gap(10),
       Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        const Text('Category', style: TextStyle(fontSize: 10, color: AppColors.textSecondary, fontFamily: 'IBMPlexMono')),
+        const Text('Category', style: TextStyle(fontSize: 10, color: AppColors.textSecondary)),
         const Gap(5),
         DropdownButtonFormField<String>(
           initialValue: cat, onChanged: (v) => onCatChange(v!), dropdownColor: AppColors.card,
-          items: AppConstants.txCategories.map((c) => DropdownMenuItem(value: c, child: Text(c, style: const TextStyle(fontSize: 12, fontFamily: 'IBMPlexMono')))).toList(),
+          items: AppConstants.txCategories.map((c) => DropdownMenuItem(value: c, child: Text(c, style: const TextStyle(fontSize: 12)))).toList(),
           decoration: const InputDecoration(contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8), isDense: true),
         ),
       ]),
@@ -637,9 +637,9 @@ class _TxTile extends ConsumerWidget {
         const Gap(10),
         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(tx.description, style: const TextStyle(fontSize: 13, color: AppColors.textPrimary, fontWeight: FontWeight.w500)),
-          Text('${tx.accountName} · ${tx.category} · ${DateFormat('dd MMM').format(tx.date)}', style: const TextStyle(fontFamily: 'IBMPlexMono', fontSize: 9.5, color: AppColors.textSecondary)),
+          Text('${tx.accountName} · ${tx.category} · ${DateFormat('dd MMM').format(tx.date)}', style: const TextStyle(fontSize: 9.5, color: AppColors.textSecondary)),
         ])),
-        Text('${tx.isIncome ? '+' : '-'}${egp(tx.amount)}', style: TextStyle(fontFamily: 'IBMPlexMono', fontSize: 13, color: tx.isIncome ? AppColors.deen : AppColors.error, fontWeight: FontWeight.w600)),
+        Text('${tx.isIncome ? '+' : '-'}${egp(tx.amount)}', style: TextStyle(fontSize: 13, color: tx.isIncome ? AppColors.deen : AppColors.error, fontWeight: FontWeight.w600)),
         const Gap(6),
         IconButton(icon: const Icon(Icons.delete_outline, size: 14, color: AppColors.error), onPressed: () => ref.read(transactionsProvider.notifier).delete(tx.id), padding: EdgeInsets.zero, constraints: const BoxConstraints()),
       ]),

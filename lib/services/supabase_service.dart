@@ -46,7 +46,11 @@ class SupabaseService {
       password: password,
       data: {'full_name': fullName},
     );
-    if (res.user != null) {
+    // Only run DB writes when a session exists (i.e. email confirmation is
+    // disabled or auto-confirmed). When email confirmation is required,
+    // res.session is null and auth.uid() would be null → RLS violation.
+    // The DB trigger handle_new_user() creates the profile row automatically.
+    if (res.user != null && res.session != null) {
       await _db.from('profiles').upsert({
         'id': res.user!.id,
         'email': email,
@@ -74,6 +78,16 @@ class SupabaseService {
         onConflict: 'id',
         ignoreDuplicates: true,
       );
+      // For email-confirmed sign-ups, _seedDefaultData() was skipped at
+      // signup time (no session). Detect first login by checking for habits.
+      final habits = await _db
+          .from('habits')
+          .select('id')
+          .eq('user_id', res.user!.id)
+          .limit(1);
+      if (habits.isEmpty) {
+        await _seedDefaultData(res.user!.id);
+      }
     }
     return res;
   }

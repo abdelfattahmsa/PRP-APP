@@ -119,8 +119,8 @@ class _GoalStat extends StatelessWidget {
     padding: const EdgeInsets.symmetric(vertical: 10),
     decoration: BoxDecoration(color: AppColors.card, borderRadius: BorderRadius.circular(8), border: Border.all(color: AppColors.border)),
     child: Column(children: [
-      Text(value, style: TextStyle(fontFamily: 'IBMPlexMono', fontSize: 22, fontWeight: FontWeight.w700, color: color)),
-      Text(label, style: const TextStyle(fontFamily: 'IBMPlexMono', fontSize: 9, color: AppColors.textSecondary)),
+      Text(value, style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: color)),
+      Text(label, style: const TextStyle(fontSize: 9, color: AppColors.textSecondary)),
     ]),
   ));
 }
@@ -133,7 +133,7 @@ class _SectionHeader extends StatelessWidget {
     padding: const EdgeInsets.only(bottom: 8),
     child: Row(children: [
       Expanded(child: Divider(color: AppColors.border.withValues(alpha: 0.6))),
-      Padding(padding: const EdgeInsets.symmetric(horizontal: 10), child: Text(label, style: const TextStyle(fontFamily: 'IBMPlexMono', fontSize: 9, color: AppColors.textSecondary, letterSpacing: 1.5))),
+      Padding(padding: const EdgeInsets.symmetric(horizontal: 10), child: Text(label, style: const TextStyle(fontSize: 9, color: AppColors.textSecondary, letterSpacing: 1.5))),
       Expanded(child: Divider(color: AppColors.border.withValues(alpha: 0.6))),
     ]),
   );
@@ -160,7 +160,7 @@ class _GoalAddForm extends StatelessWidget {
       const Gap(10),
       Row(children: [
         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const Text('Priority', style: TextStyle(fontSize: 10, color: AppColors.textSecondary, fontFamily: 'IBMPlexMono')),
+          const Text('Priority', style: TextStyle(fontSize: 10, color: AppColors.textSecondary)),
           const Gap(5),
           Row(children: ['high', 'medium', 'low'].map((p) {
             final sel = priority == p;
@@ -173,7 +173,7 @@ class _GoalAddForm extends StatelessWidget {
                   duration: 120.ms,
                   padding: const EdgeInsets.symmetric(vertical: 7),
                   decoration: BoxDecoration(color: sel ? c.withValues(alpha: 0.15) : AppColors.surface, borderRadius: BorderRadius.circular(7), border: Border.all(color: sel ? c.withValues(alpha: 0.5) : AppColors.border)),
-                  child: Center(child: Text(p, style: TextStyle(fontFamily: 'IBMPlexMono', fontSize: 10, color: sel ? c : AppColors.textSecondary, fontWeight: sel ? FontWeight.w700 : FontWeight.w400))),
+                  child: Center(child: Text(p, style: TextStyle(fontSize: 10, color: sel ? c : AppColors.textSecondary, fontWeight: sel ? FontWeight.w700 : FontWeight.w400))),
                 ),
               ),
             ));
@@ -181,7 +181,7 @@ class _GoalAddForm extends StatelessWidget {
         ])),
         const Gap(10),
         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const Text('Target Date *', style: TextStyle(fontSize: 10, color: AppColors.textSecondary, fontFamily: 'IBMPlexMono')),
+          const Text('Target Date *', style: TextStyle(fontSize: 10, color: AppColors.textSecondary)),
           const Gap(5),
           GestureDetector(
             onTap: onDateTap,
@@ -191,7 +191,7 @@ class _GoalAddForm extends StatelessWidget {
               child: Row(children: [
                 const Icon(Icons.calendar_today, size: 12, color: AppColors.textSecondary),
                 const Gap(6),
-                Text(DateFormat('dd MMM yy').format(target), style: const TextStyle(fontFamily: 'IBMPlexMono', fontSize: 11, color: AppColors.textPrimary)),
+                Text(DateFormat('dd MMM yy').format(target), style: const TextStyle(fontSize: 11, color: AppColors.textPrimary)),
               ]),
             ),
           ),
@@ -199,9 +199,9 @@ class _GoalAddForm extends StatelessWidget {
       ]),
       const Gap(10),
       Row(children: [
-        const Text('Starting progress:', style: TextStyle(fontSize: 10, color: AppColors.textSecondary, fontFamily: 'IBMPlexMono')),
+        const Text('Starting progress:', style: TextStyle(fontSize: 10, color: AppColors.textSecondary)),
         Expanded(child: Slider(value: progress.toDouble(), min: 0, max: 100, divisions: 20, onChanged: (v) => onProgressChange(v.round()))),
-        Text('$progress%', style: const TextStyle(fontFamily: 'IBMPlexMono', fontSize: 11, color: AppColors.gold)),
+        Text('$progress%', style: const TextStyle(fontSize: 11, color: AppColors.gold)),
       ]),
       Row(children: [
         Expanded(child: ElevatedButton(onPressed: onSave, child: const Text('Add Goal'))),
@@ -254,13 +254,13 @@ class _GoalTileState extends ConsumerState<_GoalTile> {
           Row(children: [
             Container(width: 4, height: 4, decoration: BoxDecoration(color: priColor, shape: BoxShape.circle)),
             const Gap(6),
-            Text(goal.priority.toUpperCase(), style: TextStyle(fontFamily: 'IBMPlexMono', fontSize: 8, color: priColor, fontWeight: FontWeight.w700, letterSpacing: 0.5)),
+            Text(goal.priority.toUpperCase(), style: TextStyle(fontSize: 8, color: priColor, fontWeight: FontWeight.w700, letterSpacing: 0.5)),
             if (goal.status == 'done') ...[
               const Gap(8),
-              const Text('COMPLETE ✓', style: TextStyle(fontFamily: 'IBMPlexMono', fontSize: 8, color: AppColors.deen, fontWeight: FontWeight.w600)),
+              const Text('COMPLETE ✓', style: TextStyle(fontSize: 8, color: AppColors.deen, fontWeight: FontWeight.w600)),
             ],
             const Spacer(),
-            Text(daysLeft < 0 ? 'Overdue' : daysLeft == 0 ? 'Today!' : '${daysLeft}d left', style: TextStyle(fontFamily: 'IBMPlexMono', fontSize: 9, color: daysColor)),
+            Text(daysLeft < 0 ? 'Overdue' : daysLeft == 0 ? 'Today!' : '${daysLeft}d left', style: TextStyle(fontSize: 9, color: daysColor)),
           ]),
           const Gap(6),
           Text(goal.title, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: widget.faded ? AppColors.textSecondary : AppColors.textPrimary)),
@@ -272,9 +272,9 @@ class _GoalTileState extends ConsumerState<_GoalTile> {
           Row(children: [
             Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Row(children: [
-                const Text('Progress', style: TextStyle(fontFamily: 'IBMPlexMono', fontSize: 9, color: AppColors.textSecondary)),
+                const Text('Progress', style: TextStyle(fontSize: 9, color: AppColors.textSecondary)),
                 const Spacer(),
-                Text('${goal.progress}%', style: TextStyle(fontFamily: 'IBMPlexMono', fontSize: 10, color: priColor, fontWeight: FontWeight.w600)),
+                Text('${goal.progress}%', style: TextStyle(fontSize: 10, color: priColor, fontWeight: FontWeight.w600)),
               ]),
               const Gap(4),
               SliderTheme(
@@ -306,7 +306,6 @@ class _GoalTileState extends ConsumerState<_GoalTile> {
                       ? 'Subtasks'
                       : '$doneCount/${goal.subtasks.length} done',
                   style: const TextStyle(
-                      fontFamily: 'IBMPlexMono',
                       fontSize: 9,
                       color: AppColors.textSecondary),
                 ),
@@ -378,7 +377,7 @@ class _GoalTileState extends ConsumerState<_GoalTile> {
                 child: Row(children: const [
                   Icon(Icons.add, size: 12, color: AppColors.textSecondary),
                   Gap(4),
-                  Text('Add subtask', style: TextStyle(fontFamily: 'IBMPlexMono', fontSize: 9, color: AppColors.textSecondary)),
+                  Text('Add subtask', style: TextStyle(fontSize: 9, color: AppColors.textSecondary)),
                 ]),
               ),
             const Gap(6),
@@ -386,7 +385,7 @@ class _GoalTileState extends ConsumerState<_GoalTile> {
 
           const Gap(2),
           Row(children: [
-            Text(DateFormat('d MMM yy').format(goal.targetDate), style: const TextStyle(fontFamily: 'IBMPlexMono', fontSize: 9, color: AppColors.textSecondary)),
+            Text(DateFormat('d MMM yy').format(goal.targetDate), style: const TextStyle(fontSize: 9, color: AppColors.textSecondary)),
             const Spacer(),
             if (goal.status == 'active') ...[
               _StatusBtn(label: 'Done ✓', color: AppColors.deen, onTap: () => ref.read(goalsProvider.notifier).setStatus(goal.id, 'done')),
@@ -420,7 +419,7 @@ class _StatusBtn extends StatelessWidget {
     child: Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
       decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(5), border: Border.all(color: color.withValues(alpha: 0.3))),
-      child: Text(label, style: TextStyle(fontFamily: 'IBMPlexMono', fontSize: 9.5, color: color, fontWeight: FontWeight.w600)),
+      child: Text(label, style: TextStyle(fontSize: 9.5, color: color, fontWeight: FontWeight.w600)),
     ),
   );
 }
