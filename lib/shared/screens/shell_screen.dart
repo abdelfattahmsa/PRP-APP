@@ -16,6 +16,7 @@ import '../../engines/energy/data/models/energy_models.dart';
 import '../../shared/models/all_providers.dart';
 import '../../services/notification_service.dart';
 import '../../services/web_notif.dart';
+import '../../shared/widgets/quick_capture_fab.dart';
 
 const _shellUuid = Uuid();
 
@@ -441,6 +442,8 @@ class _DesktopShellState extends ConsumerState<_DesktopShell> {
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      floatingActionButton: const QuickCaptureFAB(),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       body: Row(
         children: [
           // ── Sidebar ──
@@ -553,6 +556,8 @@ class _MobileShell extends StatelessWidget {
           Expanded(child: child),
         ],
       ),
+      floatingActionButton: const QuickCaptureFAB(),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           border: Border(top: BorderSide(color: borderColor, width: 0.5)),
