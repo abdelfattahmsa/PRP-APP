@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/router/app_router.dart';
 import '../../../features/auth/providers/auth_provider.dart';
+import '../../../features/checkin/screens/daily_checkin_screen.dart';
 import '../../../shared/models/all_providers.dart';
 import '../../../shared/widgets/app_card.dart';
 import '../../../shared/widgets/app_states.dart';
@@ -55,7 +56,11 @@ class OverviewScreen extends ConsumerWidget {
           padding: const EdgeInsets.fromLTRB(16, 20, 16, 32),
           children: [
             _GreetingHeader(user: currentUser, now: now, textSecondary: textSecondary),
-            const Gap(24),
+            const Gap(16),
+
+            // ── Daily Check-in Banner ─────────────────────────────
+            const CheckinBanner(),
+            const Gap(16),
 
             // ── KPI Grid ─────────────────────────────────────────
             BentoGrid(

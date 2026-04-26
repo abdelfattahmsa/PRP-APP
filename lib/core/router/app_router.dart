@@ -6,6 +6,7 @@ import '../../core/constants/app_constants.dart';
 import '../../features/auth/providers/auth_provider.dart';
 import '../../features/auth/screens/login_screen.dart';
 import '../../features/auth/screens/signup_screen.dart'; // includes SignupScreen + ForgotPasswordScreen
+import '../../features/checkin/screens/daily_checkin_screen.dart';
 import '../../features/onboarding/screens/onboarding_screen.dart';
 import '../../shared/screens/shell_screen.dart';
 
@@ -99,6 +100,9 @@ class Routes {
   // ── Onboarding ──
   static const onboarding = '/onboarding';
 
+  // ── Daily Check-in ──
+  static const checkin = '/checkin';
+
   // ── Legacy aliases (redirect targets exist) ──
   static const schedule = timeSchedule;
   static const calendar = timeCalendar;
@@ -165,6 +169,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
           path: Routes.onboarding,
           builder: (_, __) => const OnboardingScreen()),
+      // ── Daily Check-in ────────────────────────────────────
+      GoRoute(
+          path: Routes.checkin,
+          builder: (_, state) => DailyCheckinScreen(
+              mode: state.uri.queryParameters['mode'] ?? 'morning')),
 
       // ── Shell (authenticated) ──────────────────────────────
       ShellRoute(
