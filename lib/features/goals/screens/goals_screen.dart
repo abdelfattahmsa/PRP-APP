@@ -10,7 +10,8 @@ import 'package:intl/intl.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/models/models.dart';
 import '../../../shared/models/all_providers.dart';
-import '../../../shared/widgets/app_text_field.dart';
+import '../../../shared/widgets/app_states.dart';
+import '../../../shared/widgets/app_text_field.dart' hide EmptyState;
 
 const _uuid = Uuid();
 
@@ -86,6 +87,13 @@ class _GoalsScreenState extends ConsumerState<GoalsScreen> {
                 padding: const EdgeInsets.only(bottom: 14),
                 child: ElevatedButton.icon(icon: const Icon(Icons.add, size: 16), label: const Text('New Goal'), onPressed: () => setState(() => _adding = true)),
               ),
+
+              // Empty state
+              if (active.isEmpty && done.isEmpty && paused.isEmpty && !_adding)
+                EmptyState(
+                  icon: Icons.flag_rounded,
+                  message: 'No goals yet\nTap "New Goal" to set your first target',
+                ).animate().fadeIn(duration: 300.ms),
 
               // Active
               if (active.isNotEmpty) ...[
