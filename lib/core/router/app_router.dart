@@ -34,7 +34,13 @@ import '../../features/health/screens/health_daily_progress_screen.dart';
 import '../../features/health/screens/health_fasting_screen.dart';
 import '../../features/health/screens/health_habits_screen.dart';
 
-// ── Tab 6: Profile ──
+// ── Tab 6: Religion (Deen) ──
+import '../../features/religion/screens/religion_overview_screen.dart';
+import '../../features/religion/screens/religion_salah_screen.dart';
+import '../../features/religion/screens/religion_quran_screen.dart';
+import '../../features/religion/screens/religion_zakat_screen.dart';
+
+// ── Tab 7: Profile ──
 import '../../features/profile/screens/profile_settings_screen.dart';
 import '../../features/profile/screens/profile_account_screen.dart';
 import '../../features/profile/screens/profile_app_settings_screen.dart';
@@ -76,7 +82,13 @@ class Routes {
   static const healthFasting = '/health/fasting';
   static const healthHabits = '/health/habits';
 
-  // ── Tab 6: Profile ──
+  // ── Tab 6: Religion (Deen) ──
+  static const religionOverview = '/deen/overview';
+  static const religionSalah    = '/deen/salah';
+  static const religionQuran    = '/deen/quran';
+  static const religionZakat    = '/deen/zakat';
+
+  // ── Tab 7: Profile ──
   static const profileSettings = '/profile/settings';
   static const profileAccount = '/profile/account';
   static const profileApp = '/profile/app';
@@ -238,7 +250,26 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (_, __) => const HealthHabitsScreen(),
           ),
 
-          // ── Tab 6: Profile ────────────────────────────────
+          // ── Tab 6: Religion (Deen) ───────────────────────
+          GoRoute(path: '/deen', redirect: (_, __) => Routes.religionOverview),
+          GoRoute(
+            path: Routes.religionOverview,
+            builder: (_, __) => const ReligionOverviewScreen(),
+          ),
+          GoRoute(
+            path: Routes.religionSalah,
+            builder: (_, __) => const ReligionSalahScreen(),
+          ),
+          GoRoute(
+            path: Routes.religionQuran,
+            builder: (_, __) => const ReligionQuranScreen(),
+          ),
+          GoRoute(
+            path: Routes.religionZakat,
+            builder: (_, __) => const ReligionZakatScreen(),
+          ),
+
+          // ── Tab 7: Profile ────────────────────────────────
           GoRoute(
               path: '/profile',
               redirect: (_, __) => Routes.profileSettings),

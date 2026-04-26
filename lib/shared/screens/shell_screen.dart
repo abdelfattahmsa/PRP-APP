@@ -168,6 +168,31 @@ const kAppTabs = <AppTab>[
     ],
   ),
   AppTab(
+    id: 'religion',
+    label: 'Deen',
+    icon: Icons.mosque_outlined,
+    activeIcon: Icons.mosque_rounded,
+    route: Routes.religionOverview,
+    subTabs: [
+      AppSubTab(
+          label: 'Overview',
+          icon: Icons.bar_chart_outlined,
+          route: Routes.religionOverview),
+      AppSubTab(
+          label: 'Salah',
+          icon: Icons.access_time_outlined,
+          route: Routes.religionSalah),
+      AppSubTab(
+          label: 'Quran',
+          icon: Icons.menu_book_outlined,
+          route: Routes.religionQuran),
+      AppSubTab(
+          label: 'Zakat',
+          icon: Icons.calculate_outlined,
+          route: Routes.religionZakat),
+    ],
+  ),
+  AppTab(
     id: 'profile',
     label: 'Profile',
     icon: Icons.person_outline,

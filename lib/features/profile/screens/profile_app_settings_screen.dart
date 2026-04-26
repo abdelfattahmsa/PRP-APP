@@ -956,10 +956,11 @@ class _PillarTogglesSection extends ConsumerWidget {
   const _PillarTogglesSection();
 
   static const _pillars = [
-    (id: 'time',    label: 'Time',    icon: Icons.schedule_rounded,                 desc: 'Calendar, Schedule & Tasks'),
-    (id: 'finance', label: 'Finance', icon: Icons.account_balance_wallet_rounded,   desc: 'Accounts, Transactions & Investments'),
-    (id: 'energy',  label: 'Energy',  icon: Icons.bolt_rounded,                     desc: 'Focus, Goals & Ideas'),
-    (id: 'health',  label: 'Health',  icon: Icons.favorite_rounded,                 desc: 'Habits, Fasting & Progress'),
+    (id: 'time',     label: 'Time',     icon: Icons.schedule_rounded,                desc: 'Calendar, Schedule & Tasks'),
+    (id: 'finance',  label: 'Finance',  icon: Icons.account_balance_wallet_rounded,  desc: 'Accounts, Transactions & Investments'),
+    (id: 'energy',   label: 'Energy',   icon: Icons.bolt_rounded,                    desc: 'Focus, Goals & Ideas'),
+    (id: 'health',   label: 'Health',   icon: Icons.favorite_rounded,                desc: 'Habits, Fasting & Progress'),
+    (id: 'religion', label: 'Deen',     icon: Icons.mosque_rounded,                  desc: 'Salah, Quran & Zakat (opt-in)'),
   ];
 
   @override

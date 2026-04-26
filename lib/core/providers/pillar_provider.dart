@@ -5,7 +5,8 @@ import '../../shared/screens/shell_screen.dart';
 
 // ── Pillars that can be toggled on/off ───────────────────────────
 // 'overview' and 'profile' are always visible.
-const kToggleablePillars = ['time', 'finance', 'energy', 'health'];
+// 'religion' is opt-in: off by default.
+const kToggleablePillars = ['time', 'finance', 'energy', 'health', 'religion'];
 const kDefaultActivePillars = {'time', 'finance', 'energy', 'health'};
 
 // ── State + Notifier ─────────────────────────────────────────────
