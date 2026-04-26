@@ -2,6 +2,28 @@
   "buildCommand": null,
   "outputDirectory": "build/web",
   "framework": null,
+  "headers": [
+    {
+      "source": "/(index\\.html|flutter_service_worker\\.js|flutter\\.js|manifest\\.json)",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" },
+        { "key": "Pragma",        "value": "no-cache" },
+        { "key": "Expires",       "value": "0" }
+      ]
+    },
+    {
+      "source": "/assets/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    },
+    {
+      "source": "/(.*\\.js|.*\\.wasm|.*\\.ttf|.*\\.otf|.*\\.png|.*\\.jpg)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    }
+  ],
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ]
