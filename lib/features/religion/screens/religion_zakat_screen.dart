@@ -60,7 +60,6 @@ class _ReligionZakatScreenState extends State<ReligionZakatScreen> {
     final cardColor = isDark ? AppColors.card : AppColors.lightCard;
     final borderColor = isDark ? AppColors.border : AppColors.lightBorder;
     final textSecondary = isDark ? AppColors.textSecondary : AppColors.lightTextSecondary;
-    final accent = Theme.of(context).colorScheme.primary;
 
     final hasGoldPrice = _goldPricePerGram > 0;
     final result = _zakatDue;

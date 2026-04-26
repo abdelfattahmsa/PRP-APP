@@ -1057,7 +1057,7 @@ class _PillarToggleTile extends StatelessWidget {
         trailing: Switch(
           value: isActive,
           onChanged: isDisabled ? null : (_) => onToggle(),
-          activeColor: accent,
+          activeThumbColor: accent,
         ),
         onTap: isDisabled ? null : onToggle,
       ),

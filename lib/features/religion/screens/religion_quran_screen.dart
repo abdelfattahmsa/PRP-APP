@@ -380,7 +380,7 @@ class _SurahDropdown extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DropdownButtonFormField<int>(
-      value: value,
+      initialValue: value,
       decoration: InputDecoration(labelText: label, isDense: true),
       isExpanded: true,
       menuMaxHeight: 300,

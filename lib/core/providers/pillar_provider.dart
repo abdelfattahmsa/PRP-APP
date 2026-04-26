@@ -38,7 +38,7 @@ class PillarNotifier extends AsyncNotifier<Set<String>> {
   }
 
   bool isActive(String pillarId) {
-    return state.asData?.value?.contains(pillarId) ?? true;
+    return state.asData?.value.contains(pillarId) ?? true;
   }
 }
 

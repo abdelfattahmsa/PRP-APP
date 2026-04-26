@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../../core/constants/app_constants.dart';
 import '../../features/auth/providers/auth_provider.dart';
 import '../../features/auth/screens/login_screen.dart';
 import '../../features/auth/screens/signup_screen.dart'; // includes SignupScreen + ForgotPasswordScreen
+import '../../features/onboarding/screens/onboarding_screen.dart';
 import '../../shared/screens/shell_screen.dart';
 
 // ── Tab 1: Overview ──
@@ -93,6 +96,9 @@ class Routes {
   static const profileAccount = '/profile/account';
   static const profileApp = '/profile/app';
 
+  // ── Onboarding ──
+  static const onboarding = '/onboarding';
+
   // ── Legacy aliases (redirect targets exist) ──
   static const schedule = timeSchedule;
   static const calendar = timeCalendar;
@@ -103,11 +109,23 @@ class Routes {
 }
 
 // ══════════════════════════════════════════════════════════════
+// ONBOARDING STATE PROVIDER
+// Reads SharedPreferences once; stays null until resolved.
+// ══════════════════════════════════════════════════════════════
+final onboardedProvider = FutureProvider<bool>((ref) async {
+  final prefs = await SharedPreferences.getInstance();
+  return prefs.getBool(AppConstants.prefOnboarded) ?? false;
+});
+
+// ══════════════════════════════════════════════════════════════
 // ROUTER PROVIDER
 // ══════════════════════════════════════════════════════════════
 final routerProvider = Provider<GoRouter>((ref) {
   // authStateProvider is now a plain Provider<bool> (Clerk isSignedIn)
   final isLoggedIn = ref.watch(authStateProvider);
+  // Onboarding — may still be loading (null = unknown, true/false = resolved)
+  final onboardedAsync = ref.watch(onboardedProvider);
+  final hasOnboarded = onboardedAsync.asData?.value;
 
   return GoRouter(
     initialLocation: Routes.overview,
@@ -116,8 +134,24 @@ final routerProvider = Provider<GoRouter>((ref) {
       final isAuthRoute = loc.startsWith('/login') ||
           loc.startsWith('/signup') ||
           loc.startsWith('/forgot');
+      final isOnboardingRoute = loc.startsWith('/onboarding');
+
+      // Not logged in — send to login
       if (!isLoggedIn && !isAuthRoute) return Routes.login;
-      if (isLoggedIn && isAuthRoute) return Routes.overview;
+      // Logged in, on auth page — decide where to go
+      if (isLoggedIn && isAuthRoute) {
+        // Wait until we know onboarding state
+        if (hasOnboarded == null) return null;
+        return hasOnboarded ? Routes.overview : Routes.onboarding;
+      }
+      // Logged in, not yet onboarded, and not already on onboarding
+      if (isLoggedIn && hasOnboarded == false && !isOnboardingRoute) {
+        return Routes.onboarding;
+      }
+      // Logged in, already onboarded, on onboarding route → skip to overview
+      if (isLoggedIn && hasOnboarded == true && isOnboardingRoute) {
+        return Routes.overview;
+      }
       return null;
     },
     routes: [
@@ -127,6 +161,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
           path: Routes.forgotPassword,
           builder: (_, __) => const ForgotPasswordScreen()),
+      // ── Onboarding ─────────────────────────────────────────
+      GoRoute(
+          path: Routes.onboarding,
+          builder: (_, __) => const OnboardingScreen()),
 
       // ── Shell (authenticated) ──────────────────────────────
       ShellRoute(
