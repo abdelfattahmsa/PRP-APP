@@ -37,6 +37,23 @@
     window.si = window.si || function () { (window.siq = window.siq || []).push(arguments); };
   </script>
   <script defer src="/_vercel/speed-insights/script.js"></script>
+
+  <!-- Auto-reload when a new service worker takes control.
+       The Flutter SW already calls skipWaiting() on install, so a new
+       deployment activates immediately. This listener reloads the page
+       so users always see the latest version without a manual refresh. -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      // One-time reload when controller changes (new SW activated)
+      let refreshing = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!refreshing) {
+          refreshing = true;
+          window.location.reload();
+        }
+      });
+    }
+  </script>
 </head>
 <body>
   <script src="flutter_bootstrap.js" async></script>
