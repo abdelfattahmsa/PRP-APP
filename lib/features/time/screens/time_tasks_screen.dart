@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:intl/intl.dart';
@@ -73,7 +73,7 @@ class _TimeTasksScreenState extends ConsumerState<TimeTasksScreen> {
                     label: 'Goals',
                     count: activeGoals.length,
                     selected: _filter == _TaskSource.goals,
-                    color: AppColors.pmp,
+                    color: AppColors.learn,
                     onTap: () => setState(() => _filter = _TaskSource.goals),
                   ),
                   const Gap(8),
@@ -302,9 +302,9 @@ class _GoalTaskCard extends StatelessWidget {
                         value: progress / 100,
                         minHeight: 5,
                         backgroundColor:
-                            AppColors.pmp.withValues(alpha: 0.15),
+                            AppColors.learn.withValues(alpha: 0.15),
                         valueColor: const AlwaysStoppedAnimation<Color>(
-                            AppColors.pmp),
+                            AppColors.learn),
                       ),
                     ),
                   ),

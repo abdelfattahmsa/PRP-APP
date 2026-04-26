@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -109,9 +109,9 @@ class _OverviewTab extends StatelessWidget {
             _SummaryCard(label: 'CC Balance',       value: egp(summary.totalCC),         color: AppColors.error),
             _SummaryCard(label: 'Remaining Limit',  value: egp(summary.remainingLimit),   color: summary.remainingLimit < 0 ? AppColors.error : AppColors.deen),
             _SummaryCard(label: 'Total Savings',    value: egp(summary.totalSavings),     color: AppColors.gold),
-            _SummaryCard(label: 'Cash + Current',   value: egp(summary.totalCurrent),     color: AppColors.pmp),
+            _SummaryCard(label: 'Cash + Current',   value: egp(summary.totalCurrent),     color: AppColors.learn),
             _SummaryCard(label: 'External Debts',   value: egp(summary.totalExtDebt),     color: AppColors.fasting),
-            _SummaryCard(label: "Today's Spend",    value: egp(summary.todaySpend),       color: AppColors.kyberia),
+            _SummaryCard(label: "Today's Spend",    value: egp(summary.todaySpend),       color: AppColors.project),
           ],
         ),
       ]),
@@ -266,7 +266,7 @@ class _BankCardState extends ConsumerState<_BankCard> {
                 Expanded(child: _BankStat(label: 'CC Balance', value: egp(widget.bank.creditCardBalance), color: AppColors.error)),
                 Expanded(child: _BankStat(label: 'Rem. Limit', value: egp(rem), color: rem < 0 ? AppColors.error : AppColors.deen)),
                 Expanded(child: _BankStat(label: 'Savings', value: egp(widget.bank.savingsBalance), color: AppColors.gold)),
-                Expanded(child: _BankStat(label: 'Current', value: egp(widget.bank.currentBalance), color: AppColors.pmp)),
+                Expanded(child: _BankStat(label: 'Current', value: egp(widget.bank.currentBalance), color: AppColors.learn)),
               ]),
         if (!_editing && widget.bank.creditCardLimit > 0) ...[
           const Gap(8),

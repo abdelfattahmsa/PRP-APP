@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
@@ -95,7 +95,7 @@ class EnergyOverviewScreen extends ConsumerWidget {
                     label: 'Active Goals',
                     value: '${activeGoals.length}',
                     icon: Icons.flag_rounded,
-                    iconColor: AppColors.pmp,
+                    iconColor: AppColors.learn,
                     onTap: () => context.go(Routes.energyGoals),
                   ),
                 ),

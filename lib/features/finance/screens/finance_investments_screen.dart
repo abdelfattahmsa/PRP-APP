@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:intl/intl.dart';
@@ -134,10 +134,10 @@ class _InvestmentTile extends ConsumerWidget {
     if (t.contains('gold')) return AppColors.gold;
     if (t.contains('silver')) return AppColors.textSecondary;
     if (t.contains('crypto') || t.contains('bitcoin')) return AppColors.warning;
-    if (t.contains('stock') || t.contains('share') || t.contains('equity')) return AppColors.pmp;
-    if (t.contains('bond') || t.contains('bill')) return AppColors.cfi;
+    if (t.contains('stock') || t.contains('share') || t.contains('equity')) return AppColors.learn;
+    if (t.contains('bond') || t.contains('bill')) return AppColors.learn;
     if (t.contains('real estate')) return AppColors.success;
-    return AppColors.pmp;
+    return AppColors.learn;
   }
 
   @override

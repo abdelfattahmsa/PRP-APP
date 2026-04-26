@@ -82,15 +82,14 @@ class AppColors {
   static const lightTextMuted = Color(0xFFCBD5E1);
 
   // ── CATEGORY COLORS ───────────────────────────────────────────
-  static const deen = Color(0xFF54C478);
-  static const pmp = Color(0xFF6A8EF0);
-  static const cfi = Color(0xFF4AAAE0);
-  static const health = Color(0xFFD07848);
-  static const kyberia = Color(0xFFAA70EE);
-  static const work = Color(0xFFC09840);
+  static const deen    = Color(0xFF54C478);
+  static const learn   = Color(0xFF6A8EF0);
+  static const project = Color(0xFFAA70EE);
+  static const health  = Color(0xFFD07848);
+  static const work    = Color(0xFFC09840);
   static const fasting = Color(0xFFE08840);
   static const commute = Color(0xFF3AB8A8);
-  static const rest = Color(0xFF6B6080);
+  static const rest    = Color(0xFF6B6080);
 
   // ── SEMANTIC ─────────────────────────────────────────────────
   static const success = Color(0xFF54C478);
@@ -114,19 +113,18 @@ class AppColors {
 
   static Color categoryColor(String key) {
     return switch (key) {
-      'deen' => deen,
-      'pmp' => pmp,
-      'study' || 'cfi' => cfi,
-      'health' => health,
-      'kyb' || 'kyberia' => kyberia,
-      'work' => work,
-      'fast' || 'fasting' => fasting,
-      'com' || 'commute' => commute,
-      'rest' => rest,
-      'personal' => personal,
-      'islamic' => islamic,
-      'finance' => finance,
-      'quran' => quran,
+      'deen'                           => deen,
+      'learn' || 'pmp' || 'study'      => learn,
+      'project' || 'kyb' || 'kyberia'  => project,
+      'health'                         => health,
+      'work'                           => work,
+      'fast' || 'fasting'              => fasting,
+      'com' || 'commute'               => commute,
+      'rest'                           => rest,
+      'personal'                       => personal,
+      'islamic'                        => islamic,
+      'finance'                        => finance,
+      'quran'                          => quran,
       'travel' => travel,
       'family' => family,
       'done' => done,

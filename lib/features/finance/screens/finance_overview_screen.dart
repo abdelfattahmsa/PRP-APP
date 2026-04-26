@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
@@ -266,10 +266,10 @@ class _SpendingDonut extends StatelessWidget {
 
   static const _catColors = {
     'Food': AppColors.fasting,
-    'Transport': AppColors.pmp,
+    'Transport': AppColors.learn,
     'Shopping': AppColors.fasting,
     'Health': AppColors.health,
-    'Entertainment': AppColors.kyberia,
+    'Entertainment': AppColors.project,
     'Bills': AppColors.warning,
     'Education': AppColors.gold,
     'Personal': AppColors.rest,
@@ -294,8 +294,8 @@ class _SpendingDonut extends StatelessWidget {
       ..sort((a, b) => b.value.compareTo(a.value));
 
     final defaultColors = [
-      AppColors.error, AppColors.warning, AppColors.pmp,
-      AppColors.kyberia, AppColors.cfi, AppColors.health,
+      AppColors.error, AppColors.warning, AppColors.learn,
+      AppColors.project, AppColors.learn, AppColors.health,
     ];
 
     final slices = sorted.asMap().entries.map((e) {

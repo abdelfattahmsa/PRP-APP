@@ -10,6 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/router/app_router.dart';
 import '../../core/constants/app_constants.dart';
+import '../../core/providers/pillar_provider.dart';
 import '../../features/auth/providers/auth_provider.dart';
 import '../../engines/energy/data/models/energy_models.dart';
 import '../../shared/models/all_providers.dart';
@@ -247,9 +248,9 @@ class _ShellScreenState extends ConsumerState<ShellScreen> {
     }
   }
 
-  int get _activeTabIndex {
-    for (var i = 0; i < kAppTabs.length; i++) {
-      final tab = kAppTabs[i];
+  int _activeTabIndex(List<AppTab> tabs) {
+    for (var i = 0; i < tabs.length; i++) {
+      final tab = tabs[i];
       for (final sub in tab.subTabs) {
         if (widget.location.startsWith(sub.route)) return i;
       }
@@ -302,18 +303,22 @@ class _ShellScreenState extends ConsumerState<ShellScreen> {
       }
     });
 
-    final tabIndex = _activeTabIndex;
-    final activeTab = kAppTabs[tabIndex];
+    // ── Visible tabs (pillar-filtered) ─────────────────────────
+    final visibleTabs = ref.watch(visibleTabsProvider);
+    final tabIndex = _activeTabIndex(visibleTabs);
+    final activeTab = visibleTabs[tabIndex];
 
     Widget shell;
     if (Breakpoints.isWide(context)) {
       shell = _DesktopShell(
+        tabs: visibleTabs,
         location: widget.location,
         tabIndex: tabIndex,
         child: widget.child,
       );
     } else {
       shell = _MobileShell(
+        tabs: visibleTabs,
         location: widget.location,
         activeTab: activeTab,
         tabIndex: tabIndex,
@@ -373,10 +378,12 @@ class _ShellScreenState extends ConsumerState<ShellScreen> {
 
 class _DesktopShell extends ConsumerStatefulWidget {
   const _DesktopShell({
+    required this.tabs,
     required this.location,
     required this.tabIndex,
     required this.child,
   });
+  final List<AppTab> tabs;
   final String location;
   final int tabIndex;
   final Widget child;
@@ -435,18 +442,18 @@ class _DesktopShellState extends ConsumerState<_DesktopShell> {
                         const EdgeInsets.symmetric(vertical: Spacing.sm),
                     children: [
                       // Show all tabs except Profile (last) — Profile lives at the bottom
-                      for (var i = 0; i < kAppTabs.length - 1; i++) ...[
+                      for (var i = 0; i < widget.tabs.length - 1; i++) ...[
                         _SidebarTabItem(
-                          tab: kAppTabs[i],
+                          tab: widget.tabs[i],
                           active: i == widget.tabIndex,
                           expanded: _expanded,
-                          onTap: () => context.go(kAppTabs[i].route),
+                          onTap: () => context.go(widget.tabs[i].route),
                         ),
                         // Sub-tabs shown when this tab is active
                         if (i == widget.tabIndex &&
-                            kAppTabs[i].hasSubTabs &&
+                            widget.tabs[i].hasSubTabs &&
                             _expanded)
-                          for (final sub in kAppTabs[i].subTabs)
+                          for (final sub in widget.tabs[i].subTabs)
                             _SidebarSubTabItem(
                               sub: sub,
                               active: widget.location.startsWith(sub.route),
@@ -454,9 +461,9 @@ class _DesktopShellState extends ConsumerState<_DesktopShell> {
                             ),
                         // Collapsed: show active sub-tab indicator dot
                         if (i == widget.tabIndex &&
-                            kAppTabs[i].hasSubTabs &&
+                            widget.tabs[i].hasSubTabs &&
                             !_expanded)
-                          for (final sub in kAppTabs[i].subTabs)
+                          for (final sub in widget.tabs[i].subTabs)
                             _SidebarSubTabItemCollapsed(
                               sub: sub,
                               active: widget.location.startsWith(sub.route),
@@ -470,7 +477,7 @@ class _DesktopShellState extends ConsumerState<_DesktopShell> {
                 _SidebarProfileFooter(
                   ref: ref,
                   expanded: _expanded,
-                  active: widget.tabIndex == kAppTabs.length - 1,
+                  active: widget.tabIndex == widget.tabs.length - 1,
                   location: widget.location,
                 ),
               ],
@@ -490,11 +497,13 @@ class _DesktopShellState extends ConsumerState<_DesktopShell> {
 
 class _MobileShell extends StatelessWidget {
   const _MobileShell({
+    required this.tabs,
     required this.location,
     required this.activeTab,
     required this.tabIndex,
     required this.child,
   });
+  final List<AppTab> tabs;
   final String location;
   final AppTab activeTab;
   final int tabIndex;
@@ -525,9 +534,9 @@ class _MobileShell extends StatelessWidget {
         ),
         child: NavigationBar(
           selectedIndex: tabIndex,
-          onDestinationSelected: (i) => context.go(kAppTabs[i].route),
+          onDestinationSelected: (i) => context.go(tabs[i].route),
           destinations: [
-            for (final tab in kAppTabs)
+            for (final tab in tabs)
               NavigationDestination(
                 icon: Icon(tab.icon),
                 selectedIcon: Icon(tab.activeIcon),

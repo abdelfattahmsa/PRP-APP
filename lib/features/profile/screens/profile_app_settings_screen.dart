@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
+﻿import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
@@ -7,6 +7,7 @@ import 'package:uuid/uuid.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/providers/theme_provider.dart';
+import '../../../core/providers/pillar_provider.dart';
 import '../../../shared/models/all_providers.dart';
 import '../../../shared/widgets/placeholders.dart';
 import '../../../engines/categories/data/models/user_category_model.dart';
@@ -124,6 +125,23 @@ class _ProfileAppSettingsScreenState
               title: 'App Settings',
               subtitle: 'Theme, notifications, and display',
             ),
+            const Gap(24),
+
+            // ── Pillars ────────────────────────────────────────
+            const SectionHeader('Active Pillars'),
+            const Gap(4),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Text(
+                'Show or hide pillars in the navigation. At least one must remain active.',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: isDark
+                          ? AppColors.textSecondary
+                          : AppColors.lightTextSecondary,
+                    ),
+              ),
+            ),
+            _PillarTogglesSection(),
             const Gap(24),
 
             // ── Theme ──────────────────────────────────────────
@@ -685,7 +703,7 @@ Future<void> _pickFromList(
                       : Icons.radio_button_unchecked_rounded,
                   size: 18,
                   color: options[i] == selected
-                      ? AppColors.pmp
+                      ? AppColors.learn
                       : AppColors.textSecondary,
                 ),
                 const Gap(12),
@@ -925,6 +943,122 @@ class _CategoryManagerSheetState
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+// PILLAR TOGGLE SECTION
+// ══════════════════════════════════════════════════════════════
+
+class _PillarTogglesSection extends ConsumerWidget {
+  const _PillarTogglesSection();
+
+  static const _pillars = [
+    (id: 'time',    label: 'Time',    icon: Icons.schedule_rounded,                 desc: 'Calendar, Schedule & Tasks'),
+    (id: 'finance', label: 'Finance', icon: Icons.account_balance_wallet_rounded,   desc: 'Accounts, Transactions & Investments'),
+    (id: 'energy',  label: 'Energy',  icon: Icons.bolt_rounded,                     desc: 'Focus, Goals & Ideas'),
+    (id: 'health',  label: 'Health',  icon: Icons.favorite_rounded,                 desc: 'Habits, Fasting & Progress'),
+  ];
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardColor = isDark ? AppColors.card : AppColors.lightCard;
+    final borderColor = isDark ? AppColors.border : AppColors.lightBorder;
+    final accent = Theme.of(context).colorScheme.primary;
+    final textSecondary = isDark ? AppColors.textSecondary : AppColors.lightTextSecondary;
+
+    final pillarsAsync = ref.watch(pillarProvider);
+    final active = pillarsAsync.asData?.value ?? kDefaultActivePillars;
+    final canDisable = active.length > 1;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: cardColor,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: borderColor),
+      ),
+      child: Column(
+        children: [
+          for (var i = 0; i < _pillars.length; i++) ...[
+            if (i > 0) Divider(height: 1, color: borderColor),
+            _PillarToggleTile(
+              label: _pillars[i].label,
+              icon: _pillars[i].icon,
+              desc: _pillars[i].desc,
+              isActive: active.contains(_pillars[i].id),
+              canDisable: canDisable || !active.contains(_pillars[i].id),
+              accent: accent,
+              textSecondary: textSecondary,
+              onToggle: () => ref.read(pillarProvider.notifier).toggle(_pillars[i].id),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _PillarToggleTile extends StatelessWidget {
+  const _PillarToggleTile({
+    required this.label,
+    required this.icon,
+    required this.desc,
+    required this.isActive,
+    required this.canDisable,
+    required this.accent,
+    required this.textSecondary,
+    required this.onToggle,
+  });
+
+  final String label;
+  final IconData icon;
+  final String desc;
+  final bool isActive;
+  final bool canDisable;
+  final Color accent;
+  final Color textSecondary;
+  final VoidCallback onToggle;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDisabled = isActive && !canDisable;
+
+    return Opacity(
+      opacity: isDisabled ? 0.45 : 1.0,
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        leading: Container(
+          width: 36,
+          height: 36,
+          decoration: BoxDecoration(
+            color: (isActive ? accent : textSecondary).withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(icon, size: 18, color: isActive ? accent : textSecondary),
+        ),
+        title: Text(
+          label,
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: isActive ? null : textSecondary,
+              ),
+        ),
+        subtitle: Text(
+          desc,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: textSecondary,
+                fontSize: 11,
+              ),
+        ),
+        trailing: Switch(
+          value: isActive,
+          onChanged: isDisabled ? null : (_) => onToggle(),
+          activeColor: accent,
+        ),
+        onTap: isDisabled ? null : onToggle,
       ),
     );
   }

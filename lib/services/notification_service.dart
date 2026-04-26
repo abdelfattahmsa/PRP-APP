@@ -22,7 +22,7 @@ class NotificationService {
     );
     const windows = WindowsInitializationSettings(
       appName: 'PRP',
-      appUserModelId: 'com.kyberia.prp',
+      appUserModelId: 'com.prpapp.prp',
       guid: 'b7c3e1f2-d4a5-4890-b12c-def456789abc',
     );
     await _plugin.initialize(
@@ -125,27 +125,25 @@ class NotificationService {
 
   String _categoryLabel(String key) {
     return switch (key) {
-      'deen' => 'Deen activity',
-      'pmp' => 'PMP study time',
-      'study' => 'CFI study time',
-      'health' => 'Health activity',
-      'kyb' => 'Kyberia work',
-      'work' => 'Work block',
-      'fast' => 'Fasting check-in',
-      'com' => 'Commute block',
-      _ => 'Schedule block',
+      'deen'    => 'Deen activity',
+      'learn'   => 'Learning time',
+      'project' => 'Project work',
+      'health'  => 'Health activity',
+      'work'    => 'Work block',
+      'fast'    => 'Fasting check-in',
+      'com'     => 'Commute block',
+      _         => 'Schedule block',
     };
   }
 
   Color _categoryColor(String key) {
     return switch (key) {
-      'deen' => const Color(0xFF54C478),
-      'pmp' => const Color(0xFF6A8EF0),
-      'study' => const Color(0xFF4AAAE0),
-      'health' => const Color(0xFFD07848),
-      'kyb' => const Color(0xFFAA70EE),
-      'work' => const Color(0xFFC09840),
-      _ => const Color(0xFFC8A050),
+      'deen'    => const Color(0xFF54C478),
+      'learn'   => const Color(0xFF6A8EF0),
+      'project' => const Color(0xFFAA70EE),
+      'health'  => const Color(0xFFD07848),
+      'work'    => const Color(0xFFC09840),
+      _         => const Color(0xFFC8A050),
     };
   }
 }

@@ -261,8 +261,8 @@ class _SessionLogTile extends ConsumerWidget {
     final labelCtrl = TextEditingController(text: session.blockLabel);
     final noteCtrl = TextEditingController(text: session.note ?? '');
     String category = session.blockCategoryKey;
-    const cats = ['deen', 'pmp', 'study', 'health', 'kyb', 'work', 'rest', 'fast', 'com'];
-    const catLabels = ['Deen', 'PMP', 'Study', 'Health', 'Kyberia', 'Work', 'Rest', 'Fasting', 'Commute'];
+    const cats = ['deen', 'learn', 'project', 'health', 'work', 'rest', 'fast', 'com'];
+    const catLabels = ['Deen', 'Learning', 'Project', 'Health', 'Work', 'Rest', 'Fasting', 'Commute'];
 
     await showDialog<void>(
       context: context,

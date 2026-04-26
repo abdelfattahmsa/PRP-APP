@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gap/gap.dart';
@@ -29,7 +29,7 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
     ('normal',  '🏗️ Normal',  AppColors.gold),
     ('fasting', '🌙 Fasting', AppColors.fasting),
     ('friday',  '✨ Friday',  AppColors.deen),
-    ('cairo',   '🏙️ Cairo',  AppColors.pmp),
+    ('cairo',   '🏙️ Cairo',  AppColors.learn),
   ];
 
   Color get _accent => _modes.firstWhere((m) => m.$1 == _mode).$3;

@@ -63,15 +63,14 @@ class UserCategory extends Equatable {
 // ── Default seeds ──────────────────────────────────────────────
 
 const kDefaultScheduleCategories = [
-  UserCategory(id: '', name: 'Deen',    emoji: '🕌', engine: 'schedule', key: 'deen',   order: 0),
-  UserCategory(id: '', name: 'PMP',     emoji: '📋', engine: 'schedule', key: 'pmp',    order: 1),
-  UserCategory(id: '', name: 'Study',   emoji: '📚', engine: 'schedule', key: 'study',  order: 2),
-  UserCategory(id: '', name: 'Health',  emoji: '🚶', engine: 'schedule', key: 'health', order: 3),
-  UserCategory(id: '', name: 'Kyberia', emoji: '⚗️', engine: 'schedule', key: 'kyb',    order: 4),
-  UserCategory(id: '', name: 'Work',    emoji: '🏗️', engine: 'schedule', key: 'work',   order: 5),
-  UserCategory(id: '', name: 'Rest',    emoji: '💤', engine: 'schedule', key: 'rest',   order: 6),
-  UserCategory(id: '', name: 'Fasting', emoji: '🌙', engine: 'schedule', key: 'fast',   order: 7),
-  UserCategory(id: '', name: 'Commute', emoji: '🚗', engine: 'schedule', key: 'com',    order: 8),
+  UserCategory(id: '', name: 'Deen',     emoji: '🕌', engine: 'schedule', key: 'deen',    order: 0),
+  UserCategory(id: '', name: 'Learning', emoji: '📖', engine: 'schedule', key: 'learn',   order: 1),
+  UserCategory(id: '', name: 'Project',  emoji: '🚀', engine: 'schedule', key: 'project', order: 2),
+  UserCategory(id: '', name: 'Health',   emoji: '🚶', engine: 'schedule', key: 'health',  order: 3),
+  UserCategory(id: '', name: 'Work',     emoji: '🏗️', engine: 'schedule', key: 'work',    order: 4),
+  UserCategory(id: '', name: 'Rest',     emoji: '💤', engine: 'schedule', key: 'rest',    order: 5),
+  UserCategory(id: '', name: 'Fasting',  emoji: '🌙', engine: 'schedule', key: 'fast',    order: 6),
+  UserCategory(id: '', name: 'Commute',  emoji: '🚗', engine: 'schedule', key: 'com',     order: 7),
 ];
 
 const kDefaultTxCategories = [
@@ -83,6 +82,6 @@ const kDefaultTxCategories = [
   UserCategory(id: '', name: 'Health',    emoji: '💊', engine: 'transaction', order: 5),
   UserCategory(id: '', name: 'Personal',  emoji: '👤', engine: 'transaction', order: 6),
   UserCategory(id: '', name: 'Business',  emoji: '💼', engine: 'transaction', order: 7),
-  UserCategory(id: '', name: 'Transfer',  emoji: '🔄', engine: 'transaction', order: 8),
-  UserCategory(id: '', name: 'Kyberia',   emoji: '⚗️', engine: 'transaction', order: 9),
+  UserCategory(id: '', name: 'Education', emoji: '🎓', engine: 'transaction', order: 8),
+  UserCategory(id: '', name: 'Transfer',  emoji: '🔄', engine: 'transaction', order: 9),
 ];

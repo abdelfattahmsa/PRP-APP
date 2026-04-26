@@ -27,20 +27,21 @@ class AppConstants {
   static const prefFirstDayOfWeek = 'first_day_of_week';
   static const prefDefaultCurrency = 'default_currency';
   static const prefAlphaVantageApiKey = 'alpha_vantage_api_key';
+  static const prefActivePillars = 'active_pillars';
 
   // Default schedule modes
   static const scheduleModes = ['normal', 'fasting', 'friday', 'cairo'];
 
   // Category keys
   static const categoryKeys = [
-    'deen', 'pmp', 'study', 'health', 'kyb',
+    'deen', 'learn', 'project', 'health',
     'work', 'rest', 'fast', 'com',
   ];
 
   // Event type keys
   static const eventTypeKeys = [
     'personal', 'milestone', 'islamic', 'work',
-    'study', 'kyberia', 'family', 'finance',
+    'study', 'family', 'finance',
     'quran', 'travel', 'done', 'health',
   ];
 
@@ -91,7 +92,7 @@ class AppConstants {
   static const txCategories = [
     'General', 'Food', 'Transport', 'Bills',
     'Shopping', 'Health', 'Personal', 'Business',
-    'Transfer', 'Kyberia',
+    'Education', 'Transfer',
   ];
 
   // Focus timer defaults (minutes)
@@ -113,15 +114,14 @@ class CategoryInfo {
 }
 
 const categoryInfoMap = {
-  'deen':   CategoryInfo(key: 'deen',   label: 'Deen',    emoji: '🕌'),
-  'pmp':    CategoryInfo(key: 'pmp',    label: 'PMP',     emoji: '📋'),
-  'study':  CategoryInfo(key: 'study',  label: 'CFI',     emoji: '📚'),
-  'health': CategoryInfo(key: 'health', label: 'Health',  emoji: '🚶'),
-  'kyb':    CategoryInfo(key: 'kyb',    label: 'Kyberia', emoji: '⚗️'),
-  'work':   CategoryInfo(key: 'work',   label: 'Work',    emoji: '🏗️'),
-  'rest':   CategoryInfo(key: 'rest',   label: 'Rest',    emoji: '💤'),
-  'fast':   CategoryInfo(key: 'fast',   label: 'Fasting', emoji: '🌙'),
-  'com':    CategoryInfo(key: 'com',    label: 'Commute', emoji: '🚗'),
+  'deen':    CategoryInfo(key: 'deen',    label: 'Deen',     emoji: '🕌'),
+  'learn':   CategoryInfo(key: 'learn',   label: 'Learning', emoji: '📖'),
+  'project': CategoryInfo(key: 'project', label: 'Project',  emoji: '🚀'),
+  'health':  CategoryInfo(key: 'health',  label: 'Health',   emoji: '🚶'),
+  'work':    CategoryInfo(key: 'work',    label: 'Work',     emoji: '🏗️'),
+  'rest':    CategoryInfo(key: 'rest',    label: 'Rest',     emoji: '💤'),
+  'fast':    CategoryInfo(key: 'fast',    label: 'Fasting',  emoji: '🌙'),
+  'com':     CategoryInfo(key: 'com',     label: 'Commute',  emoji: '🚗'),
 };
 
 /// Event type display info
@@ -138,7 +138,6 @@ const eventTypeInfoMap = {
   'islamic':   EventTypeInfo(key: 'islamic',   label: 'Islamic',   emoji: '🌙'),
   'work':      EventTypeInfo(key: 'work',      label: 'Work',      emoji: '💼'),
   'study':     EventTypeInfo(key: 'study',     label: 'Study',     emoji: '📚'),
-  'kyberia':   EventTypeInfo(key: 'kyberia',   label: 'Kyberia',   emoji: '⚗️'),
   'family':    EventTypeInfo(key: 'family',    label: 'Family',    emoji: '👨‍👩‍👦'),
   'finance':   EventTypeInfo(key: 'finance',   label: 'Finance',   emoji: '💰'),
   'quran':     EventTypeInfo(key: 'quran',     label: 'Quran',     emoji: '📖'),

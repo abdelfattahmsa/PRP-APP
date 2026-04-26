@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
@@ -121,7 +121,7 @@ class TimeOverviewScreen extends ConsumerWidget {
                     label: 'Focus 7d',
                     value: '${focusData.fold(0.0, (a, b) => a + b).round()}m',
                     icon: Icons.bar_chart_rounded,
-                    iconColor: AppColors.pmp,
+                    iconColor: AppColors.learn,
                   ),
                 ),
               ],

@@ -357,38 +357,35 @@ class SupabaseService {
 
   // ── SEED DEFAULT DATA ─────────────────────────────────────────
   /// Called on first sign-up to populate default schedule blocks,
-  /// calendar events, and habits.
+  /// habits, and goals. All data is generic and user-agnostic.
   Future<void> _seedDefaultData(String uid) async {
-    // Default habits
+    final now = DateTime.now();
+    final endOfYear   = DateTime(now.year, 12, 31).toIso8601String().split('T').first;
+    final sixMonths   = DateTime(now.year, now.month + 6, now.day).toIso8601String().split('T').first;
+    final ninetyDays  = now.add(const Duration(days: 90)).toIso8601String().split('T').first;
+
+    // Generic starter habits
     final defaultHabits = [
-      {'id': _uuid(), 'user_id': uid, 'name': 'Fajr on time', 'icon': '🕌', 'order': 0, 'streak': 0, 'longest_streak': 0, 'history': {}, 'is_archived': false},
-      {'id': _uuid(), 'user_id': uid, 'name': 'Quran (35 min)', 'icon': '📖', 'order': 1, 'streak': 0, 'longest_streak': 0, 'history': {}, 'is_archived': false},
-      {'id': _uuid(), 'user_id': uid, 'name': 'Morning Zekr', 'icon': '📿', 'order': 2, 'streak': 0, 'longest_streak': 0, 'history': {}, 'is_archived': false},
-      {'id': _uuid(), 'user_id': uid, 'name': 'Evening Zekr', 'icon': '🌙', 'order': 3, 'streak': 0, 'longest_streak': 0, 'history': {}, 'is_archived': false},
-      {'id': _uuid(), 'user_id': uid, 'name': 'Walk 30 min', 'icon': '🚶', 'order': 4, 'streak': 0, 'longest_streak': 0, 'history': {}, 'is_archived': false},
-      {'id': _uuid(), 'user_id': uid, 'name': 'PMP study', 'icon': '📋', 'order': 5, 'streak': 0, 'longest_streak': 0, 'history': {}, 'is_archived': false},
-      {'id': _uuid(), 'user_id': uid, 'name': 'CFI study', 'icon': '📚', 'order': 6, 'streak': 0, 'longest_streak': 0, 'history': {}, 'is_archived': false},
-      {'id': _uuid(), 'user_id': uid, 'name': 'Kyberia outreach (5 emails)', 'icon': '⚗️', 'order': 7, 'streak': 0, 'longest_streak': 0, 'history': {}, 'is_archived': false},
+      {'id': _uuid(), 'user_id': uid, 'name': 'Morning routine',           'icon': '🌅', 'order': 0, 'streak': 0, 'longest_streak': 0, 'history': {}, 'is_archived': false},
+      {'id': _uuid(), 'user_id': uid, 'name': 'Exercise 30 min',           'icon': '🏃', 'order': 1, 'streak': 0, 'longest_streak': 0, 'history': {}, 'is_archived': false},
+      {'id': _uuid(), 'user_id': uid, 'name': 'Read / Learn 30 min',       'icon': '📖', 'order': 2, 'streak': 0, 'longest_streak': 0, 'history': {}, 'is_archived': false},
+      {'id': _uuid(), 'user_id': uid, 'name': 'Drink 2L water',            'icon': '💧', 'order': 3, 'streak': 0, 'longest_streak': 0, 'history': {}, 'is_archived': false},
+      {'id': _uuid(), 'user_id': uid, 'name': 'Daily journaling',          'icon': '✍️', 'order': 4, 'streak': 0, 'longest_streak': 0, 'history': {}, 'is_archived': false},
+      {'id': _uuid(), 'user_id': uid, 'name': 'No screens 1hr before bed', 'icon': '🌙', 'order': 5, 'streak': 0, 'longest_streak': 0, 'history': {}, 'is_archived': false},
     ];
     await _db.from('habits').insert(defaultHabits);
 
-    // Default goals
+    // Generic starter goals
     final defaultGoals = [
-      {'id': _uuid(), 'user_id': uid, 'title': 'PMP Certified', 'target_date': '2026-06-30', 'priority': 'high', 'status': 'active', 'progress': 0, 'description': 'Study starts now. Exam by June 30.', 'milestones': [], 'linked_event_ids': []},
-      {'id': _uuid(), 'user_id': uid, 'title': 'First Kyberia Client', 'target_date': '2026-05-01', 'priority': 'high', 'status': 'active', 'progress': 10, 'description': 'Cold outreach + crawler pipeline', 'milestones': [], 'linked_event_ids': []},
-      {'id': _uuid(), 'user_id': uid, 'title': 'Product #1 Live', 'target_date': '2026-04-10', 'priority': 'high', 'status': 'active', 'progress': 0, 'description': 'MVP by April 10 — no perfectionism', 'milestones': [], 'linked_event_ids': []},
-      {'id': _uuid(), 'user_id': uid, 'title': 'Debt ≤ 100K EGP', 'target_date': '2026-09-15', 'priority': 'high', 'status': 'active', 'progress': 0, 'description': 'Salary + Kyberia revenue → debt first', 'milestones': [], 'linked_event_ids': []},
-      {'id': _uuid(), 'user_id': uid, 'title': 'Memorize 10 Juz Quran', 'target_date': '2026-12-31', 'priority': 'high', 'status': 'active', 'progress': 0, 'description': '35 min/day = ~1 juz per 20 days', 'milestones': [], 'linked_event_ids': []},
-      {'id': _uuid(), 'user_id': uid, 'title': 'Get Engaged', 'target_date': '2026-05-30', 'priority': 'high', 'status': 'active', 'progress': 95, 'description': 'May 30, 2026 إن شاء الله', 'milestones': [], 'linked_event_ids': []},
-      {'id': _uuid(), 'user_id': uid, 'title': 'Wedding', 'target_date': '2027-03-01', 'priority': 'high', 'status': 'active', 'progress': 0, 'description': 'March 2027 إن شاء الله 🤍', 'milestones': [], 'linked_event_ids': []},
+      {'id': _uuid(), 'user_id': uid, 'title': 'Build 3-month emergency fund',         'target_date': sixMonths,   'priority': 'high',   'status': 'active', 'progress': 0, 'description': 'Save consistently until you have 3 months of living expenses covered.',     'milestones': [], 'linked_event_ids': []},
+      {'id': _uuid(), 'user_id': uid, 'title': 'Complete a professional certification', 'target_date': endOfYear,   'priority': 'high',   'status': 'active', 'progress': 0, 'description': 'Pick a certification relevant to your career and get it done this year.',    'milestones': [], 'linked_event_ids': []},
+      {'id': _uuid(), 'user_id': uid, 'title': 'Exercise 3× per week for 90 days',     'target_date': ninetyDays,  'priority': 'medium', 'status': 'active', 'progress': 0, 'description': 'Build a sustainable exercise habit — consistency beats intensity.',         'milestones': [], 'linked_event_ids': []},
+      {'id': _uuid(), 'user_id': uid, 'title': 'Read 12 books this year',               'target_date': endOfYear,   'priority': 'medium', 'status': 'active', 'progress': 0, 'description': 'One book per month — fiction, non-fiction, whatever feeds your mind.',      'milestones': [], 'linked_event_ids': []},
     ];
     await _db.from('goals').insert(defaultGoals);
 
     // Seed default schedule blocks (normal mode)
     await _seedScheduleBlocks(uid);
-
-    // Seed default calendar events (milestones + Islamic dates)
-    await _seedDefaultCalendarEvents(uid);
 
     // Seed default user categories
     await _seedDefaultCategories(uid);
@@ -396,24 +393,20 @@ class SupabaseService {
 
   Future<void> _seedScheduleBlocks(String uid) async {
     final normalBlocks = [
-      {'schedule_mode': 'normal', 'time': '04:25', 'label': 'Qiyam al-Layl', 'category_key': 'deen', 'duration': '30m', 'note': 'Start 2 rakaat. Build gradually.', 'order': 0},
-      {'schedule_mode': 'normal', 'time': '04:55', 'label': 'Fajr + Morning Zekr', 'category_key': 'deen', 'duration': '15m', 'note': null, 'order': 1},
-      {'schedule_mode': 'normal', 'time': '05:10', 'label': 'Quran — recitation & memorization', 'category_key': 'deen', 'duration': '35m', 'note': '10 juz by Dec 31 إن شاء الله', 'order': 2},
-      {'schedule_mode': 'normal', 'time': '05:45', 'label': 'Get ready', 'category_key': 'rest', 'duration': '5m', 'note': 'No breakfast. Wash, dress, bag.', 'order': 3},
-      {'schedule_mode': 'normal', 'time': '05:50', 'label': 'PMP — quick morning review', 'category_key': 'pmp', 'duration': '10m', 'note': null, 'order': 4},
-      {'schedule_mode': 'normal', 'time': '06:00', 'label': 'Commute to site', 'category_key': 'com', 'duration': '1hr', 'note': '🎧 PMP audio or Quran', 'order': 5},
-      {'schedule_mode': 'normal', 'time': '07:00', 'label': 'Site work', 'category_key': 'work', 'duration': '5hrs', 'note': null, 'order': 6},
-      {'schedule_mode': 'normal', 'time': '12:00', 'label': 'Lunch break — PMP reading', 'category_key': 'pmp', 'duration': '1hr', 'note': 'Main PMP slot. No food — full focus.', 'order': 7},
-      {'schedule_mode': 'normal', 'time': '13:00', 'label': 'Site work continues', 'category_key': 'work', 'duration': '4hrs', 'note': null, 'order': 8},
-      {'schedule_mode': 'normal', 'time': '17:00', 'label': 'Commute home', 'category_key': 'com', 'duration': '1hr', 'note': '🎧 CFI audio or Evening Zekr', 'order': 9},
-      {'schedule_mode': 'normal', 'time': '18:00', 'label': 'Arrive + settle', 'category_key': 'rest', 'duration': '10m', 'note': null, 'order': 10},
-      {'schedule_mode': 'normal', 'time': '18:10', 'label': 'Maghrib + Evening Zekr', 'category_key': 'deen', 'duration': '20m', 'note': null, 'order': 11},
-      {'schedule_mode': 'normal', 'time': '18:30', 'label': 'Dinner + CFI Study', 'category_key': 'study', 'duration': '90m', 'note': 'Eat while studying.', 'order': 12},
-      {'schedule_mode': 'normal', 'time': '20:00', 'label': 'Walk', 'category_key': 'health', 'duration': '30m', 'note': null, 'order': 13},
-      {'schedule_mode': 'normal', 'time': '20:30', 'label': 'Kyberia — outreach + build', 'category_key': 'kyb', 'duration': '40m', 'note': null, 'order': 14},
-      {'schedule_mode': 'normal', 'time': '21:10', 'label': 'Isha', 'category_key': 'deen', 'duration': '15m', 'note': null, 'order': 15},
-      {'schedule_mode': 'normal', 'time': '21:25', 'label': 'Wind down', 'category_key': 'rest', 'duration': '60m', 'note': null, 'order': 16},
-      {'schedule_mode': 'normal', 'time': '22:25', 'label': 'Sleep', 'category_key': 'rest', 'duration': null, 'note': '→ 04:25 = 6hrs exactly', 'order': 17},
+      {'schedule_mode': 'normal', 'time': '06:00', 'label': 'Morning routine',        'category_key': 'rest',    'duration': '30m',   'note': 'Hydrate, stretch, set your intentions for the day.', 'order': 0},
+      {'schedule_mode': 'normal', 'time': '06:30', 'label': 'Exercise',               'category_key': 'health',  'duration': '45m',   'note': null, 'order': 1},
+      {'schedule_mode': 'normal', 'time': '07:15', 'label': 'Breakfast & planning',   'category_key': 'rest',    'duration': '30m',   'note': 'Review your goals and tasks for the day.', 'order': 2},
+      {'schedule_mode': 'normal', 'time': '08:00', 'label': 'Deep work — block 1',    'category_key': 'work',    'duration': '3hrs',  'note': 'Your most important work. No distractions.', 'order': 3},
+      {'schedule_mode': 'normal', 'time': '11:00', 'label': 'Break',                  'category_key': 'rest',    'duration': '15m',   'note': null, 'order': 4},
+      {'schedule_mode': 'normal', 'time': '11:15', 'label': 'Deep work — block 2',    'category_key': 'work',    'duration': '1hr 45m','note': null, 'order': 5},
+      {'schedule_mode': 'normal', 'time': '13:00', 'label': 'Lunch break',            'category_key': 'rest',    'duration': '1hr',   'note': null, 'order': 6},
+      {'schedule_mode': 'normal', 'time': '14:00', 'label': 'Learning / skill time',  'category_key': 'learn',   'duration': '1hr',   'note': 'Course, book, or deliberate skill practice.', 'order': 7},
+      {'schedule_mode': 'normal', 'time': '15:00', 'label': 'Work — afternoon',       'category_key': 'work',    'duration': '2hrs',  'note': null, 'order': 8},
+      {'schedule_mode': 'normal', 'time': '17:00', 'label': 'Side project / creative','category_key': 'project', 'duration': '1hr',   'note': 'Build something of your own.', 'order': 9},
+      {'schedule_mode': 'normal', 'time': '18:00', 'label': 'Walk / workout',         'category_key': 'health',  'duration': '30m',   'note': null, 'order': 10},
+      {'schedule_mode': 'normal', 'time': '18:30', 'label': 'Personal time',          'category_key': 'rest',    'duration': '2hrs',  'note': 'Family, hobbies, social.', 'order': 11},
+      {'schedule_mode': 'normal', 'time': '20:30', 'label': 'Wind down',              'category_key': 'rest',    'duration': '1hr',   'note': 'No screens. Reflect, read, or relax.', 'order': 12},
+      {'schedule_mode': 'normal', 'time': '22:00', 'label': 'Sleep',                  'category_key': 'rest',    'duration': null,    'note': 'Aim for 7–8 hours.', 'order': 13},
     ];
 
     final rows = normalBlocks.map((b) => {...b, 'id': _uuid(), 'user_id': uid, 'notify_on_start': true, 'notify_on_end': false}).toList();
@@ -430,24 +423,6 @@ class SupabaseService {
 
   Future<void> setCashOnHand(double amount) async {
     await _db.from('profiles').update({'cash_on_hand': amount}).eq('id', _uid);
-  }
-
-  // ── SEED CALENDAR EVENTS ───────────────────────────────────
-  Future<void> _seedDefaultCalendarEvents(String uid) async {
-    final events = <Map<String, dynamic>>[
-      {'id': _uuid(), 'user_id': uid, 'title': 'Engagement', 'date': '2026-05-30', 'type_key': 'milestone', 'is_done': false, 'notes': 'إن شاء الله 🤍'},
-      {'id': _uuid(), 'user_id': uid, 'title': 'Wedding', 'date': '2027-03-01', 'type_key': 'milestone', 'is_done': false, 'notes': 'March 2027 إن شاء الله'},
-      {'id': _uuid(), 'user_id': uid, 'title': 'PMP Exam Deadline', 'date': '2026-06-30', 'type_key': 'milestone', 'is_done': false},
-      {'id': _uuid(), 'user_id': uid, 'title': 'Product #1 MVP', 'date': '2026-04-10', 'type_key': 'milestone', 'is_done': false},
-      {'id': _uuid(), 'user_id': uid, 'title': 'First Kyberia Client', 'date': '2026-05-01', 'type_key': 'milestone', 'is_done': false},
-      {'id': _uuid(), 'user_id': uid, 'title': 'Ramadan Start', 'date': '2026-02-18', 'type_key': 'islamic', 'is_done': false},
-      {'id': _uuid(), 'user_id': uid, 'title': 'Eid Al-Fitr', 'date': '2026-03-20', 'type_key': 'islamic', 'is_done': false},
-      {'id': _uuid(), 'user_id': uid, 'title': 'Eid Al-Adha', 'date': '2026-05-27', 'type_key': 'islamic', 'is_done': false},
-      {'id': _uuid(), 'user_id': uid, 'title': 'Islamic New Year', 'date': '2026-06-17', 'type_key': 'islamic', 'is_done': false},
-      {'id': _uuid(), 'user_id': uid, 'title': 'Mawlid Al-Nabi', 'date': '2026-08-26', 'type_key': 'islamic', 'is_done': false},
-      {'id': _uuid(), 'user_id': uid, 'title': 'Debt ≤ 100K Target', 'date': '2026-09-15', 'type_key': 'milestone', 'is_done': false},
-    ];
-    await _db.from('calendar_events').insert(events);
   }
 
   // ── USER CATEGORIES ────────────────────────────────────────────

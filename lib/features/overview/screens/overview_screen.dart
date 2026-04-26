@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
@@ -101,7 +101,7 @@ class OverviewScreen extends ConsumerWidget {
                     label: 'Active Goals',
                     value: '$activeGoals',
                     icon: Icons.flag_rounded,
-                    iconColor: AppColors.pmp,
+                    iconColor: AppColors.learn,
                     subtitle: goalsAsync.isLoading ? 'Loading...' : null,
                     onTap: () => context.go(Routes.energyGoals),
                   ),
@@ -319,7 +319,7 @@ class _QuickActions extends StatelessWidget {
           Routes.energyFocus),
       ('Log Habit', Icons.check_circle_rounded, AppColors.accent,
           Routes.healthHabits),
-      ('Add Event', Icons.event_rounded, AppColors.pmp, Routes.timeCalendar),
+      ('Add Event', Icons.event_rounded, AppColors.learn, Routes.timeCalendar),
     ];
 
     return GridView.count(

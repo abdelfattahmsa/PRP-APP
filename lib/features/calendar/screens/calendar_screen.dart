@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:table_calendar/table_calendar.dart';
@@ -229,9 +229,9 @@ class _EventTile extends ConsumerWidget {
                   if (event.linkUrl != null && event.linkUrl!.isNotEmpty) ...[
                     const Gap(4),
                     Row(children: [
-                      const Icon(Icons.link, size: 11, color: AppColors.pmp),
+                      const Icon(Icons.link, size: 11, color: AppColors.learn),
                       const Gap(3),
-                      Text(event.linkUrl!.length > 40 ? '${event.linkUrl!.substring(0, 40)}...' : event.linkUrl!, style: const TextStyle(fontSize: 10, color: AppColors.pmp)),
+                      Text(event.linkUrl!.length > 40 ? '${event.linkUrl!.substring(0, 40)}...' : event.linkUrl!, style: const TextStyle(fontSize: 10, color: AppColors.learn)),
                     ]),
                   ],
                 ])),
