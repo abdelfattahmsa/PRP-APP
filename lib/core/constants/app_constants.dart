@@ -3,7 +3,7 @@ class AppConstants {
   AppConstants._();
 
   static const appName = 'PRP';
-  static const appVersion = '4.7.0';
+  static const appVersion = '4.9.0';
   static const appStage = 'Alpha'; // alpha → beta → release
 
   // Supabase
