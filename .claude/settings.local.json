@@ -76,7 +76,24 @@
       "Bash(Write-Host \"Done\")",
       "Bash('C:/Program Files \\(x86\\)/Windows Kits/10/bin/10.0.26100.0/x64/signtool.exe' sign /fd certHash /f 'C:/Users/abdel/Documents/PRP APP/build/KyberiaLabs.pfx' /p KyberiaLabs2026! /d 'PRP — Personal Resource Planner' /du https://prp-app.website /tr http://timestamp.digicert.com /td SHA256 'C:/Users/abdel/Documents/PRP APP/build/windows/x64/runner/Release/PRP.exe')",
       "Bash(echo \"Exit: $?\")",
-      "Bash(powershell -Command ' *)"
+      "Bash(powershell -Command ' *)",
+      "Bash(sort -t. -k1,1)",
+      "Bash(netlify deploy *)",
+      "Bash(vercel build *)",
+      "Bash(vercel logs *)",
+      "Bash(grep -E \"\\\\.\\(dart|json\\)$\")",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(grep -v \"^$\")",
+      "Bash(ls -la --group-directories-first)",
+      "Bash(dir /b)",
+      "WebSearch",
+      "Bash(git rm *)",
+      "Bash(ls *.png *.txt *.iml)",
+      "Bash(ls brand/)",
+      "Bash(mv prp_logo_*.png brand/logos/)",
+      "Bash(mv Gemini_Generated_Image_*.png brand/logos/)"
     ]
   }
 }

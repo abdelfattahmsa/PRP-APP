@@ -117,14 +117,9 @@ app.*.symbols
 !**/ios/**/default.perspectivev3
 !/packages/flutter_tools/test/data/dart_dependencies_test/**/.packages
 !/dev/ci/**/Gemfile.lock
-favicon.png
-Gemini_Generated_Image_yc68vgyc68vgyc68.png
-prp_logo_orange.png
-prp_logo_purple.png
-prp_logo_red.png
-prp_logo_ref_black.png
-prp_logo_ref_white.png
-prp_logo_transparent.png
-prp_logo_transparent_alt.png
-prp_logo_white.png
-prp_logo_white_8K.png
+# IDE artifacts
+*.iml
+
+# Temp build output files
+analyze_output.txt
+upgrade_output.txt
