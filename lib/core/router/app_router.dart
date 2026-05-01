@@ -49,6 +49,10 @@ import '../../features/profile/screens/profile_settings_screen.dart';
 import '../../features/profile/screens/profile_account_screen.dart';
 import '../../features/profile/screens/profile_app_settings_screen.dart';
 
+// ── Legal ──
+import '../../features/legal/terms_screen.dart';
+import '../../features/legal/privacy_screen.dart';
+
 // ══════════════════════════════════════════════════════════════
 // ROUTE CONSTANTS
 // ══════════════════════════════════════════════════════════════
@@ -102,6 +106,10 @@ class Routes {
 
   // ── Daily Check-in ──
   static const checkin = '/checkin';
+
+  // ── Legal ──
+  static const terms = '/terms';
+  static const privacy = '/privacy';
 
   // ── Legacy aliases (redirect targets exist) ──
   static const schedule = timeSchedule;
@@ -174,6 +182,9 @@ final routerProvider = Provider<GoRouter>((ref) {
           path: Routes.checkin,
           builder: (_, state) => DailyCheckinScreen(
               mode: state.uri.queryParameters['mode'] ?? 'morning')),
+      // ── Legal ─────────────────────────────────────────────
+      GoRoute(path: Routes.terms,   builder: (_, __) => const TermsScreen()),
+      GoRoute(path: Routes.privacy, builder: (_, __) => const PrivacyScreen()),
 
       // ── Shell (authenticated) ──────────────────────────────
       ShellRoute(

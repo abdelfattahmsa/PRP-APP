@@ -7,9 +7,9 @@ import 'package:go_router/go_router.dart';
 import 'package:gap/gap.dart';
 import 'package:uuid/uuid.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/router/app_router.dart';
-import '../../core/constants/app_constants.dart';
 import '../../core/providers/pillar_provider.dart';
 import '../../features/auth/providers/auth_provider.dart';
 import '../../engines/energy/data/models/energy_models.dart';
@@ -166,31 +166,6 @@ const kAppTabs = <AppTab>[
           label: 'Habits',
           icon: Icons.check_circle_outline,
           route: Routes.healthHabits),
-    ],
-  ),
-  AppTab(
-    id: 'religion',
-    label: 'Deen',
-    icon: Icons.mosque_outlined,
-    activeIcon: Icons.mosque_rounded,
-    route: Routes.religionOverview,
-    subTabs: [
-      AppSubTab(
-          label: 'Overview',
-          icon: Icons.bar_chart_outlined,
-          route: Routes.religionOverview),
-      AppSubTab(
-          label: 'Salah',
-          icon: Icons.access_time_outlined,
-          route: Routes.religionSalah),
-      AppSubTab(
-          label: 'Quran',
-          icon: Icons.menu_book_outlined,
-          route: Routes.religionQuran),
-      AppSubTab(
-          label: 'Zakat',
-          icon: Icons.calculate_outlined,
-          route: Routes.religionZakat),
     ],
   ),
   AppTab(
@@ -458,18 +433,48 @@ class _DesktopShellState extends ConsumerState<_DesktopShell> {
             ),
             child: Column(
               children: [
-                _SidebarBrand(
+                _SidebarProfileHeader(
                   expanded: _expanded,
                   onToggle: () =>
                       setState(() => _expanded = !_expanded),
                 ),
-                Divider(height: 1, color: borderColor),
+                // ── Profile sub-tabs (visible when on any /profile route) ──
+                Builder(builder: (ctx) {
+                  final isProfileActive =
+                      widget.tabIndex == widget.tabs.length - 1;
+                  final profileTab = widget.tabs.last;
+                  if (!isProfileActive || !profileTab.hasSubTabs) {
+                    return Divider(height: 1, color: borderColor);
+                  }
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const SizedBox(height: 4),
+                      if (_expanded)
+                        for (final sub in profileTab.subTabs)
+                          _SidebarSubTabItem(
+                            sub: sub,
+                            active: widget.location.startsWith(sub.route),
+                            onTap: () => context.go(sub.route),
+                          )
+                      else
+                        for (final sub in profileTab.subTabs)
+                          _SidebarSubTabItemCollapsed(
+                            sub: sub,
+                            active: widget.location.startsWith(sub.route),
+                            onTap: () => context.go(sub.route),
+                          ),
+                      const SizedBox(height: 4),
+                      Divider(height: 1, color: borderColor),
+                    ],
+                  );
+                }),
                 Expanded(
                   child: ListView(
                     padding:
                         const EdgeInsets.symmetric(vertical: Spacing.sm),
                     children: [
-                      // Show all tabs except Profile (last) — Profile lives at the bottom
+                      // Show all tabs except Profile (last) — Profile card lives at top
                       for (var i = 0; i < widget.tabs.length - 1; i++) ...[
                         _SidebarTabItem(
                           tab: widget.tabs[i],
@@ -502,12 +507,7 @@ class _DesktopShellState extends ConsumerState<_DesktopShell> {
                   ),
                 ),
                 Divider(height: 1, color: borderColor),
-                _SidebarProfileFooter(
-                  ref: ref,
-                  expanded: _expanded,
-                  active: widget.tabIndex == widget.tabs.length - 1,
-                  location: widget.location,
-                ),
+                _SidebarFooter(expanded: _expanded),
               ],
             ),
           ),
@@ -690,68 +690,102 @@ class _MobileSubTabItem extends StatelessWidget {
 // SIDEBAR COMPONENTS
 // ══════════════════════════════════════════════════════════════
 
-class _SidebarBrand extends StatelessWidget {
-  const _SidebarBrand({required this.expanded, required this.onToggle});
+class _SidebarProfileHeader extends ConsumerWidget {
+  const _SidebarProfileHeader({
+    required this.expanded,
+    required this.onToggle,
+  });
   final bool expanded;
   final VoidCallback onToggle;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final user = ref.watch(currentUserProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final accent = Theme.of(context).colorScheme.primary;
     final textMuted = isDark ? AppColors.textMuted : AppColors.lightTextMuted;
 
-    return InkWell(
-      onTap: onToggle,
-      child: Padding(
-        padding: EdgeInsets.fromLTRB(
-          expanded ? 16 : 12,
-          20,
-          expanded ? 12 : 12,
-          16,
+    final initial = user?.fullName?.isNotEmpty == true
+        ? user!.fullName![0].toUpperCase()
+        : (user != null && user.email.isNotEmpty ? user.email[0].toUpperCase() : '?');
+
+    Widget avatar({double radius = 18}) => CircleAvatar(
+          radius: radius,
+          backgroundImage: user?.avatarUrl != null
+              ? NetworkImage(user!.avatarUrl!)
+              : null,
+          backgroundColor: accent.withValues(alpha: 0.15),
+          child: user?.avatarUrl == null
+              ? Text(
+                  initial,
+                  style: TextStyle(
+                    color: accent,
+                    fontSize: radius * 0.67,
+                    fontWeight: FontWeight.w600,
+                    fontFamily: 'Roboto',
+                  ),
+                )
+              : null,
+        );
+
+    if (!expanded) {
+      return InkWell(
+        onTap: onToggle,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
+          child: Center(child: avatar(radius: 16)),
         ),
-        child: Row(
-          children: [
-            // Logo mark
-            SizedBox(
-              width: 36,
-              height: 36,
-              child: Image.asset(
-                'assets/images/prp_logo.png',
-                fit: BoxFit.contain,
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 12, 4, 8),
+      child: Row(
+        children: [
+          GestureDetector(
+            onTap: () => context.go(kAppTabs.last.route),
+            child: avatar(radius: 18),
+          ),
+          const Gap(10),
+          Expanded(
+            child: GestureDetector(
+              onTap: () => context.go(kAppTabs.last.route),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    user?.fullName?.isNotEmpty == true
+                        ? user!.fullName!
+                        : 'My Profile',
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  Text(
+                    user?.email ?? '',
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: textMuted,
+                      fontFamily: 'Roboto',
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
               ),
             ),
-            if (expanded) ...[
-              const Gap(10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      AppConstants.appName,
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontFamily: 'PlayfairDisplay',
-                            fontSize: 14,
-                          ),
-                    ),
-                    Text(
-                      'v${AppConstants.appVersion}',
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            color: textMuted,
-                          ),
-                    ),
-                  ],
-                ),
-              ),
-              Icon(
-                Icons.chevron_left_rounded,
-                size: 16,
-                color: textMuted,
-              ),
-            ] else ...[
-              const Spacer(),
-            ],
-          ],
-        ),
+          ),
+          IconButton(
+            onPressed: onToggle,
+            icon: const Icon(Icons.chevron_left_rounded, size: 16),
+            color: textMuted,
+            tooltip: 'Collapse',
+            padding: const EdgeInsets.all(4),
+            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+          ),
+        ],
       ),
     );
   }
@@ -952,167 +986,107 @@ class _SidebarSubTabItemCollapsed extends StatelessWidget {
   }
 }
 
-class _SidebarProfileFooter extends StatelessWidget {
-  const _SidebarProfileFooter({
-    required this.ref,
-    required this.expanded,
-    required this.active,
-    required this.location,
-  });
-  final WidgetRef ref;
+class _SidebarFooter extends StatelessWidget {
+  const _SidebarFooter({required this.expanded});
   final bool expanded;
-  final bool active;
-  final String location;
 
   @override
   Widget build(BuildContext context) {
-    final profileTab = kAppTabs.last; // Profile is always the last tab
-    final userAsync = ref.watch(currentUserProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final accent = Theme.of(context).colorScheme.primary;
-    final textSecondary =
-        isDark ? AppColors.textSecondary : AppColors.lightTextSecondary;
     final textMuted = isDark ? AppColors.textMuted : AppColors.lightTextMuted;
-    final borderColor = isDark ? AppColors.border : AppColors.lightBorder;
 
-    final user = userAsync;
-    final initial = user?.fullName?.isNotEmpty == true
-        ? user!.fullName![0].toUpperCase()
-        : '?';
-
-    // Collapsed sidebar: show avatar icon that navigates to profile
-    if (!expanded) {
-      return Padding(
-        padding: const EdgeInsets.all(Spacing.sm),
-        child: Tooltip(
-          message: 'Profile',
+    Widget iconBtn(IconData icon, String tooltip, VoidCallback onTap) =>
+        Tooltip(
+          message: tooltip,
           child: Material(
-            color: active ? accent.withValues(alpha: 0.1) : Colors.transparent,
-            borderRadius: BorderRadius.circular(10),
+            color: Colors.transparent,
+            borderRadius: BorderRadius.circular(8),
             child: InkWell(
-              onTap: () => context.go(profileTab.route),
-              borderRadius: BorderRadius.circular(10),
-              hoverColor: accent.withValues(alpha: 0.06),
+              onTap: onTap,
+              borderRadius: BorderRadius.circular(8),
+              hoverColor: textMuted.withValues(alpha: 0.1),
               child: SizedBox(
-                height: 44,
+                width: 32,
+                height: 32,
                 child: Center(
-                  child: CircleAvatar(
-                    radius: 14,
-                    backgroundColor: active
-                        ? accent.withValues(alpha: 0.25)
-                        : accent.withValues(alpha: 0.12),
-                    child: Text(
-                      initial,
-                      style: TextStyle(
-                        color: accent,
-                        fontFamily: 'Roboto',
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
+                  child: Icon(icon, size: 15, color: textMuted),
                 ),
               ),
             ),
           ),
-        ),
-      );
-    }
+        );
 
-    // Expanded sidebar: show user info row + profile sub-tabs when active
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // Profile sub-tabs when active
-        if (active)
-          Padding(
-            padding: const EdgeInsets.only(top: 4, bottom: 2),
-            child: Column(
-              children: [
-                for (final sub in profileTab.subTabs)
-                  _SidebarSubTabItem(
-                    sub: sub,
-                    active: location.startsWith(sub.route),
-                    onTap: () => context.go(sub.route),
-                  ),
-                Divider(height: 8, color: borderColor),
-              ],
-            ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      child: Row(
+        children: [
+          iconBtn(
+            Icons.chat_bubble_outline_rounded,
+            'Support',
+            () => launchUrl(Uri.parse('mailto:support@prp-app.website')),
           ),
-        // User identity row (acts as the Profile tab item)
-        Padding(
-          padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
-          child: Material(
-            color: active ? accent.withValues(alpha: 0.1) : Colors.transparent,
-            borderRadius: BorderRadius.circular(10),
-            child: InkWell(
-              onTap: () => context.go(profileTab.route),
-              borderRadius: BorderRadius.circular(10),
-              hoverColor: accent.withValues(alpha: 0.06),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                child: Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 14,
-                      backgroundColor: accent.withValues(alpha: 0.15),
-                      child: Text(
-                        initial,
-                        style: TextStyle(
-                          color: accent,
-                          fontFamily: 'Roboto',
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                    const Gap(10),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            user?.fullName ?? 'Profile',
-                            style: Theme.of(context)
-                                .textTheme
-                                .labelMedium
-                                ?.copyWith(
-                                  fontWeight: FontWeight.w500,
-                                  color: active ? accent : null,
-                                  fontSize: 11,
-                                ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          Text(
-                            user?.email ?? '',
-                            style: TextStyle(
-                              fontSize: 8,
-                              color: textSecondary,
-                              fontFamily: 'Roboto',
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.logout_rounded, size: 13),
+          const Gap(2),
+          iconBtn(
+            Icons.description_outlined,
+            'Terms & Privacy',
+            () => context.go(Routes.terms),
+          ),
+          if (expanded) ...[
+            const Spacer(),
+            GestureDetector(
+              onTap: () =>
+                  launchUrl(Uri.parse('https://kyberia.tech')),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    '✳',
+                    style: TextStyle(
+                      fontSize: 11,
                       color: textMuted,
-                      tooltip: 'Sign out',
-                      padding: EdgeInsets.zero,
-                      constraints:
-                          const BoxConstraints(minWidth: 28, minHeight: 28),
-                      onPressed: () =>
-                          ref.read(authNotifierProvider.notifier).signOut(),
+                      fontWeight: FontWeight.w700,
                     ),
-                  ],
+                  ),
+                  const Gap(4),
+                  Text(
+                    'Kyberia',
+                    style: TextStyle(
+                      fontSize: 9,
+                      color: textMuted,
+                      fontFamily: 'Roboto',
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Gap(8),
+          ] else ...[
+            const Gap(2),
+            Tooltip(
+              message: 'Kyberia',
+              child: GestureDetector(
+                onTap: () =>
+                    launchUrl(Uri.parse('https://kyberia.tech')),
+                child: SizedBox(
+                  width: 32,
+                  height: 32,
+                  child: Center(
+                    child: Text(
+                      '✳',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: textMuted,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ),
-          ),
-        ),
-      ],
+          ],
+        ],
+      ),
     );
   }
 }

@@ -1,6 +1,7 @@
 ﻿import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:gap/gap.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
@@ -8,6 +9,7 @@ import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/providers/theme_provider.dart';
 import '../../../core/providers/pillar_provider.dart';
+import '../../../core/router/app_router.dart';
 import '../../../shared/models/all_providers.dart';
 import '../../../shared/widgets/placeholders.dart';
 import '../../../engines/categories/data/models/user_category_model.dart';
@@ -452,13 +454,13 @@ class _ProfileAppSettingsScreenState
               SettingsTile(
                 title: 'Terms of Service',
                 leading: const Icon(Icons.description_outlined, size: 20),
-                onTap: () {},
+                onTap: () => context.go(Routes.terms),
               ),
               Divider(height: 1, color: borderColor),
               SettingsTile(
                 title: 'Privacy Policy',
                 leading: const Icon(Icons.privacy_tip_outlined, size: 20),
-                onTap: () {},
+                onTap: () => context.go(Routes.privacy),
               ),
             ]),
           ],
@@ -956,11 +958,10 @@ class _PillarTogglesSection extends ConsumerWidget {
   const _PillarTogglesSection();
 
   static const _pillars = [
-    (id: 'time',     label: 'Time',     icon: Icons.schedule_rounded,                desc: 'Calendar, Schedule & Tasks'),
-    (id: 'finance',  label: 'Finance',  icon: Icons.account_balance_wallet_rounded,  desc: 'Accounts, Transactions & Investments'),
-    (id: 'energy',   label: 'Energy',   icon: Icons.bolt_rounded,                    desc: 'Focus, Goals & Ideas'),
-    (id: 'health',   label: 'Health',   icon: Icons.favorite_rounded,                desc: 'Habits, Fasting & Progress'),
-    (id: 'religion', label: 'Deen',     icon: Icons.mosque_rounded,                  desc: 'Salah, Quran & Zakat (opt-in)'),
+    (id: 'time',     label: 'Time',     icon: Icons.schedule_rounded,               desc: 'Calendar, Schedule & Tasks'),
+    (id: 'finance',  label: 'Finance',  icon: Icons.account_balance_wallet_rounded, desc: 'Accounts, Transactions & Investments'),
+    (id: 'energy',   label: 'Energy',   icon: Icons.bolt_rounded,                   desc: 'Focus, Goals & Ideas'),
+    (id: 'health',   label: 'Health',   icon: Icons.favorite_rounded,               desc: 'Habits, Fasting & Progress'),
   ];
 
   @override

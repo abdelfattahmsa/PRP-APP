@@ -7,7 +7,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../engines/money/data/models/money_models.dart';
 import '../../../shared/models/all_providers.dart';
 import '../../../shared/widgets/app_card.dart';
-
+import '../../../services/market_data_service.dart';
 import '../../../shared/widgets/placeholders.dart' show ScreenHeader, SectionHeader;
 
 const _uuid = Uuid();
@@ -30,6 +30,9 @@ class FinanceInvestmentsScreen extends ConsumerWidget {
           data: (investments) {
             final total = investments.fold(0.0, (s, i) => s + i.amount);
             final fmt = NumberFormat('#,##0.##', 'en_US');
+
+            final baseCurrencyAsync = ref.watch(baseCurrencyProvider);
+            final baseCurrency = baseCurrencyAsync.asData?.value ?? 'USD';
 
             return ListView(
               padding: const EdgeInsets.fromLTRB(16, 20, 16, 100),
@@ -57,7 +60,7 @@ class FinanceInvestmentsScreen extends ConsumerWidget {
                                 color: textSecondary, fontSize: 13)),
                         const Gap(4),
                         Text(
-                          '${fmt.format(total)} EGP',
+                          '${fmt.format(total)} $baseCurrency',
                           style: TextStyle(
                             fontSize: 28,
                             fontWeight: FontWeight.w700,
@@ -74,6 +77,10 @@ class FinanceInvestmentsScreen extends ConsumerWidget {
                     ),
                   ),
                 ),
+                const Gap(24),
+
+                // Live Market Prices
+                const _MarketPricesCard(),
                 const Gap(24),
 
                 SectionHeader('Holdings'),
@@ -273,6 +280,221 @@ class _LivePriceBadge extends ConsumerWidget {
             )
           : Text(ticker,
               style: TextStyle(fontFamily: 'Roboto', fontSize: 10, color: secondary)),
+    );
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+// LIVE MARKET PRICES CARD
+// ══════════════════════════════════════════════════════════════
+
+class _MarketPricesCard extends ConsumerWidget {
+  const _MarketPricesCard();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final metalsAsync = ref.watch(metalPricesProvider);
+    final cryptoAsync = ref.watch(cryptoPricesProvider);
+    final fxAsync = ref.watch(fxRatesProvider);
+    final baseCurrencyAsync = ref.watch(baseCurrencyProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final accent = Theme.of(context).colorScheme.primary;
+    final textSecondary = isDark ? AppColors.textSecondary : AppColors.lightTextSecondary;
+    final fmt = NumberFormat('#,##0.##', 'en_US');
+
+    final baseCurrency = baseCurrencyAsync.asData?.value ?? 'USD';
+    final rates = fxAsync.asData?.value ?? {};
+
+    // Convert USD price to user's base currency
+    double toBase(double usd) {
+      if (baseCurrency == 'USD') return usd;
+      final toRate = rates[baseCurrency] ?? 1.0;
+      return usd * toRate;
+    }
+
+    String fmtChange(double change, {bool isPct = false}) {
+      final sign = change >= 0 ? '+' : '';
+      if (isPct) return '$sign${change.toStringAsFixed(2)}%';
+      return '$sign${fmt.format(change)}';
+    }
+
+    Color changeColor(double change) =>
+        change >= 0 ? AppColors.success : AppColors.error;
+
+    Widget priceRow(String label, String emoji, double usdPrice, double change,
+        {bool isPct = false}) {
+      final basePrice = toBase(usdPrice);
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 5),
+        child: Row(
+          children: [
+            Text(emoji, style: const TextStyle(fontSize: 15)),
+            const Gap(8),
+            Expanded(
+              child: Text(
+                label,
+                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+              ),
+            ),
+            Text(
+              '${fmt.format(basePrice)} $baseCurrency',
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+            ),
+            const Gap(8),
+            Text(
+              fmtChange(change, isPct: isPct),
+              style: TextStyle(
+                fontSize: 11,
+                color: changeColor(change),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    Widget keyRateChip(String code, Map<String, double> rates) {
+      if (code == 'USD' || rates[code] == null) return const SizedBox.shrink();
+      final rateVsUsd = rates[code]!;
+      return Container(
+        margin: const EdgeInsets.only(right: 8, bottom: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.card : AppColors.lightCard,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+              color: isDark ? AppColors.border : AppColors.lightBorder),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(code,
+                style: TextStyle(
+                    fontSize: 10,
+                    color: textSecondary,
+                    fontWeight: FontWeight.w600)),
+            Text(fmt.format(rateVsUsd),
+                style: const TextStyle(
+                    fontSize: 12, fontWeight: FontWeight.w700)),
+          ],
+        ),
+      );
+    }
+
+    return AppCard(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.show_chart_rounded, size: 16, color: accent),
+                const Gap(8),
+                Text(
+                  'Live Market Prices',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: accent,
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  'Live • USD base',
+                  style: TextStyle(fontSize: 10, color: textSecondary),
+                ),
+              ],
+            ),
+            const Gap(12),
+
+            // ── Metals ────────────────────────────────────────────
+            Text('Precious Metals',
+                style: TextStyle(
+                    fontSize: 11,
+                    color: textSecondary,
+                    fontWeight: FontWeight.w600)),
+            const Gap(6),
+            metalsAsync.when(
+              loading: () => const SizedBox(
+                  height: 40,
+                  child: Center(
+                      child: SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2)))),
+              error: (_, __) => Text('Unable to load metal prices',
+                  style: TextStyle(fontSize: 12, color: textSecondary)),
+              data: (metals) => metals == null
+                  ? Text('Metal prices unavailable',
+                      style: TextStyle(fontSize: 12, color: textSecondary))
+                  : Column(
+                      children: [
+                        priceRow('Gold', '🟡', metals.goldUsd, metals.goldChange),
+                        priceRow('Silver', '⬜', metals.silverUsd,
+                            metals.silverChange),
+                      ],
+                    ),
+            ),
+            const Gap(12),
+
+            // ── Crypto ────────────────────────────────────────────
+            Text('Crypto',
+                style: TextStyle(
+                    fontSize: 11,
+                    color: textSecondary,
+                    fontWeight: FontWeight.w600)),
+            const Gap(6),
+            cryptoAsync.when(
+              loading: () => const SizedBox(
+                  height: 40,
+                  child: Center(
+                      child: SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2)))),
+              error: (_, __) => Text('Unable to load crypto prices',
+                  style: TextStyle(fontSize: 12, color: textSecondary)),
+              data: (cryptos) => cryptos.isEmpty
+                  ? Text('Crypto prices unavailable',
+                      style: TextStyle(fontSize: 12, color: textSecondary))
+                  : Column(
+                      children: cryptos.map((c) {
+                        final emoji = c.symbol == 'BTC'
+                            ? '₿'
+                            : c.symbol == 'ETH'
+                                ? 'Ξ'
+                                : c.symbol == 'SOL'
+                                    ? '◎'
+                                    : '◆';
+                        return priceRow(
+                            '${c.name} (${c.symbol})', emoji, c.usdPrice, c.change24h,
+                            isPct: true);
+                      }).toList(),
+                    ),
+            ),
+            const Gap(12),
+
+            // ── Key FX Rates ────────────────────────────────────
+            Text('Key Rates vs USD',
+                style: TextStyle(
+                    fontSize: 11,
+                    color: textSecondary,
+                    fontWeight: FontWeight.w600)),
+            const Gap(8),
+            fxAsync.when(
+              loading: () => const SizedBox(height: 30),
+              error: (_, __) => const SizedBox.shrink(),
+              data: (rates) => Wrap(
+                children: ['EGP', 'EUR', 'GBP', 'SAR', 'AED', 'JPY']
+                    .map((c) => keyRateChip(c, rates))
+                    .toList(),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

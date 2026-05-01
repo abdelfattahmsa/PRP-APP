@@ -1,6 +1,7 @@
 # Miscellaneous
 *.class
 *.lock
+!pubspec.lock
 *.log
 *.pyc
 *.swp
@@ -123,3 +124,10 @@ app.*.symbols
 # Temp build output files
 analyze_output.txt
 upgrade_output.txt
+
+# Vercel build output & local env files
+.vercel/output/
+.vercel/.env.*.local
+
+# Claude local settings
+.claude/settings.local.json
