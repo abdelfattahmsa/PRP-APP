@@ -1,8 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import '../core/constants/app_constants.dart';
 
 /// Exchange rates relative to USD (fetched once per session).
 /// Falls back to approximate rates if network is unavailable.
@@ -21,12 +19,6 @@ final fxRatesProvider = FutureProvider<Map<String, double>>((ref) async {
     'USD': 1.0, 'EGP': 50.0, 'EUR': 0.92, 'GBP': 0.79,
     'SAR': 3.75, 'AED': 3.67, 'JPY': 150.0, 'CNY': 7.2,
   };
-});
-
-/// User's selected base currency (from SharedPreferences).
-final baseCurrencyProvider = FutureProvider<String>((ref) async {
-  final prefs = await SharedPreferences.getInstance();
-  return prefs.getString(AppConstants.prefDefaultCurrency) ?? 'EGP';
 });
 
 /// Convert [amount] from currency [from] to [to] using [rates] (all vs USD).

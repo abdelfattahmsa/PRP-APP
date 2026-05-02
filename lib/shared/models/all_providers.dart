@@ -9,3 +9,4 @@ export '../../engines/goals/providers/goals_providers.dart';
 export '../../engines/categories/providers/user_categories_provider.dart';
 export '../../core/providers/resource_scores_provider.dart';
 export '../../services/fx_rates_service.dart';
+export '../../core/providers/app_settings_provider.dart';

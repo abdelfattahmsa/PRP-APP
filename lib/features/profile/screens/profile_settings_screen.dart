@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/constants/app_constants.dart';
+import '../../../core/providers/app_settings_provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/placeholders.dart';
 import '../../../features/auth/providers/auth_provider.dart';
@@ -62,7 +63,6 @@ class ProfileSettingsScreen extends ConsumerStatefulWidget {
 
 class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
   bool _uploadingAvatar = false;
-  String _currency = 'EGP';
   String _dateFormat = 'DD/MM/YYYY';
 
   @override
@@ -75,15 +75,8 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
     final prefs = await SharedPreferences.getInstance();
     if (!mounted) return;
     setState(() {
-      _currency = prefs.getString(AppConstants.prefDefaultCurrency) ?? 'EGP';
       _dateFormat = prefs.getString(_prefDateFormat) ?? 'DD/MM/YYYY';
     });
-  }
-
-  Future<void> _saveCurrency(String val) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(AppConstants.prefDefaultCurrency, val);
-    if (mounted) setState(() => _currency = val);
   }
 
   Future<void> _saveDateFormat(String val) async {
@@ -131,6 +124,8 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
   }
 
   Future<void> _showCurrencyPicker() async {
+    final currentCurrency =
+        ref.read(currencyNotifierProvider).asData?.value ?? 'EGP';
     final picked = await showDialog<String>(
       context: context,
       builder: (ctx) => SimpleDialog(
@@ -138,7 +133,7 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
         children: _currencies
             .map((c) => ListTile(
                   title: Text(_currencySymbols[c] ?? c),
-                  trailing: c == _currency
+                  trailing: c == currentCurrency
                       ? const Icon(Icons.check_rounded, size: 18)
                       : null,
                   onTap: () => Navigator.of(ctx).pop(c),
@@ -146,7 +141,9 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
             .toList(),
       ),
     );
-    if (picked != null) await _saveCurrency(picked);
+    if (picked != null) {
+      ref.read(currencyNotifierProvider.notifier).set(picked);
+    }
   }
 
   Future<void> _showDateFormatPicker() async {
@@ -171,6 +168,7 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(currentUserProvider);
+    final currency = ref.watch(currencyNotifierProvider).asData?.value ?? 'EGP';
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final cardColor = isDark ? AppColors.card : AppColors.lightCard;
     final borderColor = isDark ? AppColors.border : AppColors.lightBorder;
@@ -370,7 +368,7 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
               Divider(height: 1, color: borderColor),
               SettingsTile(
                 title: 'Currency',
-                subtitle: _currencySymbols[_currency] ?? _currency,
+                subtitle: _currencySymbols[currency] ?? currency,
                 leading: const Icon(Icons.attach_money_outlined, size: 20),
                 onTap: _showCurrencyPicker,
               ),
