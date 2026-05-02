@@ -122,12 +122,26 @@ class Routes {
 
 // ══════════════════════════════════════════════════════════════
 // ONBOARDING STATE PROVIDER
-// Reads SharedPreferences once; stays null until resolved.
+// AsyncNotifier so markOnboarded() updates state immediately —
+// the router sees hasOnboarded == true on the same frame as
+// context.go(overview), preventing a redirect loop back to /onboarding.
 // ══════════════════════════════════════════════════════════════
-final onboardedProvider = FutureProvider<bool>((ref) async {
-  final prefs = await SharedPreferences.getInstance();
-  return prefs.getBool(AppConstants.prefOnboarded) ?? false;
-});
+class OnboardedNotifier extends AsyncNotifier<bool> {
+  @override
+  Future<bool> build() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(AppConstants.prefOnboarded) ?? false;
+  }
+
+  Future<void> markOnboarded() async {
+    state = const AsyncData(true); // instant update → router sees true immediately
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(AppConstants.prefOnboarded, true);
+  }
+}
+
+final onboardedProvider =
+    AsyncNotifierProvider<OnboardedNotifier, bool>(OnboardedNotifier.new);
 
 // ══════════════════════════════════════════════════════════════
 // ROUTER PROVIDER

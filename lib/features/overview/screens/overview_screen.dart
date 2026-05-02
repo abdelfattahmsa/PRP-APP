@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/router/app_router.dart';
+import '../../../core/providers/onboarding_checklist_provider.dart';
 import '../../../features/auth/providers/auth_provider.dart';
 import '../../../features/checkin/screens/daily_checkin_screen.dart';
 import '../../../shared/models/all_providers.dart';
@@ -33,6 +34,10 @@ class OverviewScreen extends ConsumerWidget {
     final goalsAsync = ref.watch(goalsProvider);
     final habitsAsync = ref.watch(habitsProvider);
     final scores = ref.watch(resourceScoresProvider);
+    final currency = ref.watch(baseCurrencyProvider).asData?.value ?? 'EGP';
+    final checklistItems = ref.watch(checklistProvider);
+    final checklistDismissed =
+        ref.watch(checklistDismissedProvider).asData?.value ?? false;
 
     // Computed today's focus minutes
     final todayStr = DateFormat('yyyy-MM-dd').format(DateTime.now());
@@ -50,6 +55,8 @@ class OverviewScreen extends ConsumerWidget {
         summary.totalSavings + summary.totalCurrent - summary.totalDebt;
     final fmt = NumberFormat('#,##0', 'en_US');
 
+    final allChecklistDone = checklistItems.every((i) => i.isDone);
+
     return Scaffold(
       body: SafeArea(
         child: ListView(
@@ -57,6 +64,12 @@ class OverviewScreen extends ConsumerWidget {
           children: [
             _GreetingHeader(user: currentUser, now: now, textSecondary: textSecondary),
             const Gap(16),
+
+            // ── Getting Started Checklist ─────────────────────────
+            if (!checklistDismissed && !allChecklistDone) ...[
+              _OnboardingChecklistCard(items: checklistItems),
+              const Gap(16),
+            ],
 
             // ── Daily Check-in Banner ─────────────────────────────
             const CheckinBanner(),
@@ -68,7 +81,7 @@ class OverviewScreen extends ConsumerWidget {
                 BentoCell(
                   child: KpiCard(
                     label: 'Net Worth',
-                    value: 'EGP ${fmt.format(netWorth)}',
+                    value: '$currency ${fmt.format(netWorth)}',
                     icon: Icons.account_balance_wallet_rounded,
                     iconColor: AppColors.success,
                     subtitle: 'Today −${fmt.format(summary.todaySpend)}',
@@ -523,6 +536,143 @@ class _ScoreGauge extends StatelessWidget {
               color: textSecondary,
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+// ONBOARDING CHECKLIST CARD
+// ══════════════════════════════════════════════════════════════
+
+class _OnboardingChecklistCard extends ConsumerWidget {
+  const _OnboardingChecklistCard({required this.items});
+  final List<ChecklistItem> items;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final borderColor = isDark ? AppColors.border : AppColors.lightBorder;
+    final cardColor = isDark ? AppColors.card : AppColors.lightCard;
+    final accent = Theme.of(context).colorScheme.primary;
+
+    final doneCount = items.where((i) => i.isDone).length;
+    final total = items.length;
+    final pct = total > 0 ? doneCount / total : 0.0;
+
+    // Show first 3 undone items
+    final undone = items.where((i) => !i.isDone).take(3).toList();
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: cardColor,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: accent.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Row(
+            children: [
+              Icon(Icons.checklist_rounded, color: accent, size: 18),
+              const Gap(8),
+              Text(
+                'Getting Started',
+                style: Theme.of(context)
+                    .textTheme
+                    .titleSmall
+                    ?.copyWith(fontWeight: FontWeight.w700),
+              ),
+              const Spacer(),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  '$doneCount / $total',
+                  style: TextStyle(
+                    color: accent,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    fontFamily: 'Roboto',
+                  ),
+                ),
+              ),
+              const Gap(8),
+              GestureDetector(
+                onTap: () =>
+                    ref.read(checklistDismissedProvider.notifier).dismiss(),
+                child: Icon(Icons.close_rounded,
+                    size: 16,
+                    color: isDark
+                        ? AppColors.textSecondary
+                        : AppColors.lightTextSecondary),
+              ),
+            ],
+          ),
+
+          // Progress bar
+          const Gap(10),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(3),
+            child: LinearProgressIndicator(
+              value: pct,
+              minHeight: 4,
+              backgroundColor: borderColor,
+              valueColor: AlwaysStoppedAnimation(accent),
+            ),
+          ),
+
+          const Gap(12),
+
+          // Undone items
+          ...undone.map((item) => Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: GestureDetector(
+                  onTap: () => context.go(item.route),
+                  child: Row(
+                    children: [
+                      Icon(item.icon,
+                          size: 16,
+                          color: isDark
+                              ? AppColors.textSecondary
+                              : AppColors.lightTextSecondary),
+                      const Gap(10),
+                      Expanded(
+                        child: Text(
+                          item.title,
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodySmall
+                              ?.copyWith(fontWeight: FontWeight.w500),
+                        ),
+                      ),
+                      Icon(Icons.arrow_forward_ios_rounded,
+                          size: 11,
+                          color: isDark
+                              ? AppColors.textSecondary
+                              : AppColors.lightTextSecondary),
+                    ],
+                  ),
+                ),
+              )),
+
+          if (items.length - doneCount > 3) ...[
+            Text(
+              '+${items.length - doneCount - undone.length} more',
+              style: TextStyle(
+                  fontSize: 11,
+                  color: isDark
+                      ? AppColors.textSecondary
+                      : AppColors.lightTextSecondary),
+            ),
+          ],
         ],
       ),
     );
