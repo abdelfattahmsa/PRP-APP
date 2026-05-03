@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 import '../shared/models/models.dart';
 import '../engines/ideas/data/models/idea_models.dart';
+import '../engines/time/data/models/task_model.dart';
 import '../engines/health/providers/fasting_provider.dart';
 import '../engines/categories/data/models/user_category_model.dart';
 
@@ -40,25 +41,78 @@ class SupabaseService {
     required String email,
     required String password,
     required String fullName,
+    String? username,
+    String? phone,
   }) async {
+    final metadata = <String, dynamic>{'full_name': fullName};
+    if (username != null && username.isNotEmpty) metadata['username'] = username;
+    if (phone != null && phone.isNotEmpty) metadata['phone'] = phone;
+
     final res = await _db.auth.signUp(
       email: email,
       password: password,
-      data: {'full_name': fullName},
+      data: metadata,
     );
     // Only run DB writes when a session exists (i.e. email confirmation is
     // disabled or auto-confirmed). When email confirmation is required,
     // res.session is null and auth.uid() would be null → RLS violation.
     // The DB trigger handle_new_user() creates the profile row automatically.
     if (res.user != null && res.session != null) {
-      await _db.from('profiles').upsert({
+      final profileData = <String, dynamic>{
         'id': res.user!.id,
         'email': email,
         'full_name': fullName,
-      });
+      };
+      if (username != null && username.isNotEmpty) profileData['username'] = username;
+      if (phone != null && phone.isNotEmpty) profileData['phone'] = phone;
+      try {
+        await _db.from('profiles').upsert(profileData);
+      } catch (_) {
+        // username/phone columns may not exist yet — fall back to basic upsert
+        await _db.from('profiles').upsert({
+          'id': res.user!.id,
+          'email': email,
+          'full_name': fullName,
+        });
+      }
       await _seedDefaultData(res.user!.id);
     }
     return res;
+  }
+
+  /// Look up the email associated with a given username.
+  /// Returns null if not found or if the column doesn't exist yet.
+  Future<String?> getEmailByUsername(String username) async {
+    try {
+      final res = await _db
+          .from('profiles')
+          .select('email')
+          .eq('username', username.trim())
+          .maybeSingle();
+      return res?['email'] as String?;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Look up the email associated with a given phone number.
+  /// Returns null if not found or if the column doesn't exist yet.
+  Future<String?> getEmailByPhone(String phone) async {
+    try {
+      final res = await _db
+          .from('profiles')
+          .select('email')
+          .eq('phone', phone.trim())
+          .maybeSingle();
+      return res?['email'] as String?;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Resend the signup confirmation/verification email.
+  Future<void> resendVerificationEmail(String email) async {
+    await _db.auth.resend(type: OtpType.signup, email: email);
   }
 
   Future<AuthResponse> signIn({
@@ -212,9 +266,25 @@ class SupabaseService {
     return res.map((j) => BankAccount.fromJson(j)).toList();
   }
 
-  Future<void> upsertBankAccount(BankAccount account) => _db
-      .from('bank_accounts')
-      .upsert({...account.toJson(), 'user_id': _uid});
+  Future<void> upsertBankAccount(BankAccount account) async {
+    try {
+      await _db.from('bank_accounts')
+          .upsert({...account.toJson(), 'user_id': _uid});
+    } catch (_) {
+      // Fallback: save without the new extended columns
+      // (needed if migration SQL hasn't been run yet)
+      await _db.from('bank_accounts').upsert({
+        'id': account.id,
+        'name': account.name,
+        'cc_balance': account.creditCardBalance,
+        'cc_limit': account.creditCardLimit,
+        'savings_balance': account.savingsBalance,
+        'current_balance': account.currentBalance,
+        'order': account.order,
+        'user_id': _uid,
+      });
+    }
+  }
 
   Future<void> deleteBankAccount(String id) =>
       _db.from('bank_accounts').delete().eq('id', id).eq('user_id', _uid);
@@ -263,6 +333,56 @@ class SupabaseService {
 
   Future<void> deleteTransaction(String id) =>
       _db.from('transactions').delete().eq('id', id).eq('user_id', _uid);
+
+  // ── CREDIT CARDS ──────────────────────────────────────────────
+  Future<List<CreditCard>> getCreditCards() async {
+    try {
+      final res = await _db
+          .from('credit_cards')
+          .select()
+          .eq('user_id', _uid)
+          .order('order');
+      return res.map((j) => CreditCard.fromJson(j)).toList();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  Future<void> upsertCreditCard(CreditCard card) async {
+    await _ensureProfile();
+    await _db.from('credit_cards').upsert({...card.toJson(), 'user_id': _uid});
+  }
+
+  Future<void> deleteCreditCard(String id) =>
+      _db.from('credit_cards').delete().eq('id', id).eq('user_id', _uid);
+
+  // ── INSTALLMENT PLANS ─────────────────────────────────────────
+  Future<List<InstallmentPlan>> getInstallmentPlans() async {
+    try {
+      final res = await _db
+          .from('installment_plans')
+          .select()
+          .eq('user_id', _uid)
+          .order('created_at', ascending: false);
+      return res.map((j) => InstallmentPlan.fromJson(j)).toList();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  Future<void> upsertInstallmentPlan(InstallmentPlan plan) async {
+    await _ensureProfile();
+    await _db.from('installment_plans').upsert({...plan.toJson(), 'user_id': _uid});
+  }
+
+  Future<void> deleteInstallmentPlan(String id) =>
+      _db.from('installment_plans').delete().eq('id', id).eq('user_id', _uid);
+
+  Future<void> markInstallmentPaid(String id, int paidMonths) =>
+      _db.from('installment_plans')
+          .update({'paid_months': paidMonths})
+          .eq('id', id)
+          .eq('user_id', _uid);
 
   // ── HABITS ────────────────────────────────────────────────────
   Future<List<Habit>> getHabits() async {
@@ -353,6 +473,27 @@ class SupabaseService {
         'note': session.note,
       })
       .eq('id', session.id)
+      .eq('user_id', _uid);
+
+  // ── MOOD ENTRIES ──────────────────────────────────────────────
+  Future<List<MoodEntry>> getMoodEntries({int limit = 60}) async {
+    final res = await _db
+        .from('mood_entries')
+        .select()
+        .eq('user_id', _uid)
+        .order('timestamp', ascending: false)
+        .limit(limit);
+    return res.map((j) => MoodEntry.fromJson(j)).toList();
+  }
+
+  Future<void> upsertMoodEntry(MoodEntry entry) => _db
+      .from('mood_entries')
+      .upsert({...entry.toJson(), 'user_id': _uid});
+
+  Future<void> deleteMoodEntry(String id) => _db
+      .from('mood_entries')
+      .delete()
+      .eq('id', id)
       .eq('user_id', _uid);
 
   // ── SEED DEFAULT DATA ─────────────────────────────────────────
@@ -509,6 +650,42 @@ class SupabaseService {
           'order': c.order,
         }).toList();
     await _db.from('user_categories').insert(rows);
+  }
+
+  // ── USER TASKS ────────────────────────────────────────────────
+  Future<List<UserTask>> getTasks() async {
+    try {
+      final res = await _db
+          .from('tasks')
+          .select()
+          .eq('user_id', _uid)
+          .order('order')
+          .order('created_at', ascending: false);
+      return res.map((j) => UserTask.fromJson(j)).toList();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  Future<UserTask> upsertTask(UserTask task) async {
+    final row = await _db
+        .from('tasks')
+        .upsert({...task.toJson(), 'user_id': _uid})
+        .select()
+        .single();
+    return UserTask.fromJson(row);
+  }
+
+  Future<void> deleteTask(String id) =>
+      _db.from('tasks').delete().eq('id', id).eq('user_id', _uid);
+
+  Future<void> reorderTasks(List<UserTask> tasks) async {
+    final updates = tasks
+        .asMap()
+        .entries
+        .map((e) => {'id': e.value.id, 'order': e.key, 'user_id': _uid})
+        .toList();
+    await _db.from('tasks').upsert(updates);
   }
 
   // ── IDEAS ──────────────────────────────────────────────────────

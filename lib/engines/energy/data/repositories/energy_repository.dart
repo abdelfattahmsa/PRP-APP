@@ -16,4 +16,11 @@ class EnergyRepository {
       _service.deleteFocusSession(id);
   Future<void> updateFocusSession(FocusSession session) =>
       _service.updateFocusSession(session);
+
+  Future<List<MoodEntry>> getMoodEntries({int limit = 60}) =>
+      _service.getMoodEntries(limit: limit);
+  Future<void> upsertMoodEntry(MoodEntry entry) =>
+      _service.upsertMoodEntry(entry);
+  Future<void> deleteMoodEntry(String id) =>
+      _service.deleteMoodEntry(id);
 }

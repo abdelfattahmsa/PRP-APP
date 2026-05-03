@@ -93,3 +93,49 @@ class FirstDayOfWeekNotifier extends AsyncNotifier<int> {
 final firstDayOfWeekProvider =
     AsyncNotifierProvider<FirstDayOfWeekNotifier, int>(
         FirstDayOfWeekNotifier.new);
+
+// ── Compact Mode ──────────────────────────────────────────────
+class CompactModeNotifier extends AsyncNotifier<bool> {
+  @override
+  Future<bool> build() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(AppConstants.prefCompactMode) ?? false;
+  }
+
+  Future<void> set(bool value) async {
+    state = AsyncData(value);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(AppConstants.prefCompactMode, value);
+  }
+}
+
+final compactModeProvider =
+    AsyncNotifierProvider<CompactModeNotifier, bool>(CompactModeNotifier.new);
+
+// ── Notification toggles ──────────────────────────────────────
+class _BoolPrefNotifier extends AsyncNotifier<bool> {
+  _BoolPrefNotifier(this._key, this._defaultValue);
+  final String _key;
+  final bool _defaultValue;
+
+  @override
+  Future<bool> build() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_key) ?? _defaultValue;
+  }
+
+  Future<void> set(bool value) async {
+    state = AsyncData(value);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_key, value);
+  }
+}
+
+final notifyFocusProvider = AsyncNotifierProvider<_BoolPrefNotifier, bool>(
+    () => _BoolPrefNotifier(AppConstants.prefNotifyFocus, true));
+final notifyGoalsProvider = AsyncNotifierProvider<_BoolPrefNotifier, bool>(
+    () => _BoolPrefNotifier(AppConstants.prefNotifyGoals, true));
+final notifyHabitsProvider = AsyncNotifierProvider<_BoolPrefNotifier, bool>(
+    () => _BoolPrefNotifier(AppConstants.prefNotifyHabits, false));
+final notifyFastingProvider = AsyncNotifierProvider<_BoolPrefNotifier, bool>(
+    () => _BoolPrefNotifier(AppConstants.prefNotifyFasting, true));

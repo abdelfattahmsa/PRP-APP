@@ -4,6 +4,7 @@ import 'package:gap/gap.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/constants/app_constants.dart';
+import '../../../core/providers/schedule_modes_provider.dart';
 import '../../auth/providers/auth_provider.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
@@ -51,6 +52,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final user = ref.watch(currentUserProvider);
     final scheduleMode = _scheduleMode;
     final alarmsEnabled = _alarmsEnabled;
+    final modes = ref.watch(scheduleModesProvider).asData?.value ?? [];
 
     return Scaffold(
       backgroundColor: AppColors.bg,
@@ -90,10 +92,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         fontSize: 12,
                         color: AppColors.gold,
                       ),
-                      items: AppConstants.scheduleModes
+                      items: modes
                           .map((m) => DropdownMenuItem(
-                                value: m,
-                                child: Text(_modeLabel(m)),
+                                value: m.id,
+                                child: Text('${m.emoji} ${m.label}'),
                               ))
                           .toList(),
                       onChanged: (v) {
@@ -215,13 +217,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
-  String _modeLabel(String mode) => switch (mode) {
-        'normal' => 'Normal',
-        'fasting' => 'Fasting',
-        'friday' => 'Friday',
-        'cairo' => 'Cairo',
-        _ => mode,
-      };
 }
 
 // ── Helper widgets ─────────────────────────────────────────────────

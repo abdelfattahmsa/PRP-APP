@@ -30,13 +30,75 @@ class BankAccountsNotifier extends AsyncNotifier<List<BankAccount>> {
     state = AsyncData(state.value!.where((b) => b.id != id).toList());
   }
 
-  Future<void> addNew() async {
+  Future<void> addNew({AccountType accountType = AccountType.savings}) async {
     final acc = BankAccount(
       id: _uuid.v4(),
-      name: 'New Bank',
+      name: accountType == AccountType.digitalWallet ? 'New Wallet' : 'New Account',
+      accountType: accountType,
       order: (state.value?.length ?? 0),
     );
     await upsert(acc);
+  }
+}
+
+// ── Credit Cards ──
+final creditCardsProvider =
+    AsyncNotifierProvider<CreditCardsNotifier, List<CreditCard>>(
+  CreditCardsNotifier.new,
+);
+
+class CreditCardsNotifier extends AsyncNotifier<List<CreditCard>> {
+  @override
+  Future<List<CreditCard>> build() => MoneyRepository.instance.getCreditCards();
+
+  Future<void> upsert(CreditCard card) async {
+    await MoneyRepository.instance.upsertCreditCard(card);
+    ref.invalidateSelf();
+  }
+
+  Future<void> delete(String id) async {
+    await MoneyRepository.instance.deleteCreditCard(id);
+    state = AsyncData(state.value!.where((c) => c.id != id).toList());
+  }
+
+  Future<void> addNew() async {
+    final card = CreditCard(
+      id: _uuid.v4(),
+      name: 'New Card',
+      order: (state.value?.length ?? 0),
+    );
+    await upsert(card);
+  }
+}
+
+// ── Installment Plans ──
+final installmentPlansProvider =
+    AsyncNotifierProvider<InstallmentPlansNotifier, List<InstallmentPlan>>(
+  InstallmentPlansNotifier.new,
+);
+
+class InstallmentPlansNotifier extends AsyncNotifier<List<InstallmentPlan>> {
+  @override
+  Future<List<InstallmentPlan>> build() =>
+      MoneyRepository.instance.getInstallmentPlans();
+
+  Future<void> upsert(InstallmentPlan plan) async {
+    await MoneyRepository.instance.upsertInstallmentPlan(plan);
+    ref.invalidateSelf();
+  }
+
+  Future<void> delete(String id) async {
+    await MoneyRepository.instance.deleteInstallmentPlan(id);
+    state = AsyncData(state.value!.where((p) => p.id != id).toList());
+  }
+
+  Future<void> markPaid(String id, int paidMonths) async {
+    await MoneyRepository.instance.markInstallmentPaid(id, paidMonths);
+    state = AsyncData(
+      state.value!
+          .map((p) => p.id == id ? p.copyWith(paidMonths: paidMonths) : p)
+          .toList(),
+    );
   }
 }
 
@@ -136,7 +198,6 @@ final cashOnHandProvider =
     AsyncNotifierProvider<CashOnHandNotifier, double>(CashOnHandNotifier.new);
 
 // ── Stock Price (Alpha Vantage) ──
-/// Returns the current price for [ticker] or null if unavailable/no API key.
 final stockPriceProvider =
     FutureProvider.family<double?, String>((ref, ticker) async {
   if (ticker.isEmpty) return null;
@@ -165,14 +226,31 @@ final financeSummaryProvider = Provider((ref) {
   final banks = ref.watch(bankAccountsProvider).value ?? [];
   final debts = ref.watch(debtsProvider).value ?? [];
   final txs = ref.watch(transactionsProvider).value ?? [];
+  final cards = ref.watch(creditCardsProvider).value ?? [];
+  final installments = ref.watch(installmentPlansProvider).value ?? [];
 
+  // Legacy CC totals from bank_accounts (kept for backward compat)
   final totalCC = banks.fold(0.0, (s, b) => s + b.creditCardBalance);
   final totalLimit = banks.fold(0.0, (s, b) => s + b.creditCardLimit);
+
+  // New: from dedicated credit_cards table
+  final totalCCFromCards = cards.fold(0.0, (s, c) => s + c.balance);
+  final totalCardLimit = cards.fold(0.0, (s, c) => s + c.limit);
+  final ccMinPayments = cards.fold(0.0, (s, c) => s + c.minPaymentAmount);
+  final totalInstallments = installments
+      .where((p) => !p.isCompleted)
+      .fold(0.0, (s, p) => s + p.monthlyPayment);
+
   final totalSavings = banks.fold(0.0, (s, b) => s + b.savingsBalance);
   final totalCurrent = banks.fold(0.0, (s, b) => s + b.currentBalance);
   final totalExtDebt = debts.fold(0.0, (s, d) => s + d.amount);
-  final totalDebt = totalCC + totalExtDebt;
-  final remainingLimit = totalLimit - totalCC;
+
+  // Unified CC total = legacy + new cards
+  final unifiedCC = totalCC + totalCCFromCards;
+  final unifiedLimit = totalLimit + totalCardLimit;
+  final totalDebt = unifiedCC + totalExtDebt;
+  final remainingLimit = unifiedLimit - unifiedCC;
+
   final todaySpend = txs
       .where((t) =>
           !t.isIncome &&
@@ -182,13 +260,16 @@ final financeSummaryProvider = Provider((ref) {
       .fold(0.0, (s, t) => s + t.amount);
 
   return FinanceSummary(
-    totalCC: totalCC,
-    totalLimit: totalLimit,
+    totalCC: unifiedCC,
+    totalLimit: unifiedLimit,
     remainingLimit: remainingLimit,
     totalSavings: totalSavings,
     totalCurrent: totalCurrent,
     totalExtDebt: totalExtDebt,
     totalDebt: totalDebt,
     todaySpend: todaySpend,
+    totalCCFromCards: totalCCFromCards,
+    totalInstallments: totalInstallments,
+    totalMonthlyObligation: ccMinPayments + totalInstallments,
   );
 });

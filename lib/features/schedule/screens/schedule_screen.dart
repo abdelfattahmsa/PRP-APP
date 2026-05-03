@@ -7,6 +7,7 @@ import 'package:uuid/uuid.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/constants/app_constants.dart';
+import '../../../core/providers/schedule_modes_provider.dart';
 import '../../../shared/models/models.dart';
 import '../../../shared/models/all_providers.dart';
 import '../../../shared/widgets/app_text_field.dart';
@@ -25,18 +26,33 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
   String _mode = 'normal';
   bool _alarmsOn = false;
 
-  static const _modes = [
-    ('normal',  '🏗️ Normal',  AppColors.gold),
-    ('fasting', '🌙 Fasting', AppColors.fasting),
-    ('friday',  '✨ Friday',  AppColors.deen),
-    ('cairo',   '🏙️ Cairo',  AppColors.learn),
-  ];
+  Color _accent(List<ScheduleMode> modes) {
+    final m = modes.where((m) => m.id == _mode).firstOrNull;
+    return m?.color ?? AppColors.gold;
+  }
 
-  Color get _accent => _modes.firstWhere((m) => m.$1 == _mode).$3;
+  @override
+  void initState() {
+    super.initState();
+    // Sync _mode with the persisted schedule mode after first build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // modes are loaded asynchronously; pick first valid
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final blocksAsync = ref.watch(scheduleProvider(_mode));
+    final modesAsync = ref.watch(scheduleModesProvider);
+    final modes = modesAsync.asData?.value ?? [];
+    final accent = _accent(modes);
+
+    // If current _mode is not in the list, snap to first
+    if (modes.isNotEmpty && !modes.any((m) => m.id == _mode)) {
+      WidgetsBinding.instance.addPostFrameCallback(
+          (_) => setState(() => _mode = modes.first.id));
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Daily Schedule'),
@@ -64,44 +80,68 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
         ],
       ),
       body: Column(children: [
-        // Mode tabs
-        Container(
-          height: 52, margin: const EdgeInsets.fromLTRB(12, 12, 12, 0),
-          decoration: BoxDecoration(color: AppColors.card, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppColors.border)),
-          child: Row(children: _modes.map((m) {
-            final active = m.$1 == _mode;
-            return Expanded(
-              child: GestureDetector(
-                onTap: () => setState(() => _mode = m.$1),
-                child: AnimatedContainer(
-                  duration: 150.ms, margin: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: active ? m.$3.withValues(alpha: 0.15) : Colors.transparent,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: active ? m.$3.withValues(alpha: 0.4) : Colors.transparent),
+        // ── Dynamic mode tabs ───────────────────────────────
+        if (modes.isNotEmpty)
+          SizedBox(
+            height: 52,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+              itemCount: modes.length,
+              itemBuilder: (ctx, i) {
+                final m = modes[i];
+                final active = m.id == _mode;
+                return GestureDetector(
+                  onTap: () => setState(() => _mode = m.id),
+                  child: AnimatedContainer(
+                    duration: 150.ms,
+                    margin: const EdgeInsets.only(right: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: active ? m.color.withValues(alpha: 0.15) : AppColors.card,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                          color: active
+                              ? m.color.withValues(alpha: 0.6)
+                              : AppColors.border),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(m.emoji, style: const TextStyle(fontSize: 14)),
+                        const Gap(6),
+                        Text(
+                          m.label,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight:
+                                active ? FontWeight.w700 : FontWeight.w400,
+                            color: active ? m.color : AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  child: Center(child: Text(m.$2, style: TextStyle(fontFamily: 'Roboto', fontSize: 11, fontWeight: active ? FontWeight.w700 : FontWeight.w400, color: active ? m.$3 : AppColors.textSecondary))),
-                ),
-              ),
-            );
-          }).toList()),
-        ),
+                );
+              },
+            ),
+          ),
         Expanded(
           child: blocksAsync.when(
             loading: () => const Center(child: CircularProgressIndicator(color: AppColors.gold)),
-            error: (e, _) => Center(child: Text('Unable to load schedule. Pull to retry.', style: const TextStyle(color: AppColors.error))),
+            error: (e, _) => const Center(child: Text('Unable to load schedule. Pull to retry.', style: TextStyle(color: AppColors.error))),
             data: (blocks) => blocks.isEmpty
-                ? _emptyState(context)
-                : _BlocksList(blocks: blocks, mode: _mode, accent: _accent),
+                ? _emptyState(context, accent)
+                : _BlocksList(blocks: blocks, mode: _mode, accent: accent),
           ),
         ),
       ]),
     );
   }
 
-  Widget _emptyState(BuildContext ctx) => Center(
+  Widget _emptyState(BuildContext ctx, Color accent) => Center(
     child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-      Icon(Icons.schedule_outlined, size: 48, color: _accent.withValues(alpha: 0.4)),
+      Icon(Icons.schedule_outlined, size: 48, color: accent.withValues(alpha: 0.4)),
       const Gap(12),
       Text('No blocks for $_mode', style: const TextStyle(color: AppColors.textSecondary)),
       const Gap(16),

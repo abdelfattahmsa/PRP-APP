@@ -28,6 +28,7 @@ class OnboardingScreen extends ConsumerStatefulWidget {
 class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   final _controller = PageController();
   int _currentPage = 0;
+  bool _animating = false; // guard against double-tap during page transition
 
   // Step 3 — first habit
   final _habitCtrl = TextEditingController();
@@ -52,12 +53,15 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     super.dispose();
   }
 
-  void _next() {
+  Future<void> _next() async {
+    if (_animating) return;
     if (_currentPage < _totalPages - 1) {
-      _controller.nextPage(
+      setState(() => _animating = true);
+      await _controller.nextPage(
         duration: const Duration(milliseconds: 350),
         curve: Curves.easeInOut,
       );
+      if (mounted) setState(() => _animating = false);
     } else {
       _finish();
     }

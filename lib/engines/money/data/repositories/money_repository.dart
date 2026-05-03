@@ -33,4 +33,15 @@ class MoneyRepository {
   // ── Cash on Hand ──
   Future<double> getCashOnHand() => _service.getCashOnHand();
   Future<void> setCashOnHand(double amount) => _service.setCashOnHand(amount);
+
+  // ── Credit Cards ──
+  Future<List<CreditCard>> getCreditCards() => _service.getCreditCards();
+  Future<void> upsertCreditCard(CreditCard card) => _service.upsertCreditCard(card);
+  Future<void> deleteCreditCard(String id) => _service.deleteCreditCard(id);
+
+  // ── Installment Plans ──
+  Future<List<InstallmentPlan>> getInstallmentPlans() => _service.getInstallmentPlans();
+  Future<void> upsertInstallmentPlan(InstallmentPlan plan) => _service.upsertInstallmentPlan(plan);
+  Future<void> deleteInstallmentPlan(String id) => _service.deleteInstallmentPlan(id);
+  Future<void> markInstallmentPaid(String id, int paidMonths) => _service.markInstallmentPaid(id, paidMonths);
 }

@@ -12,7 +12,6 @@ import '../../core/theme/app_theme.dart';
 import '../../core/router/app_router.dart';
 import '../../core/providers/pillar_provider.dart';
 import '../../features/auth/providers/auth_provider.dart';
-import '../../engines/energy/data/models/energy_models.dart';
 import '../../shared/models/all_providers.dart';
 import '../../services/notification_service.dart';
 import '../../services/web_notif.dart';
@@ -105,6 +104,10 @@ const kAppTabs = <AppTab>[
           icon: Icons.account_balance_outlined,
           route: Routes.financeAccounts),
       AppSubTab(
+          label: 'Cards',
+          icon: Icons.credit_card_outlined,
+          route: Routes.financeCards),
+      AppSubTab(
           label: 'Invest',
           icon: Icons.trending_up_outlined,
           route: Routes.financeInvestments),
@@ -133,6 +136,10 @@ const kAppTabs = <AppTab>[
           label: 'Focus',
           icon: Icons.timer_outlined,
           route: Routes.energyFocus),
+      AppSubTab(
+          label: 'Mood',
+          icon: Icons.sentiment_satisfied_alt_outlined,
+          route: Routes.energyMood),
       AppSubTab(
           label: 'Goals',
           icon: Icons.flag_outlined,
@@ -206,6 +213,7 @@ class ShellScreen extends ConsumerStatefulWidget {
 
 class _ShellScreenState extends ConsumerState<ShellScreen> {
   bool _showNotifBanner = false;
+  bool _emailBannerDismissed = false;
 
   @override
   void initState() {
@@ -304,6 +312,13 @@ class _ShellScreenState extends ConsumerState<ShellScreen> {
       }
     });
 
+    // ── Email verification banner ──────────────────────────────
+    final isEmailVerified = ref.watch(isEmailVerifiedProvider);
+    final isLoggedIn      = ref.watch(authStateProvider);
+    final currentUser     = ref.watch(currentUserProvider);
+    final showEmailBanner =
+        isLoggedIn && !isEmailVerified && !_emailBannerDismissed;
+
     // ── Visible tabs (pillar-filtered) ─────────────────────────
     final visibleTabs = ref.watch(visibleTabsProvider);
     final tabIndex = _activeTabIndex(visibleTabs);
@@ -327,14 +342,33 @@ class _ShellScreenState extends ConsumerState<ShellScreen> {
       );
     }
 
-    if (!_showNotifBanner) return shell;
+    final hasBanners = _showNotifBanner || showEmailBanner;
+    if (!hasBanners) return shell;
 
     return Column(
       children: [
-        _NotifPermissionBanner(
-          onEnable: _enableNotifications,
-          onDismiss: _dismissNotifBanner,
-        ),
+        if (showEmailBanner)
+          _EmailVerificationBanner(
+            email: currentUser?.email ?? '',
+            onResend: () async {
+              final messenger = ScaffoldMessenger.of(context);
+              await ref
+                  .read(authNotifierProvider.notifier)
+                  .resendVerification(currentUser?.email ?? '');
+              if (mounted) {
+                messenger.showSnackBar(
+                  const SnackBar(
+                      content: Text('✉️ Verification email resent!')),
+                );
+              }
+            },
+            onDismiss: () => setState(() => _emailBannerDismissed = true),
+          ),
+        if (_showNotifBanner)
+          _NotifPermissionBanner(
+            onEnable: _enableNotifications,
+            onDismiss: _dismissNotifBanner,
+          ),
         Expanded(child: shell),
       ],
     );
@@ -370,6 +404,33 @@ class _ShellScreenState extends ConsumerState<ShellScreen> {
     Timer(const Duration(seconds: 3), () {
       ref.read(focusTimerProvider.notifier).reset();
     });
+  }
+}
+
+// ── Sign-out confirmation ────────────────────────────────────────
+Future<void> _confirmSignOut(BuildContext context, WidgetRef ref) async {
+  final confirmed = await showDialog<bool>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: const Text('Sign out?'),
+      content: const Text('You will be returned to the login screen.'),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(ctx).pop(false),
+          child: const Text('Cancel'),
+        ),
+        TextButton(
+          onPressed: () => Navigator.of(ctx).pop(true),
+          child: const Text(
+            'Sign out',
+            style: TextStyle(color: AppColors.error),
+          ),
+        ),
+      ],
+    ),
+  );
+  if (confirmed == true) {
+    ref.read(authNotifierProvider.notifier).signOut();
   }
 }
 
@@ -523,7 +584,7 @@ class _DesktopShellState extends ConsumerState<_DesktopShell> {
 // MOBILE SHELL
 // ══════════════════════════════════════════════════════════════
 
-class _MobileShell extends StatelessWidget {
+class _MobileShell extends ConsumerWidget {
   const _MobileShell({
     required this.tabs,
     required this.location,
@@ -538,9 +599,10 @@ class _MobileShell extends StatelessWidget {
   final Widget child;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final borderColor = isDark ? AppColors.border : AppColors.lightBorder;
+    final isProfileTab = activeTab.id == 'profile';
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -552,6 +614,9 @@ class _MobileShell extends StatelessWidget {
             _MobileSubTabBar(
               subTabs: activeTab.subTabs,
               location: location,
+              trailing: isProfileTab
+                  ? _MobileSignOutButton(ref: ref)
+                  : null,
             ),
           Expanded(child: child),
         ],
@@ -587,9 +652,11 @@ class _MobileSubTabBar extends StatelessWidget {
   const _MobileSubTabBar({
     required this.subTabs,
     required this.location,
+    this.trailing,
   });
   final List<AppSubTab> subTabs;
   final String location;
+  final Widget? trailing;
 
   @override
   Widget build(BuildContext context) {
@@ -605,19 +672,52 @@ class _MobileSubTabBar extends StatelessWidget {
         color: bgColor,
         border: Border(bottom: BorderSide(color: borderColor, width: 0.5)),
       ),
-      // Horizontally scrollable so Finance (5 sub-tabs) fits on small screens
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: [
-            for (final sub in subTabs)
-              _MobileSubTabItem(
-                sub: sub,
-                active: location.startsWith(sub.route),
-                textSecondary: textSecondary,
+      child: Row(
+        children: [
+          // Horizontally scrollable so Finance (6 sub-tabs) fits on small screens
+          Expanded(
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  for (final sub in subTabs)
+                    _MobileSubTabItem(
+                      sub: sub,
+                      active: location.startsWith(sub.route),
+                      textSecondary: textSecondary,
+                    ),
+                ],
               ),
+            ),
+          ),
+          if (trailing != null) ...[
+            VerticalDivider(width: 1, color: borderColor),
+            trailing!,
           ],
-        ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Sign-out icon for the mobile profile sub-tab bar
+class _MobileSignOutButton extends StatelessWidget {
+  const _MobileSignOutButton({required this.ref});
+  final WidgetRef ref;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textSecondary =
+        isDark ? AppColors.textSecondary : AppColors.lightTextSecondary;
+    return SizedBox(
+      width: 44,
+      height: 40,
+      child: IconButton(
+        icon: Icon(Icons.logout_rounded, size: 17, color: textSecondary),
+        tooltip: 'Sign out',
+        onPressed: () => _confirmSignOut(context, ref),
+        padding: EdgeInsets.zero,
       ),
     );
   }
@@ -776,6 +876,14 @@ class _SidebarProfileHeader extends ConsumerWidget {
                 ],
               ),
             ),
+          ),
+          IconButton(
+            onPressed: () => _confirmSignOut(context, ref),
+            icon: const Icon(Icons.logout_rounded, size: 15),
+            color: textMuted,
+            tooltip: 'Sign out',
+            padding: const EdgeInsets.all(4),
+            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
           ),
           IconButton(
             onPressed: onToggle,
@@ -1085,6 +1193,89 @@ class _SidebarFooter extends StatelessWidget {
               ),
             ),
           ],
+        ],
+      ),
+    );
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+// EMAIL VERIFICATION BANNER
+// ══════════════════════════════════════════════════════════════
+
+class _EmailVerificationBanner extends StatelessWidget {
+  const _EmailVerificationBanner({
+    required this.email,
+    required this.onResend,
+    required this.onDismiss,
+  });
+  final String email;
+  final VoidCallback onResend;
+  final VoidCallback onDismiss;
+
+  @override
+  Widget build(BuildContext context) {
+    const bannerColor = Color(0xFFF59E0B); // amber
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = bannerColor.withValues(alpha: isDark ? 0.10 : 0.08);
+    final border = isDark ? AppColors.border : AppColors.lightBorder;
+    final textColor =
+        isDark ? AppColors.textSecondary : AppColors.lightTextSecondary;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
+      decoration: BoxDecoration(
+        color: bg,
+        border: Border(bottom: BorderSide(color: border, width: 0.5)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.mark_email_unread_outlined,
+              size: 15, color: bannerColor),
+          const Gap(10),
+          Expanded(
+            child: RichText(
+              text: TextSpan(
+                style: TextStyle(fontSize: 12, color: textColor),
+                children: [
+                  const TextSpan(text: 'Please verify your email '),
+                  TextSpan(
+                    text: email,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const TextSpan(text: ' to unlock all features.'),
+                ],
+              ),
+            ),
+          ),
+          const Gap(8),
+          GestureDetector(
+            onTap: onResend,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: bannerColor,
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: const Text(
+                'Resend',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+          const Gap(8),
+          GestureDetector(
+            onTap: onDismiss,
+            child: Icon(Icons.close_rounded, size: 16, color: textColor),
+          ),
         ],
       ),
     );

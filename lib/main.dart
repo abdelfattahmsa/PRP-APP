@@ -7,6 +7,7 @@ import 'core/theme/app_theme.dart';
 import 'core/router/app_router.dart';
 import 'core/constants/app_constants.dart';
 import 'core/providers/theme_provider.dart';
+import 'core/providers/app_settings_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -40,13 +41,17 @@ class PRPApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
     final themeMode = ref.watch(themeModeProvider);
+    final compactMode =
+        ref.watch(compactModeProvider).asData?.value ?? false;
+    final visualDensity =
+        compactMode ? VisualDensity.compact : VisualDensity.standard;
 
     return MaterialApp.router(
       title: AppConstants.appName,
       debugShowCheckedModeBanner: false,
       themeMode: themeMode,
-      theme: AppTheme.light,
-      darkTheme: AppTheme.dark,
+      theme: AppTheme.light.copyWith(visualDensity: visualDensity),
+      darkTheme: AppTheme.dark.copyWith(visualDensity: visualDensity),
       routerConfig: router,
       builder: (context, child) {
         return MediaQuery(

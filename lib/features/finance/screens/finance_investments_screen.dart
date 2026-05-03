@@ -533,7 +533,16 @@ const _investmentTypes = [
   'Other',
 ];
 
-const _units = ['EGP', 'USD', 'EUR', 'GBP', 'g', 'oz', 'BTC', 'shares'];
+const _currencyUnits = ['EGP', 'USD', 'EUR', 'GBP', 'SAR', 'AED'];
+const _nonCurrencyUnits = ['g', 'oz', 'BTC', 'shares'];
+
+List<String> _buildUnits(String baseCurrency) {
+  final currencies = [
+    baseCurrency,
+    ..._currencyUnits.where((c) => c != baseCurrency),
+  ];
+  return [...currencies, ..._nonCurrencyUnits];
+}
 
 class _InvestmentSheet extends ConsumerStatefulWidget {
   const _InvestmentSheet({this.existing});
@@ -550,7 +559,7 @@ class _InvestmentSheetState extends ConsumerState<_InvestmentSheet> {
   final _quantityCtrl = TextEditingController();
   final _purchasePriceCtrl = TextEditingController();
   String _type = _investmentTypes.first;
-  String _unit = _units.first;
+  String? _unit; // null until base currency is resolved
   bool _saving = false;
 
   @override
@@ -559,7 +568,7 @@ class _InvestmentSheetState extends ConsumerState<_InvestmentSheet> {
     if (widget.existing != null) {
       final inv = widget.existing!;
       _type = _investmentTypes.contains(inv.type) ? inv.type : _investmentTypes.first;
-      _unit = _units.contains(inv.unit) ? inv.unit : _units.first;
+      _unit = inv.unit;
       _amountCtrl.text = inv.amount.toString();
       _notesCtrl.text = inv.notes ?? '';
       _tickerCtrl.text = inv.ticker ?? '';
@@ -586,7 +595,7 @@ class _InvestmentSheetState extends ConsumerState<_InvestmentSheet> {
       id: widget.existing?.id ?? _uuid.v4(),
       type: _type,
       amount: amount,
-      unit: _unit,
+      unit: _unit ?? 'EGP',
       ticker: _tickerCtrl.text.trim().isEmpty ? null : _tickerCtrl.text.trim().toUpperCase(),
       quantity: double.tryParse(_quantityCtrl.text.trim()),
       purchasePrice: double.tryParse(_purchasePriceCtrl.text.trim()),
@@ -601,6 +610,18 @@ class _InvestmentSheetState extends ConsumerState<_InvestmentSheet> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bg = isDark ? AppColors.surface : Colors.white;
+    final baseCurrency =
+        ref.watch(baseCurrencyProvider).asData?.value ?? 'EGP';
+    final units = _buildUnits(baseCurrency);
+    // Initialise _unit lazily once baseCurrency is known
+    _unit ??= baseCurrency;
+    // Guard: if stored unit is not in list, snap to baseCurrency
+    if (!units.contains(_unit)) {
+      // Use post-frame to avoid calling setState during build
+      WidgetsBinding.instance.addPostFrameCallback(
+          (_) => setState(() => _unit = baseCurrency));
+    }
+    final safeUnit = units.contains(_unit) ? _unit! : baseCurrency;
 
     return Padding(
       padding:
@@ -672,7 +693,8 @@ class _InvestmentSheetState extends ConsumerState<_InvestmentSheet> {
                 Expanded(
                   flex: 2,
                   child: DropdownButtonFormField<String>(
-                    initialValue: _unit,
+                    key: ValueKey(baseCurrency),
+                    initialValue: safeUnit,
                     decoration: InputDecoration(
                       labelText: 'Unit',
                       border: OutlineInputBorder(
@@ -680,7 +702,7 @@ class _InvestmentSheetState extends ConsumerState<_InvestmentSheet> {
                       contentPadding: const EdgeInsets.symmetric(
                           horizontal: 14, vertical: 12),
                     ),
-                    items: _units
+                    items: units
                         .map((u) =>
                             DropdownMenuItem(value: u, child: Text(u)))
                         .toList(),

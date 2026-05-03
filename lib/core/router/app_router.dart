@@ -22,12 +22,14 @@ import '../../features/calendar/screens/calendar_screen.dart';
 // ── Tab 3: Finance ──
 import '../../features/finance/screens/finance_overview_screen.dart';
 import '../../features/finance/screens/finance_accounts_screen.dart';
+import '../../features/finance/screens/finance_cards_screen.dart';
 import '../../features/finance/screens/finance_investments_screen.dart';
 import '../../features/finance/screens/finance_liabilities_screen.dart';
 import '../../features/finance/screens/finance_transactions_screen.dart';
 
 // ── Tab 4: Energy ──
 import '../../features/energy/screens/energy_overview_screen.dart';
+import '../../features/energy/screens/energy_mood_screen.dart';
 import '../../features/focus/screens/focus_screen.dart';
 import '../../features/goals/screens/goals_screen.dart';
 import '../../features/ideas/screens/ideas_screen.dart';
@@ -74,6 +76,7 @@ class Routes {
   // ── Tab 3: Finance ──
   static const financeOverview = '/finance/overview';
   static const financeAccounts = '/finance/accounts';
+  static const financeCards = '/finance/cards';
   static const financeInvestments = '/finance/investments';
   static const financeLiabilities = '/finance/liabilities';
   static const financeTransactions = '/finance/transactions';
@@ -81,6 +84,7 @@ class Routes {
   // ── Tab 4: Energy ──
   static const energyOverview = '/energy/overview';
   static const energyFocus = '/energy/focus';
+  static const energyMood = '/energy/mood';
   static const energyGoals = '/energy/goals';
   static const energyIdeas = '/energy/ideas';
 
@@ -266,6 +270,10 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (_, __) => const FinanceAccountsScreen(),
           ),
           GoRoute(
+            path: Routes.financeCards,
+            builder: (_, __) => const FinanceCardsScreen(),
+          ),
+          GoRoute(
             path: Routes.financeInvestments,
             builder: (_, __) => const FinanceInvestmentsScreen(),
           ),
@@ -288,6 +296,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: Routes.energyFocus,
             builder: (_, __) => const FocusScreen(),
+          ),
+          GoRoute(
+            path: Routes.energyMood,
+            builder: (_, __) => const EnergyMoodScreen(),
           ),
           GoRoute(
             path: Routes.energyGoals,

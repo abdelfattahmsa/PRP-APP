@@ -7,8 +7,8 @@ import 'package:gap/gap.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../shared/models/models.dart';
 import '../../../shared/models/all_providers.dart';
+import '../widgets/session_planner_sheet.dart';
 
 class FocusScreen extends ConsumerStatefulWidget {
   const FocusScreen({super.key});
@@ -26,6 +26,40 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Focus Timer'),
+          actions: [
+            Consumer(builder: (ctx, ref, _) {
+              final queue = ref.watch(focusQueueProvider);
+              return IconButton(
+                icon: queue.isEmpty
+                    ? const Icon(Icons.playlist_add_rounded)
+                    : Stack(clipBehavior: Clip.none, children: [
+                        const Icon(Icons.playlist_play_rounded),
+                        Positioned(
+                          top: -4,
+                          right: -4,
+                          child: Container(
+                            width: 14,
+                            height: 14,
+                            decoration: const BoxDecoration(
+                                color: AppColors.gold,
+                                shape: BoxShape.circle),
+                            child: Center(
+                              child: Text(
+                                '${queue.sessions.length}',
+                                style: const TextStyle(
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.black),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ]),
+                tooltip: queue.isEmpty ? 'Plan session' : 'Edit session plan',
+                onPressed: () => showSessionPlannerSheet(ctx),
+              );
+            }),
+          ],
           bottom: const TabBar(
             indicatorColor: AppColors.gold, labelColor: AppColors.gold,
             unselectedLabelColor: AppColors.textSecondary,
@@ -50,6 +84,7 @@ class _FocusTimerView extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(focusTimerProvider);
     final notifier = ref.read(focusTimerProvider.notifier);
+    final queue = ref.watch(focusQueueProvider);
     final blocksAsync = ref.watch(scheduleProvider('normal'));
     final blocks = blocksAsync.value ?? [];
 
@@ -128,6 +163,13 @@ class _FocusTimerView extends ConsumerWidget {
         ]),
         const Gap(16),
 
+        // ── Session Queue progress ────────────────────────────
+        if (!queue.isEmpty) ...[
+          const Gap(4),
+          _QueueProgressBar(queue: queue),
+          const Gap(8),
+        ],
+
         // Block selector
         if (blocks.isNotEmpty) Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           const Text('Link to block:', style: TextStyle(fontSize: 10, color: AppColors.textSecondary, fontFamily: 'Roboto')),
@@ -170,6 +212,44 @@ class _TimerBtn extends StatelessWidget {
 class _DurControl extends StatelessWidget {
   const _DurControl({required this.label, required this.value, required this.color, required this.onChange});
   final String label; final int value; final Color color; final void Function(int) onChange;
+
+  Future<void> _editWithKeyboard(BuildContext context) async {
+    final ctrl = TextEditingController(text: '$value');
+    final result = await showDialog<int>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('$label duration'),
+        content: TextField(
+          controller: ctrl,
+          keyboardType: TextInputType.number,
+          autofocus: true,
+          textAlign: TextAlign.center,
+          style: TextStyle(fontFamily: 'Roboto', fontSize: 24, color: color, fontWeight: FontWeight.w700),
+          decoration: const InputDecoration(
+            suffixText: 'min',
+            hintText: '25',
+          ),
+          onSubmitted: (v) {
+            final n = int.tryParse(v.trim());
+            if (n != null && n >= 1 && n <= 180) Navigator.pop(ctx, n);
+          },
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          FilledButton(
+            onPressed: () {
+              final n = int.tryParse(ctrl.text.trim());
+              if (n != null && n >= 1 && n <= 180) Navigator.pop(ctx, n);
+            },
+            child: const Text('Set'),
+          ),
+        ],
+      ),
+    );
+    ctrl.dispose();
+    if (result != null) onChange(result);
+  }
+
   @override
   Widget build(BuildContext context) => Expanded(child: Container(
     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -178,10 +258,83 @@ class _DurControl extends StatelessWidget {
       Text('$label:', style: TextStyle(fontFamily: 'Roboto', fontSize: 10, color: color)),
       const Spacer(),
       IconButton(icon: const Icon(Icons.remove, size: 14), onPressed: () => onChange(value > 1 ? value - 1 : 1), padding: EdgeInsets.zero, constraints: const BoxConstraints()),
-      Text(' $value min ', style: TextStyle(fontFamily: 'Roboto', fontSize: 12, fontWeight: FontWeight.w600, color: color)),
+      GestureDetector(
+        onTap: () => _editWithKeyboard(context),
+        child: Tooltip(
+          message: 'Tap to type duration',
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Text('$value min', style: TextStyle(fontFamily: 'Roboto', fontSize: 12, fontWeight: FontWeight.w600, color: color)),
+          ),
+        ),
+      ),
       IconButton(icon: const Icon(Icons.add, size: 14), onPressed: () => onChange(value + 1), padding: EdgeInsets.zero, constraints: const BoxConstraints()),
     ]),
   ));
+}
+
+// ── Queue Progress Bar ──────────────────────────────────────
+class _QueueProgressBar extends StatelessWidget {
+  const _QueueProgressBar({required this.queue});
+  final FocusQueueState queue;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Icon(Icons.playlist_play_rounded,
+                size: 14, color: AppColors.gold),
+            const Gap(4),
+            Text(
+              'Session ${queue.currentIndex + 1} of ${queue.sessions.length}',
+              style: const TextStyle(
+                  fontSize: 11,
+                  color: AppColors.textSecondary,
+                  fontFamily: 'Roboto'),
+            ),
+            const Spacer(),
+            if (queue.hasNext)
+              Text(
+                'Next: ${queue.sessions[queue.currentIndex + 1].label}',
+                style: const TextStyle(
+                    fontSize: 10,
+                    color: AppColors.textSecondary,
+                    fontFamily: 'Roboto'),
+              ),
+          ],
+        ),
+        const Gap(4),
+        Row(
+          children: [
+            for (var i = 0; i < queue.sessions.length; i++) ...[
+              if (i > 0) const Gap(3),
+              Expanded(
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: i < queue.currentIndex
+                        ? AppColors.success
+                        : i == queue.currentIndex
+                            ? AppColors.gold
+                            : AppColors.border,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ],
+    );
+  }
 }
 
 class _FocusLogView extends ConsumerWidget {

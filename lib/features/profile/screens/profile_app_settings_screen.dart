@@ -9,6 +9,7 @@ import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/providers/theme_provider.dart';
 import '../../../core/providers/pillar_provider.dart';
+import '../../../core/providers/schedule_modes_provider.dart';
 import '../../../core/router/app_router.dart';
 import '../../../shared/models/all_providers.dart';
 import '../../../shared/widgets/placeholders.dart';
@@ -27,12 +28,6 @@ class ProfileAppSettingsScreen extends ConsumerStatefulWidget {
 
 class _ProfileAppSettingsScreenState
     extends ConsumerState<ProfileAppSettingsScreen> {
-  bool _notifyFocus = true;
-  bool _notifyGoals = true;
-  bool _notifyHabits = false;
-  bool _notifyFasting = true;
-  bool _compactMode = false;
-
   static const _currencies = ['EGP', 'USD', 'EUR', 'GBP', 'SAR', 'AED'];
   static const _currencyLabels = [
     'EGP — Egyptian Pound',
@@ -92,6 +87,12 @@ class _ProfileAppSettingsScreenState
     final scheduleMode = ref.watch(scheduleModeNotifierProvider).asData?.value ?? 'normal';
     final dayStartHour = ref.watch(dayStartHourProvider).asData?.value ?? 6;
     final firstDayOfWeek = ref.watch(firstDayOfWeekProvider).asData?.value ?? 1;
+    final compactMode = ref.watch(compactModeProvider).asData?.value ?? false;
+    final notifyFocus = ref.watch(notifyFocusProvider).asData?.value ?? true;
+    final notifyGoals = ref.watch(notifyGoalsProvider).asData?.value ?? true;
+    final notifyHabits = ref.watch(notifyHabitsProvider).asData?.value ?? false;
+    final notifyFasting = ref.watch(notifyFastingProvider).asData?.value ?? true;
+    final scheduleModes = ref.watch(scheduleModesProvider).asData?.value ?? [];
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final borderColor = isDark ? AppColors.border : AppColors.lightBorder;
     final accent = Theme.of(context).colorScheme.primary;
@@ -179,8 +180,9 @@ class _ProfileAppSettingsScreenState
                 title: 'Compact Mode',
                 subtitle: 'Reduce spacing for more content',
                 leading: const Icon(Icons.compress_rounded, size: 20),
-                value: _compactMode,
-                onChanged: (v) => setState(() => _compactMode = v),
+                value: compactMode,
+                onChanged: (v) =>
+                    ref.read(compactModeProvider.notifier).set(v),
               ),
             ]),
             const Gap(24),
@@ -197,32 +199,36 @@ class _ProfileAppSettingsScreenState
                 title: 'Focus Reminders',
                 subtitle: 'Remind to start focus sessions',
                 leading: const Icon(Icons.timer_outlined, size: 20),
-                value: _notifyFocus,
-                onChanged: (v) => setState(() => _notifyFocus = v),
+                value: notifyFocus,
+                onChanged: (v) =>
+                    ref.read(notifyFocusProvider.notifier).set(v),
               ),
               Divider(height: 1, color: borderColor),
               SettingsSwitchTile(
                 title: 'Goal Updates',
                 subtitle: 'Notify on goal milestones',
                 leading: const Icon(Icons.flag_outlined, size: 20),
-                value: _notifyGoals,
-                onChanged: (v) => setState(() => _notifyGoals = v),
+                value: notifyGoals,
+                onChanged: (v) =>
+                    ref.read(notifyGoalsProvider.notifier).set(v),
               ),
               Divider(height: 1, color: borderColor),
               SettingsSwitchTile(
                 title: 'Habit Reminders',
                 subtitle: 'Daily habit check-in prompts',
                 leading: const Icon(Icons.check_circle_outline, size: 20),
-                value: _notifyHabits,
-                onChanged: (v) => setState(() => _notifyHabits = v),
+                value: notifyHabits,
+                onChanged: (v) =>
+                    ref.read(notifyHabitsProvider.notifier).set(v),
               ),
               Divider(height: 1, color: borderColor),
               SettingsSwitchTile(
                 title: 'Fasting Alerts',
                 subtitle: 'Fast start/end reminders',
                 leading: const Icon(Icons.hourglass_empty_rounded, size: 20),
-                value: _notifyFasting,
-                onChanged: (v) => setState(() => _notifyFasting = v),
+                value: notifyFasting,
+                onChanged: (v) =>
+                    ref.read(notifyFastingProvider.notifier).set(v),
               ),
             ]),
             const Gap(24),
@@ -233,20 +239,41 @@ class _ProfileAppSettingsScreenState
             SectionCard(children: [
               SettingsTile(
                 title: 'Schedule Mode',
-                subtitle: _scheduleModeLabel(scheduleMode),
-                leading: const Icon(Icons.view_timeline_outlined, size: 20),
+                subtitle: scheduleModes.isEmpty
+                    ? scheduleMode
+                    : (scheduleModes
+                            .where((m) => m.id == scheduleMode)
+                            .firstOrNull
+                            ?.label ??
+                        scheduleMode),
+                leading: scheduleModes.isEmpty
+                    ? const Icon(Icons.view_timeline_outlined, size: 20)
+                    : Text(
+                        scheduleModes
+                                .where((m) => m.id == scheduleMode)
+                                .firstOrNull
+                                ?.emoji ??
+                            '📅',
+                        style: const TextStyle(fontSize: 18),
+                      ),
                 onTap: () => _pickFromList(
                   context,
                   title: 'Schedule Mode',
-                  options: AppConstants.scheduleModes,
-                  labels: AppConstants.scheduleModes
-                      .map(_scheduleModeLabel)
-                      .toList(),
+                  options: scheduleModes.map((m) => m.id).toList(),
+                  labels:
+                      scheduleModes.map((m) => '${m.emoji} ${m.label}').toList(),
                   selected: scheduleMode,
                   onPick: (v) => ref
                       .read(scheduleModeNotifierProvider.notifier)
                       .set(v),
                 ),
+              ),
+              Divider(height: 1, color: borderColor),
+              SettingsTile(
+                title: 'Manage Schedule Modes',
+                subtitle: '${scheduleModes.length} mode${scheduleModes.length == 1 ? '' : 's'} — add, edit or remove',
+                leading: const Icon(Icons.tune_rounded, size: 20),
+                onTap: () => _showScheduleModesManager(context, ref),
               ),
               Divider(height: 1, color: borderColor),
               SettingsTile(
@@ -584,17 +611,329 @@ class _NotifPermissionTileState extends State<_NotifPermissionTile> {
 }
 
 // ══════════════════════════════════════════════════════════════
-// SETTINGS HELPERS
+// SCHEDULE MODES MANAGER
 // ══════════════════════════════════════════════════════════════
 
-String _scheduleModeLabel(String mode) {
-  switch (mode) {
-    case 'fasting': return 'Fasting Day';
-    case 'friday':  return 'Friday';
-    case 'cairo':   return 'Cairo Extended';
-    default:        return 'Normal';
+Future<void> _showScheduleModesManager(
+    BuildContext context, WidgetRef ref) {
+  return showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (ctx) => UncontrolledProviderScope(
+      container: ProviderScope.containerOf(context),
+      child: const _ScheduleModesSheet(),
+    ),
+  );
+}
+
+class _ScheduleModesSheet extends ConsumerStatefulWidget {
+  const _ScheduleModesSheet();
+  @override
+  ConsumerState<_ScheduleModesSheet> createState() =>
+      _ScheduleModesSheetState();
+}
+
+class _ScheduleModesSheetState extends ConsumerState<_ScheduleModesSheet> {
+  bool _adding = false;
+  String? _editingId;
+  final _labelCtrl = TextEditingController();
+  String _emoji = '📅';
+  Color _color = AppColors.gold;
+
+  static const _quickEmojis = [
+    '📅', '🏗️', '🌙', '✨', '🏙️', '🔥', '⚡', '🧘', '📚', '💼',
+    '🏋️', '🌿', '🎯', '🌅', '🏖️', '❄️', '🌺', '🕌', '🚀', '💡',
+  ];
+
+  static const _quickColors = [
+    Color(0xFFFFD700), // gold
+    Color(0xFF7B68EE), // fasting purple
+    Color(0xFF4CAF50), // deen green
+    Color(0xFF42A5F5), // learn blue
+    Color(0xFFFF7043), // orange
+    Color(0xFFEC407A), // pink
+    Color(0xFF26C6DA), // cyan
+    Color(0xFFAB47BC), // violet
+    Color(0xFF66BB6A), // light green
+    Color(0xFFEF5350), // red
+  ];
+
+  @override
+  void dispose() {
+    _labelCtrl.dispose();
+    super.dispose();
+  }
+
+  void _startEdit(ScheduleMode mode) {
+    setState(() {
+      _editingId = mode.id;
+      _adding = true;
+      _labelCtrl.text = mode.label;
+      _emoji = mode.emoji;
+      _color = mode.color;
+    });
+  }
+
+  void _cancelAdd() {
+    setState(() {
+      _adding = false;
+      _editingId = null;
+      _labelCtrl.clear();
+      _emoji = '📅';
+      _color = AppColors.gold;
+    });
+  }
+
+  Future<void> _save() async {
+    final label = _labelCtrl.text.trim();
+    if (label.isEmpty) return;
+    final notifier = ref.read(scheduleModesProvider.notifier);
+    if (_editingId != null) {
+      await notifier.updateMode(ScheduleMode(
+        id: _editingId!,
+        label: label,
+        emoji: _emoji,
+        colorHex: _color.toARGB32(),
+      ));
+    } else {
+      final id = label.toLowerCase().replaceAll(RegExp(r'\s+'), '_');
+      await notifier.add(ScheduleMode(
+        id: id,
+        label: label,
+        emoji: _emoji,
+        colorHex: _color.toARGB32(),
+      ));
+    }
+    _cancelAdd();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = isDark ? AppColors.surface : AppColors.lightSurface;
+    final border = isDark ? AppColors.border : AppColors.lightBorder;
+    final accent = Theme.of(context).colorScheme.primary;
+    final bottom = MediaQuery.viewInsetsOf(context).bottom;
+
+    final modesAsync = ref.watch(scheduleModesProvider);
+    final modes = modesAsync.value ?? [];
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+      constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.85),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: border),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Center(
+            child: Container(
+              margin: const EdgeInsets.only(top: 12, bottom: 4),
+              width: 36,
+              height: 4,
+              decoration: BoxDecoration(
+                  color: border, borderRadius: BorderRadius.circular(2)),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+            child: Row(
+              children: [
+                Text('Schedule Modes',
+                    style: Theme.of(context)
+                        .textTheme
+                        .titleMedium
+                        ?.copyWith(fontWeight: FontWeight.w700)),
+                const Spacer(),
+                IconButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  icon: const Icon(Icons.close_rounded, size: 20),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+              ],
+            ),
+          ),
+          const Divider(height: 20),
+          Flexible(
+            child: ListView(
+              padding: EdgeInsets.fromLTRB(16, 0, 16, 16 + bottom),
+              shrinkWrap: true,
+              children: [
+                ReorderableListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: modes.length,
+                  onReorder: (o, n) =>
+                      ref.read(scheduleModesProvider.notifier).reorder(o, n),
+                  itemBuilder: (ctx, i) {
+                    final m = modes[i];
+                    return ListTile(
+                      key: ValueKey(m.id),
+                      contentPadding:
+                          const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                      leading: Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: m.color.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                              color: m.color.withValues(alpha: 0.4)),
+                        ),
+                        child: Center(
+                            child:
+                                Text(m.emoji, style: const TextStyle(fontSize: 18))),
+                      ),
+                      title: Text(m.label,
+                          style: const TextStyle(fontWeight: FontWeight.w600)),
+                      subtitle: Text('id: ${m.id}',
+                          style: const TextStyle(fontSize: 10)),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.edit_outlined, size: 18),
+                            onPressed: () => _startEdit(m),
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                          ),
+                          const Gap(4),
+                          IconButton(
+                            icon: Icon(Icons.delete_outline_rounded,
+                                size: 18, color: AppColors.error),
+                            onPressed: modes.length > 1
+                                ? () => ref
+                                    .read(scheduleModesProvider.notifier)
+                                    .delete(m.id)
+                                : null,
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                          ),
+                          const Gap(8),
+                          const Icon(Icons.drag_handle_rounded,
+                              size: 18, color: AppColors.textSecondary),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+                const Gap(8),
+                if (!_adding)
+                  OutlinedButton.icon(
+                    onPressed: () => setState(() => _adding = true),
+                    icon: const Icon(Icons.add, size: 16),
+                    label: const Text('Add Mode'),
+                  )
+                else ...[
+                  // Emoji picker
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
+                    children: _quickEmojis.map((e) {
+                      final sel = e == _emoji;
+                      return GestureDetector(
+                        onTap: () => setState(() => _emoji = e),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 100),
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: sel
+                                ? accent.withValues(alpha: 0.15)
+                                : Colors.transparent,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: sel ? accent : border),
+                          ),
+                          child: Center(
+                              child: Text(e,
+                                  style: const TextStyle(fontSize: 18))),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                  const Gap(12),
+                  // Color picker
+                  Row(children: [
+                    Text('Color:',
+                        style: Theme.of(context).textTheme.bodySmall),
+                    const Gap(8),
+                    Wrap(
+                      spacing: 6,
+                      children: _quickColors.map((c) {
+                        final sel = c.toARGB32() == _color.toARGB32();
+                        return GestureDetector(
+                          onTap: () => setState(() => _color = c),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 100),
+                            width: 24,
+                            height: 24,
+                            decoration: BoxDecoration(
+                              color: c,
+                              shape: BoxShape.circle,
+                              border: sel
+                                  ? Border.all(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurface,
+                                      width: 2)
+                                  : null,
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ]),
+                  const Gap(12),
+                  Row(children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _labelCtrl,
+                        autofocus: true,
+                        textCapitalization: TextCapitalization.words,
+                        decoration: InputDecoration(
+                          hintText: 'Mode name (e.g. Deep Work)',
+                          prefixText: '$_emoji  ',
+                          isDense: true,
+                        ),
+                        onSubmitted: (_) => _save(),
+                      ),
+                    ),
+                    const Gap(8),
+                    TextButton(
+                        onPressed: _cancelAdd,
+                        child: const Text('Cancel')),
+                    const Gap(4),
+                    FilledButton(
+                      onPressed: _save,
+                      style: FilledButton.styleFrom(
+                        backgroundColor: _color,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 12),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10)),
+                      ),
+                      child: Text(_editingId != null ? 'Update' : 'Add'),
+                    ),
+                  ]),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
+
+// ══════════════════════════════════════════════════════════════
+// SETTINGS HELPERS
+// ══════════════════════════════════════════════════════════════
 
 Future<void> _pickMinutes(
   BuildContext context, {

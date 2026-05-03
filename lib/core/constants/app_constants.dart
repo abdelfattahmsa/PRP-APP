@@ -28,8 +28,14 @@ class AppConstants {
   static const prefDefaultCurrency = 'default_currency';
   static const prefAlphaVantageApiKey = 'alpha_vantage_api_key';
   static const prefActivePillars = 'active_pillars';
+  static const prefCompactMode = 'compact_mode';
+  static const prefNotifyFocus = 'notify_focus';
+  static const prefNotifyGoals = 'notify_goals';
+  static const prefNotifyHabits = 'notify_habits';
+  static const prefNotifyFasting = 'notify_fasting';
+  static const prefScheduleModes = 'schedule_modes_v2'; // JSON list of ScheduleMode objects
 
-  // Default schedule modes
+  // Default schedule modes (fallback — user-defined list replaces these)
   static const scheduleModes = ['normal', 'fasting', 'friday', 'cairo'];
 
   // Category keys

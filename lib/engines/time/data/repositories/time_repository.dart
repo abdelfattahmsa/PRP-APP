@@ -1,5 +1,6 @@
 import '../../../../services/supabase_service.dart';
 import '../models/time_models.dart';
+import '../models/task_model.dart';
 
 /// Repository for Time Engine (Schedule + Calendar).
 class TimeRepository {
@@ -15,6 +16,12 @@ class TimeRepository {
   Future<void> deleteBlock(String id) => _service.deleteBlock(id);
   Future<void> reorderBlocks(List<ScheduleBlock> blocks) =>
       _service.reorderBlocks(blocks);
+
+  // ── Tasks ──
+  Future<List<UserTask>> getTasks() => _service.getTasks();
+  Future<UserTask> upsertTask(UserTask task) => _service.upsertTask(task);
+  Future<void> deleteTask(String id) => _service.deleteTask(id);
+  Future<void> reorderTasks(List<UserTask> tasks) => _service.reorderTasks(tasks);
 
   // ── Calendar ──
   Future<List<CalendarEvent>> getCalendarEvents({DateTime? from, DateTime? to}) =>

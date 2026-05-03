@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:uuid/uuid.dart';
 import '../../core/theme/app_theme.dart';
-import '../../core/constants/app_constants.dart';
+import '../../core/providers/schedule_modes_provider.dart';
 import '../../engines/money/data/models/money_models.dart';
 import '../../engines/money/providers/money_providers.dart';
 import '../../engines/health/data/models/health_models.dart';
@@ -648,6 +648,7 @@ class _AddScheduleBlockSheetState
   Widget build(BuildContext context) {
     final accent = Theme.of(context).colorScheme.primary;
     final scheduleCats = ref.watch(scheduleCategoriesProvider);
+    final scheduleModes = ref.watch(scheduleModesProvider).asData?.value ?? [];
 
     return _SheetWrapper(
       title: 'Add Schedule Block',
@@ -722,15 +723,19 @@ class _AddScheduleBlockSheetState
             const Gap(12),
 
             // Schedule mode
-            DropdownButtonFormField<String>(
-              initialValue: _scheduleMode,
-              decoration: const InputDecoration(labelText: 'Schedule mode'),
-              items: AppConstants.scheduleModes
-                  .map((m) => DropdownMenuItem(
-                      value: m, child: Text(m[0].toUpperCase() + m.substring(1))))
-                  .toList(),
-              onChanged: (v) => setState(() => _scheduleMode = v!),
-            ),
+            if (scheduleModes.isNotEmpty)
+              DropdownButtonFormField<String>(
+                initialValue: scheduleModes.any((m) => m.id == _scheduleMode)
+                    ? _scheduleMode
+                    : scheduleModes.first.id,
+                decoration: const InputDecoration(labelText: 'Schedule mode'),
+                items: scheduleModes
+                    .map((m) => DropdownMenuItem(
+                        value: m.id,
+                        child: Text('${m.emoji} ${m.label}')))
+                    .toList(),
+                onChanged: (v) => setState(() => _scheduleMode = v!),
+              ),
             const Gap(12),
 
             // Note
