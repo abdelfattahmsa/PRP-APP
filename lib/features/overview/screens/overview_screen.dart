@@ -10,6 +10,7 @@ import '../../../core/providers/onboarding_checklist_provider.dart';
 import '../../../features/auth/providers/auth_provider.dart';
 import '../../../features/checkin/screens/daily_checkin_screen.dart';
 import '../../../shared/models/all_providers.dart';
+import '../../../engines/money/data/models/money_models.dart' show FinanceSummary;
 import '../../../shared/widgets/app_card.dart';
 import '../../../shared/widgets/app_states.dart';
 
