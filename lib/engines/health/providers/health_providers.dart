@@ -1,7 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:uuid/uuid.dart';
 import '../data/models/health_models.dart';
 import '../data/repositories/health_repository.dart';
 
+const _uuid = Uuid();
+
+// ── Habits ────────────────────────────────────────────────────────
 final habitsProvider =
     AsyncNotifierProvider<HabitsNotifier, List<Habit>>(HabitsNotifier.new);
 
@@ -49,3 +53,112 @@ final habitsTodayProvider = Provider((ref) {
   final done = habits.where((h) => h.isDoneToday).length;
   return (done: done, total: habits.length, pct: done / habits.length);
 });
+
+// ── Body Profile ──────────────────────────────────────────────────
+final bodyProfileProvider =
+    AsyncNotifierProvider<BodyProfileNotifier, BodyProfile>(BodyProfileNotifier.new);
+
+class BodyProfileNotifier extends AsyncNotifier<BodyProfile> {
+  @override
+  Future<BodyProfile> build() => HealthRepository.instance.getBodyProfile();
+
+  Future<void> save(BodyProfile profile) async {
+    await HealthRepository.instance.upsertBodyProfile(profile);
+    state = AsyncData(profile);
+  }
+}
+
+// ── Weight Entries ────────────────────────────────────────────────
+final weightEntriesProvider =
+    AsyncNotifierProvider<WeightEntriesNotifier, List<WeightEntry>>(
+        WeightEntriesNotifier.new);
+
+class WeightEntriesNotifier extends AsyncNotifier<List<WeightEntry>> {
+  @override
+  Future<List<WeightEntry>> build() =>
+      HealthRepository.instance.getWeightEntries();
+
+  Future<void> add({required double weightKg, String? note}) async {
+    final entry = WeightEntry(
+      id: _uuid.v4(),
+      date: DateTime.now(),
+      weightKg: weightKg,
+      note: note,
+    );
+    await HealthRepository.instance.addWeightEntry(entry);
+    state = AsyncData([entry, ...state.value!]);
+  }
+
+  Future<void> delete(String id) async {
+    await HealthRepository.instance.deleteWeightEntry(id);
+    state = AsyncData(state.value!.where((e) => e.id != id).toList());
+  }
+}
+
+// ── Calorie Entries ───────────────────────────────────────────────
+final calorieEntriesProvider =
+    AsyncNotifierProvider<CalorieEntriesNotifier, List<CalorieEntry>>(
+        CalorieEntriesNotifier.new);
+
+class CalorieEntriesNotifier extends AsyncNotifier<List<CalorieEntry>> {
+  @override
+  Future<List<CalorieEntry>> build() =>
+      HealthRepository.instance.getCalorieEntries();
+
+  Future<void> add({
+    required MealType mealType,
+    required String description,
+    required int calories,
+  }) async {
+    final entry = CalorieEntry(
+      id: _uuid.v4(),
+      date: DateTime.now(),
+      mealType: mealType,
+      description: description,
+      calories: calories,
+    );
+    await HealthRepository.instance.addCalorieEntry(entry);
+    state = AsyncData([entry, ...state.value!]);
+  }
+
+  Future<void> delete(String id) async {
+    await HealthRepository.instance.deleteCalorieEntry(id);
+    state = AsyncData(state.value!.where((e) => e.id != id).toList());
+  }
+}
+
+// ── Exercise Entries ──────────────────────────────────────────────
+final exerciseEntriesProvider =
+    AsyncNotifierProvider<ExerciseEntriesNotifier, List<ExerciseEntry>>(
+        ExerciseEntriesNotifier.new);
+
+class ExerciseEntriesNotifier extends AsyncNotifier<List<ExerciseEntry>> {
+  @override
+  Future<List<ExerciseEntry>> build() =>
+      HealthRepository.instance.getExerciseEntries();
+
+  Future<void> add({
+    required String name,
+    required ExerciseType exerciseType,
+    required int durationMins,
+    int caloriesBurned = 0,
+    String? note,
+  }) async {
+    final entry = ExerciseEntry(
+      id: _uuid.v4(),
+      date: DateTime.now(),
+      name: name,
+      exerciseType: exerciseType,
+      durationMins: durationMins,
+      caloriesBurned: caloriesBurned,
+      note: note,
+    );
+    await HealthRepository.instance.addExerciseEntry(entry);
+    state = AsyncData([entry, ...state.value!]);
+  }
+
+  Future<void> delete(String id) async {
+    await HealthRepository.instance.deleteExerciseEntry(id);
+    state = AsyncData(state.value!.where((e) => e.id != id).toList());
+  }
+}

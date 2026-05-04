@@ -496,6 +496,85 @@ class SupabaseService {
       .eq('id', id)
       .eq('user_id', _uid);
 
+  // ── BODY PROFILE ──────────────────────────────────────────────
+  Future<BodyProfile> getBodyProfile() async {
+    final res = await _db
+        .from('body_profiles')
+        .select()
+        .eq('user_id', _uid)
+        .maybeSingle();
+    return res != null ? BodyProfile.fromJson(res) : const BodyProfile();
+  }
+
+  Future<void> upsertBodyProfile(BodyProfile profile) => _db
+      .from('body_profiles')
+      .upsert({...profile.toJson(), 'user_id': _uid}, onConflict: 'user_id');
+
+  // ── WEIGHT ENTRIES ────────────────────────────────────────────
+  Future<List<WeightEntry>> getWeightEntries({int limit = 90}) async {
+    final res = await _db
+        .from('weight_entries')
+        .select()
+        .eq('user_id', _uid)
+        .order('date', ascending: false)
+        .limit(limit);
+    return res.map((j) => WeightEntry.fromJson(j)).toList();
+  }
+
+  Future<void> addWeightEntry(WeightEntry entry) => _db
+      .from('weight_entries')
+      .insert({...entry.toJson(), 'user_id': _uid});
+
+  Future<void> deleteWeightEntry(String id) => _db
+      .from('weight_entries')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', _uid);
+
+  // ── CALORIE ENTRIES ───────────────────────────────────────────
+  Future<List<CalorieEntry>> getCalorieEntries({int limit = 200}) async {
+    final res = await _db
+        .from('calorie_entries')
+        .select()
+        .eq('user_id', _uid)
+        .order('date', ascending: false)
+        .order('created_at', ascending: false)
+        .limit(limit);
+    return res.map((j) => CalorieEntry.fromJson(j)).toList();
+  }
+
+  Future<void> addCalorieEntry(CalorieEntry entry) => _db
+      .from('calorie_entries')
+      .insert({...entry.toJson(), 'user_id': _uid});
+
+  Future<void> deleteCalorieEntry(String id) => _db
+      .from('calorie_entries')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', _uid);
+
+  // ── EXERCISE ENTRIES ──────────────────────────────────────────
+  Future<List<ExerciseEntry>> getExerciseEntries({int limit = 200}) async {
+    final res = await _db
+        .from('exercise_entries')
+        .select()
+        .eq('user_id', _uid)
+        .order('date', ascending: false)
+        .order('created_at', ascending: false)
+        .limit(limit);
+    return res.map((j) => ExerciseEntry.fromJson(j)).toList();
+  }
+
+  Future<void> addExerciseEntry(ExerciseEntry entry) => _db
+      .from('exercise_entries')
+      .insert({...entry.toJson(), 'user_id': _uid});
+
+  Future<void> deleteExerciseEntry(String id) => _db
+      .from('exercise_entries')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', _uid);
+
   // ── SEED DEFAULT DATA ─────────────────────────────────────────
   /// Called on first sign-up to populate default schedule blocks,
   /// habits, and goals. All data is generic and user-agnostic.

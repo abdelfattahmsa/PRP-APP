@@ -173,6 +173,18 @@ const kAppTabs = <AppTab>[
           label: 'Habits',
           icon: Icons.check_circle_outline,
           route: Routes.healthHabits),
+      AppSubTab(
+          label: 'Body',
+          icon: Icons.monitor_weight_outlined,
+          route: Routes.healthBody),
+      AppSubTab(
+          label: 'Nutrition',
+          icon: Icons.restaurant_outlined,
+          route: Routes.healthNutrition),
+      AppSubTab(
+          label: 'Exercise',
+          icon: Icons.fitness_center_outlined,
+          route: Routes.healthExercise),
     ],
   ),
   AppTab(

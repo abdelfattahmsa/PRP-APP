@@ -39,6 +39,9 @@ import '../../features/health/screens/health_overview_screen.dart';
 import '../../features/health/screens/health_daily_progress_screen.dart';
 import '../../features/health/screens/health_fasting_screen.dart';
 import '../../features/health/screens/health_habits_screen.dart';
+import '../../features/health/screens/health_body_screen.dart';
+import '../../features/health/screens/health_nutrition_screen.dart';
+import '../../features/health/screens/health_exercise_screen.dart';
 
 // ── Tab 6: Religion (Deen) ──
 import '../../features/religion/screens/religion_overview_screen.dart';
@@ -93,6 +96,9 @@ class Routes {
   static const healthDailyProgress = '/health/daily-progress';
   static const healthFasting = '/health/fasting';
   static const healthHabits = '/health/habits';
+  static const healthBody = '/health/body';
+  static const healthNutrition = '/health/nutrition';
+  static const healthExercise = '/health/exercise';
 
   // ── Tab 6: Religion (Deen) ──
   static const religionOverview = '/deen/overview';
@@ -332,6 +338,18 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: Routes.healthHabits,
             builder: (_, __) => const HealthHabitsScreen(),
+          ),
+          GoRoute(
+            path: Routes.healthBody,
+            builder: (_, __) => const HealthBodyScreen(),
+          ),
+          GoRoute(
+            path: Routes.healthNutrition,
+            builder: (_, __) => const HealthNutritionScreen(),
+          ),
+          GoRoute(
+            path: Routes.healthExercise,
+            builder: (_, __) => const HealthExerciseScreen(),
           ),
 
           // ── Tab 6: Religion (Deen) ───────────────────────
