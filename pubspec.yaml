@@ -43,6 +43,9 @@ dependencies:
   # URL
   url_launcher: ^6.3.1
 
+  # Health platform integration (iOS, Android, macOS)
+  health: ^12.2.0
+
   # Utils
   intl: ^0.20.2
   uuid: ^4.5.3

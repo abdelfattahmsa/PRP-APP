@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../engines/health/data/models/health_models.dart';
 import '../../../engines/health/providers/health_providers.dart';
+import '../widgets/health_sync_banner.dart';
 
 class HealthExerciseScreen extends ConsumerWidget {
   const HealthExerciseScreen({super.key});
@@ -72,7 +73,11 @@ class _ExerciseContent extends ConsumerWidget {
         return ListView(
           padding: pad,
           children: [
-            _StatsRow(todayMins: todayMins, todayCals: todayCals, weekMins: weekMins, weekCals: weekCals, isDark: isDark),
+            const HealthSyncBanner(),
+              const Gap(8),
+              const HealthSyncStatsStrip(),
+              const Gap(12),
+              _StatsRow(todayMins: todayMins, todayCals: todayCals, weekMins: weekMins, weekCals: weekCals, isDark: isDark),
             const Gap(16),
             _TypeBreakdown(entries: weekEntries, isDark: isDark),
             const Gap(16),

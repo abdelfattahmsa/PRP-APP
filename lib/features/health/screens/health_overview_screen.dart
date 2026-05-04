@@ -9,6 +9,7 @@ import '../../../shared/models/all_providers.dart';
 import '../../../shared/widgets/app_card.dart';
 import '../../../shared/widgets/app_chart.dart';
 import '../../../shared/widgets/placeholders.dart' show ScreenHeader;
+import '../widgets/health_sync_banner.dart';
 
 class HealthOverviewScreen extends ConsumerWidget {
   const HealthOverviewScreen({super.key});
@@ -72,7 +73,11 @@ class HealthOverviewScreen extends ConsumerWidget {
               title: 'Health',
               subtitle: 'Habits, fasting, and wellness',
             ),
-            const Gap(24),
+            const Gap(16),
+            const HealthSyncBanner(),
+            const Gap(8),
+            const HealthSyncStatsStrip(),
+            const Gap(20),
 
             // ── KPI Grid ──────────────────────────────────────────
             BentoGrid(

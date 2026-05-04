@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import '../data/models/health_models.dart';
 import '../data/repositories/health_repository.dart';
+import '../../../services/health_sync_service.dart';
 
 const _uuid = Uuid();
 
@@ -89,6 +90,25 @@ class WeightEntriesNotifier extends AsyncNotifier<List<WeightEntry>> {
     state = AsyncData([entry, ...state.value!]);
   }
 
+  Future<void> addFromSync({required double weightKg}) async {
+    final existing = state.value ?? [];
+    final todayKey = DateTime.now().toIso8601String().split('T').first;
+    // Don't duplicate if already have a synced entry for today
+    final alreadyToday = existing.any(
+      (e) => e.date.toIso8601String().split('T').first == todayKey &&
+          e.note == '🔄 Synced',
+    );
+    if (alreadyToday) return;
+    final entry = WeightEntry(
+      id: _uuid.v4(),
+      date: DateTime.now(),
+      weightKg: weightKg,
+      note: '🔄 Synced',
+    );
+    await HealthRepository.instance.addWeightEntry(entry);
+    state = AsyncData([entry, ...existing]);
+  }
+
   Future<void> delete(String id) async {
     await HealthRepository.instance.deleteWeightEntry(id);
     state = AsyncData(state.value!.where((e) => e.id != id).toList());
@@ -161,4 +181,30 @@ class ExerciseEntriesNotifier extends AsyncNotifier<List<ExerciseEntry>> {
     await HealthRepository.instance.deleteExerciseEntry(id);
     state = AsyncData(state.value!.where((e) => e.id != id).toList());
   }
+}
+
+// ── Health Platform Sync ──────────────────────────────────────────
+// Holds the last sync result; null means not yet synced this session.
+final healthSyncProvider =
+    AsyncNotifierProvider<HealthSyncNotifier, HealthSyncResult?>(
+        HealthSyncNotifier.new);
+
+class HealthSyncNotifier extends AsyncNotifier<HealthSyncResult?> {
+  @override
+  Future<HealthSyncResult?> build() async => null; // no auto-sync on startup
+
+  Future<void> sync() async {
+    state = const AsyncLoading();
+    final result = await HealthSyncService.instance.syncToday();
+    state = AsyncData(result);
+
+    // If sync returned a weight, add it to the weight log
+    if (result.latestWeightKg != null && result.permissionGranted) {
+      final notifier = ref.read(weightEntriesProvider.notifier);
+      await notifier.addFromSync(weightKg: result.latestWeightKg!);
+    }
+  }
+
+  bool get isSupported => HealthSyncService.instance.isSupported;
+  String get platformName => HealthSyncService.instance.platformName;
 }

@@ -6,6 +6,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../engines/health/data/models/health_models.dart';
 import '../../../engines/health/providers/health_providers.dart';
 import '../../../shared/widgets/app_chart.dart';
+import '../widgets/health_sync_banner.dart';
 
 class HealthBodyScreen extends ConsumerWidget {
   const HealthBodyScreen({super.key});
@@ -59,6 +60,10 @@ class _BodyContent extends ConsumerWidget {
           return ListView(
             padding: pad,
             children: [
+              const HealthSyncBanner(),
+              const Gap(8),
+              const HealthSyncStatsStrip(),
+              const Gap(12),
               _TopCards(profile: profile, latest: latest, bmi: bmi, isDark: isDark),
               const Gap(16),
               if (profile.heightCm == null) _SetupBanner(profile: profile, isDark: isDark),
