@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:timezone/data/latest.dart' as tz;
@@ -8,6 +9,8 @@ import 'core/router/app_router.dart';
 import 'core/constants/app_constants.dart';
 import 'core/providers/theme_provider.dart';
 import 'core/providers/app_settings_provider.dart';
+import 'core/providers/locale_provider.dart';
+import 'l10n/app_localizations.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -45,6 +48,7 @@ class PRPApp extends ConsumerWidget {
         ref.watch(compactModeProvider).asData?.value ?? false;
     final visualDensity =
         compactMode ? VisualDensity.compact : VisualDensity.standard;
+    final locale = ref.watch(localeProvider).asData?.value ?? const Locale('en');
 
     return MaterialApp.router(
       title: AppConstants.appName,
@@ -53,6 +57,15 @@ class PRPApp extends ConsumerWidget {
       theme: AppTheme.light.copyWith(visualDensity: visualDensity),
       darkTheme: AppTheme.dark.copyWith(visualDensity: visualDensity),
       routerConfig: router,
+      // ── Localizations ──────────────────────────────────────────
+      locale: locale,
+      supportedLocales: kSupportedLocales,
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
       builder: (context, child) {
         return MediaQuery(
           data: MediaQuery.of(context).copyWith(

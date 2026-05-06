@@ -7,7 +7,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/providers/app_settings_provider.dart';
+import '../../../core/providers/locale_provider.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../shared/widgets/placeholders.dart';
 import '../../../features/auth/providers/auth_provider.dart';
 
@@ -146,6 +148,28 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
     }
   }
 
+  Future<void> _showLanguagePicker() async {
+    final currentLocale = ref.read(localeProvider).asData?.value ?? const Locale('en');
+    final picked = await showDialog<Locale>(
+      context: context,
+      builder: (ctx) => SimpleDialog(
+        title: const Text('Language'),
+        children: kSupportedLocales
+            .map((loc) => ListTile(
+                  title: Text(kLocaleNames[loc.languageCode] ?? loc.languageCode),
+                  trailing: loc.languageCode == currentLocale.languageCode
+                      ? const Icon(Icons.check_rounded, size: 18)
+                      : null,
+                  onTap: () => Navigator.of(ctx).pop(loc),
+                ))
+            .toList(),
+      ),
+    );
+    if (picked != null) {
+      await ref.read(localeProvider.notifier).setLocale(picked);
+    }
+  }
+
   Future<void> _showDateFormatPicker() async {
     final picked = await showDialog<String>(
       context: context,
@@ -169,6 +193,9 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
   Widget build(BuildContext context) {
     final user = ref.watch(currentUserProvider);
     final currency = ref.watch(currencyNotifierProvider).asData?.value ?? 'EGP';
+    final currentLocale = ref.watch(localeProvider).asData?.value ?? const Locale('en');
+    final currentLanguageName = kLocaleNames[currentLocale.languageCode] ?? 'English';
+    final l = AppLocalizations.of(context)!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final cardColor = isDark ? AppColors.card : AppColors.lightCard;
     final borderColor = isDark ? AppColors.border : AppColors.lightBorder;
@@ -360,10 +387,10 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
             const Gap(12),
             SectionCard(children: [
               SettingsTile(
-                title: 'Language',
-                subtitle: 'English',
+                title: l.language,
+                subtitle: currentLanguageName,
                 leading: const Icon(Icons.translate_outlined, size: 20),
-                onTap: () => _showInfo('Arabic is coming soon. English is the only available language.'),
+                onTap: _showLanguagePicker,
               ),
               Divider(height: 1, color: borderColor),
               SettingsTile(

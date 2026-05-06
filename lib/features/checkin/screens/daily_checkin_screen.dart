@@ -8,7 +8,7 @@ import '../../../engines/checkin/providers/checkin_providers.dart';
 
 // ══════════════════════════════════════════════════════════════
 // DAILY CHECK-IN SCREEN
-// Shown as a modal-style screen; user swipes or taps to dismiss.
+// 4-resource check-in: Energy/Mood + Money + Time + Health
 // ══════════════════════════════════════════════════════════════
 class DailyCheckinScreen extends ConsumerStatefulWidget {
   /// 'morning' or 'evening'
@@ -22,30 +22,24 @@ class DailyCheckinScreen extends ConsumerStatefulWidget {
 
 class _DailyCheckinScreenState extends ConsumerState<DailyCheckinScreen> {
   int _score = 3; // 1–5
-  final _textCtrl = TextEditingController();
+  final _priorityCtrl  = TextEditingController(); // Energy: focus / accomplishment
+  final _moneyCtrl     = TextEditingController();
+  final _timeCtrl      = TextEditingController();
+  final _healthCtrl    = TextEditingController();
   bool _saving = false;
-  bool _done = false;
+  bool _done   = false;
 
   bool get _isMorning => widget.mode == 'morning';
 
   List<String> get _emojis => _isMorning ? kEnergyEmojis : kMoodEmojis;
   List<String> get _labels => _isMorning ? kEnergyLabels : kMoodLabels;
 
-  String get _title =>
-      _isMorning ? 'Morning Check-in' : 'Evening Check-in';
-
-  String get _scoreLabel =>
-      _isMorning ? 'Energy level' : 'How was your day?';
-
-  String get _textHint => _isMorning
-      ? "Today's top priority..."
-      : 'What did you accomplish?';
-
-  String get _textLabel => _isMorning ? "Today's focus" : 'Accomplishments';
-
   @override
   void dispose() {
-    _textCtrl.dispose();
+    _priorityCtrl.dispose();
+    _moneyCtrl.dispose();
+    _timeCtrl.dispose();
+    _healthCtrl.dispose();
     super.dispose();
   }
 
@@ -53,19 +47,29 @@ class _DailyCheckinScreenState extends ConsumerState<DailyCheckinScreen> {
     if (_saving) return;
     setState(() => _saving = true);
     try {
+      final moneyNote  = _moneyCtrl.text.trim().isNotEmpty ? _moneyCtrl.text.trim() : null;
+      final timeNote   = _timeCtrl.text.trim().isNotEmpty  ? _timeCtrl.text.trim()  : null;
+      final healthNote = _healthCtrl.text.trim().isNotEmpty ? _healthCtrl.text.trim() : null;
+
       if (_isMorning) {
         await ref.read(todayCheckinProvider.notifier).saveMorning(
               energy: _score,
-              priority: _textCtrl.text.trim(),
+              priority: _priorityCtrl.text.trim(),
+              moneyNote: moneyNote,
+              timeNote: timeNote,
+              healthNote: healthNote,
             );
       } else {
         await ref.read(todayCheckinProvider.notifier).saveEvening(
               mood: _score,
-              accomplishment: _textCtrl.text.trim(),
+              accomplishment: _priorityCtrl.text.trim(),
+              moneyNote: moneyNote,
+              timeNote: timeNote,
+              healthNote: healthNote,
             );
       }
       if (mounted) setState(() => _done = true);
-      await Future.delayed(const Duration(milliseconds: 800));
+      await Future.delayed(const Duration(milliseconds: 900));
       if (mounted) context.pop();
     } catch (e) {
       if (mounted) {
@@ -81,129 +85,123 @@ class _DailyCheckinScreenState extends ConsumerState<DailyCheckinScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = isDark ? AppColors.bg : AppColors.lightBg;
+    final title = _isMorning ? 'Morning Check-in' : 'Evening Check-in';
+
     return Scaffold(
-      backgroundColor: AppColors.bg,
+      backgroundColor: bg,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.close_rounded, color: AppColors.textSecondary),
+          icon: Icon(Icons.close_rounded,
+              color: isDark ? AppColors.textSecondary : AppColors.lightTextSecondary),
           onPressed: () => context.pop(),
         ),
         title: Text(
-          _title,
-          style: const TextStyle(
-              color: AppColors.textPrimary,
-              fontWeight: FontWeight.w700,
-              fontSize: 17),
+          title,
+          style: TextStyle(
+            color: isDark ? AppColors.textPrimary : AppColors.lightTextPrimary,
+            fontWeight: FontWeight.w700,
+            fontSize: 17,
+          ),
         ),
         centerTitle: true,
       ),
-      body: _done ? _DoneState(isMorning: _isMorning) : _buildForm(),
+      body: _done ? _DoneState(isMorning: _isMorning) : _buildForm(isDark),
     );
   }
 
-  Widget _buildForm() {
+  Widget _buildForm(bool isDark) {
+    final textSec = isDark ? AppColors.textSecondary : AppColors.lightTextSecondary;
+
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(24, 16, 24, 40),
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 40),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ── Score label ──────────────────────────────────
-          Text(
-            _scoreLabel,
-            style: const TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.5,
-            ),
+          // ─── Section 1: Energy / Mood ──────────────────────
+          _SectionHeader(
+            emoji: _isMorning ? '⚡' : '😊',
+            title: _isMorning ? 'Energy level' : 'How was your day?',
+            color: AppColors.accent,
           ),
-          const Gap(16),
-
-          // ── Emoji selector ───────────────────────────────
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: List.generate(5, (i) {
-              final val = i + 1;
-              final isSelected = _score == val;
-              return GestureDetector(
-                onTap: () => setState(() => _score = val),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 180),
-                  width: 56,
-                  height: 72,
-                  decoration: BoxDecoration(
-                    color: isSelected ? AppColors.accentFaint : AppColors.card,
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(
-                      color:
-                          isSelected ? AppColors.accent : AppColors.border,
-                      width: isSelected ? 1.5 : 1,
-                    ),
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(_emojis[i],
-                          style: TextStyle(
-                              fontSize: isSelected ? 28 : 22)),
-                      const Gap(4),
-                      Text(
-                        '$val',
-                        style: TextStyle(
-                          color: isSelected
-                              ? AppColors.accent
-                              : AppColors.textMuted,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }),
-          ),
-
-          const Gap(6),
-          Center(
-            child: Text(
-              _labels[_score - 1],
-              style: const TextStyle(
-                color: AppColors.accent,
-                fontWeight: FontWeight.w600,
-                fontSize: 14,
-              ),
-            ),
-          ),
-
-          const Gap(28),
-
-          // ── Text input ───────────────────────────────────
-          Text(
-            _textLabel,
-            style: const TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.5,
-            ),
+          const Gap(14),
+          _EmojiPicker(
+            emojis: _emojis,
+            labels: _labels,
+            selected: _score,
+            onSelect: (v) => setState(() => _score = v),
+            isDark: isDark,
           ),
           const Gap(10),
-          TextField(
-            controller: _textCtrl,
-            style: const TextStyle(color: AppColors.textPrimary, fontSize: 14),
-            maxLines: 3,
-            decoration: InputDecoration(
-              hintText: _textHint,
-              contentPadding: const EdgeInsets.all(16),
-            ),
+          _NoteField(
+            controller: _priorityCtrl,
+            hint: _isMorning ? "Today's top focus or intention…" : 'What did you accomplish?',
+            isDark: isDark,
           ),
 
-          const Gap(32),
+          const Gap(24),
+          Divider(color: isDark ? AppColors.border : AppColors.lightBorder, height: 1),
+          const Gap(24),
 
-          // ── Save button ──────────────────────────────────
+          // ─── Section 2: Money ─────────────────────────────
+          _SectionHeader(
+            emoji: '💰',
+            title: _isMorning ? 'Money intention' : 'Money reflection',
+            color: AppColors.finance,
+          ),
+          const Gap(12),
+          _NoteField(
+            controller: _moneyCtrl,
+            hint: _isMorning
+                ? 'Any financial goal or focus today? (optional)'
+                : 'Any money win, expense, or lesson? (optional)',
+            isDark: isDark,
+          ),
+
+          const Gap(24),
+          Divider(color: isDark ? AppColors.border : AppColors.lightBorder, height: 1),
+          const Gap(24),
+
+          // ─── Section 3: Time ──────────────────────────────
+          _SectionHeader(
+            emoji: '⏰',
+            title: _isMorning ? 'Time priority' : 'Time reflection',
+            color: AppColors.info,
+          ),
+          const Gap(12),
+          _NoteField(
+            controller: _timeCtrl,
+            hint: _isMorning
+                ? 'How will you spend your time today? (optional)'
+                : 'How did you use your time? (optional)',
+            isDark: isDark,
+          ),
+
+          const Gap(24),
+          Divider(color: isDark ? AppColors.border : AppColors.lightBorder, height: 1),
+          const Gap(24),
+
+          // ─── Section 4: Health ────────────────────────────
+          _SectionHeader(
+            emoji: '💚',
+            title: _isMorning ? 'Health intention' : 'Health reflection',
+            color: AppColors.health,
+          ),
+          const Gap(12),
+          _NoteField(
+            controller: _healthCtrl,
+            hint: _isMorning
+                ? 'Any health goal today — sleep, exercise, nutrition? (optional)'
+                : 'How was your sleep, movement, or nutrition? (optional)',
+            isDark: isDark,
+          ),
+
+          const Gap(36),
+
+          // ─── Save button ──────────────────────────────────
           SizedBox(
             width: double.infinity,
             height: 52,
@@ -231,13 +229,13 @@ class _DailyCheckinScreenState extends ConsumerState<DailyCheckinScreen> {
           ),
 
           const Gap(12),
-
           Center(
             child: TextButton(
               onPressed: () => context.pop(),
-              child: const Text('Skip for today',
-                  style: TextStyle(
-                      color: AppColors.textMuted, fontSize: 12)),
+              child: Text(
+                'Skip for today',
+                style: TextStyle(color: textSec, fontSize: 12),
+              ),
             ),
           ),
         ],
@@ -246,6 +244,142 @@ class _DailyCheckinScreenState extends ConsumerState<DailyCheckinScreen> {
   }
 }
 
+// ── Sub-widgets ────────────────────────────────────────────────
+
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader({
+    required this.emoji,
+    required this.title,
+    required this.color,
+  });
+  final String emoji;
+  final String title;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Text(emoji, style: const TextStyle(fontSize: 18)),
+        const Gap(8),
+        Text(
+          title,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            color: color,
+            letterSpacing: 0.3,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _EmojiPicker extends StatelessWidget {
+  const _EmojiPicker({
+    required this.emojis,
+    required this.labels,
+    required this.selected,
+    required this.onSelect,
+    required this.isDark,
+  });
+  final List<String> emojis;
+  final List<String> labels;
+  final int selected;
+  final ValueChanged<int> onSelect;
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    final cardColor  = isDark ? AppColors.card : AppColors.lightCard;
+    final borderColor = isDark ? AppColors.border : AppColors.lightBorder;
+
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: List.generate(5, (i) {
+            final val = i + 1;
+            final isSelected = selected == val;
+            return GestureDetector(
+              onTap: () => onSelect(val),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 160),
+                width: 54,
+                height: 68,
+                decoration: BoxDecoration(
+                  color: isSelected ? AppColors.accentFaint : cardColor,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: isSelected ? AppColors.accent : borderColor,
+                    width: isSelected ? 1.5 : 1,
+                  ),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(emojis[i],
+                        style: TextStyle(fontSize: isSelected ? 26 : 20)),
+                    const Gap(4),
+                    Text(
+                      '$val',
+                      style: TextStyle(
+                        color: isSelected ? AppColors.accent : AppColors.textMuted,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }),
+        ),
+        const Gap(6),
+        Center(
+          child: Text(
+            labels[selected - 1],
+            style: const TextStyle(
+              color: AppColors.accent,
+              fontWeight: FontWeight.w600,
+              fontSize: 13,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _NoteField extends StatelessWidget {
+  const _NoteField({
+    required this.controller,
+    required this.hint,
+    required this.isDark,
+  });
+  final TextEditingController controller;
+  final String hint;
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      controller: controller,
+      style: TextStyle(
+        color: isDark ? AppColors.textPrimary : AppColors.lightTextPrimary,
+        fontSize: 14,
+      ),
+      maxLines: 2,
+      decoration: InputDecoration(
+        hintText: hint,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      ),
+    );
+  }
+}
+
+// ── Done state ─────────────────────────────────────────────────
 class _DoneState extends StatelessWidget {
   const _DoneState({required this.isMorning});
   final bool isMorning;
@@ -310,8 +444,8 @@ class CheckinBanner extends ConsumerWidget {
     final emoji = isEvening ? '🌙' : '🌅';
     final label = isEvening ? 'Evening check-in' : 'Morning check-in';
     final sublabel = isEvening
-        ? 'How did your day go?'
-        : 'How are you feeling today?';
+        ? 'How did your day go across all 4 areas?'
+        : 'How are you starting the day?';
 
     return GestureDetector(
       onTap: () => Navigator.of(context).push(MaterialPageRoute(

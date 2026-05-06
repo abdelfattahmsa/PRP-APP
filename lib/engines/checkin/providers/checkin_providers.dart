@@ -24,10 +24,19 @@ class TodayCheckinNotifier extends AsyncNotifier<DailyCheckin?> {
   Future<void> saveMorning({
     required int energy,
     required String priority,
+    String? moneyNote,
+    String? timeNote,
+    String? healthNote,
   }) async {
     final existing = state.asData?.value;
     final checkin = (existing ?? DailyCheckin(id: _uuid.v4(), date: _todayStr()))
-        .copyWith(morningEnergy: energy, topPriority: priority);
+        .copyWith(
+          morningEnergy: energy,
+          topPriority: priority,
+          morningMoneyNote: moneyNote,
+          morningTimeNote: timeNote,
+          morningHealthNote: healthNote,
+        );
     state = const AsyncLoading();
     final saved = await CheckinRepository.instance.upsertCheckin(checkin);
     state = AsyncData(saved);
@@ -36,10 +45,19 @@ class TodayCheckinNotifier extends AsyncNotifier<DailyCheckin?> {
   Future<void> saveEvening({
     required int mood,
     required String accomplishment,
+    String? moneyNote,
+    String? timeNote,
+    String? healthNote,
   }) async {
     final existing = state.asData?.value;
     final checkin = (existing ?? DailyCheckin(id: _uuid.v4(), date: _todayStr()))
-        .copyWith(eveningMood: mood, accomplishment: accomplishment);
+        .copyWith(
+          eveningMood: mood,
+          accomplishment: accomplishment,
+          eveningMoneyNote: moneyNote,
+          eveningTimeNote: timeNote,
+          eveningHealthNote: healthNote,
+        );
     state = const AsyncLoading();
     final saved = await CheckinRepository.instance.upsertCheckin(checkin);
     state = AsyncData(saved);

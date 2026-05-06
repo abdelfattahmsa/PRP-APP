@@ -16,6 +16,7 @@ import '../../shared/models/all_providers.dart';
 import '../../services/notification_service.dart';
 import '../../services/web_notif.dart';
 import '../../shared/widgets/quick_capture_fab.dart';
+import '../../l10n/app_localizations.dart';
 
 const _shellUuid = Uuid();
 
@@ -209,6 +210,64 @@ const kAppTabs = <AppTab>[
     ],
   ),
 ];
+
+// ══════════════════════════════════════════════════════════════
+// LOCALIZATION HELPERS
+// ══════════════════════════════════════════════════════════════
+
+extension AppTabL10n on AppTab {
+  String localizedLabel(AppLocalizations l) {
+    switch (id) {
+      case 'overview': return l.tabOverview;
+      case 'time':     return l.tabTime;
+      case 'finance':  return l.tabFinance;
+      case 'energy':   return l.tabEnergy;
+      case 'health':   return l.tabHealth;
+      case 'profile':  return l.tabProfile;
+      default:         return label;
+    }
+  }
+}
+
+extension AppSubTabL10n on AppSubTab {
+  String localizedLabel(AppLocalizations l) {
+    switch (route) {
+      // shared "Overview"
+      case Routes.timeOverview:
+      case Routes.financeOverview:
+      case Routes.energyOverview:
+      case Routes.healthOverview:
+        return l.subOverview;
+      // Time
+      case Routes.timeCalendar:   return l.subCalendar;
+      case Routes.timeSchedule:   return l.subSchedule;
+      case Routes.timeTasks:      return l.subTasks;
+      // Finance
+      case Routes.financeAccounts:     return l.subAccounts;
+      case Routes.financeCards:        return l.subCards;
+      case Routes.financeInvestments:  return l.subInvest;
+      case Routes.financeLiabilities:  return l.subDebts;
+      case Routes.financeTransactions: return l.subTxns;
+      // Energy
+      case Routes.energyFocus: return l.subFocus;
+      case Routes.energyMood:  return l.subMood;
+      case Routes.energyGoals: return l.subGoals;
+      case Routes.energyIdeas: return l.subIdeas;
+      // Health
+      case Routes.healthDailyProgress: return l.subProgress;
+      case Routes.healthFasting:        return l.subFasting;
+      case Routes.healthHabits:         return l.subHabits;
+      case Routes.healthBody:           return l.subBody;
+      case Routes.healthNutrition:      return l.subNutrition;
+      case Routes.healthExercise:       return l.subExercise;
+      // Profile
+      case Routes.profileSettings: return l.tabProfile;
+      case Routes.profileAccount:  return l.subAccount;
+      case Routes.profileApp:      return l.subApp;
+      default: return label;
+    }
+  }
+}
 
 // ══════════════════════════════════════════════════════════════
 // SHELL SCREEN
@@ -421,21 +480,22 @@ class _ShellScreenState extends ConsumerState<ShellScreen> {
 
 // ── Sign-out confirmation ────────────────────────────────────────
 Future<void> _confirmSignOut(BuildContext context, WidgetRef ref) async {
+  final l = AppLocalizations.of(context)!;
   final confirmed = await showDialog<bool>(
     context: context,
     builder: (ctx) => AlertDialog(
-      title: const Text('Sign out?'),
-      content: const Text('You will be returned to the login screen.'),
+      title: Text(l.signOutTitle),
+      content: Text(l.signOutMessage),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(ctx).pop(false),
-          child: const Text('Cancel'),
+          child: Text(l.cancel),
         ),
         TextButton(
           onPressed: () => Navigator.of(ctx).pop(true),
-          child: const Text(
-            'Sign out',
-            style: TextStyle(color: AppColors.error),
+          child: Text(
+            l.signOut,
+            style: const TextStyle(color: AppColors.error),
           ),
         ),
       ],
@@ -615,6 +675,7 @@ class _MobileShell extends ConsumerWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final borderColor = isDark ? AppColors.border : AppColors.lightBorder;
     final isProfileTab = activeTab.id == 'profile';
+    final l = AppLocalizations.of(context)!;
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -647,7 +708,7 @@ class _MobileShell extends ConsumerWidget {
               NavigationDestination(
                 icon: Icon(tab.icon),
                 selectedIcon: Icon(tab.activeIcon),
-                label: tab.label,
+                label: tab.localizedLabel(l),
               ),
           ],
         ),
@@ -722,12 +783,13 @@ class _MobileSignOutButton extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textSecondary =
         isDark ? AppColors.textSecondary : AppColors.lightTextSecondary;
+    final l = AppLocalizations.of(context)!;
     return SizedBox(
       width: 44,
       height: 40,
       child: IconButton(
         icon: Icon(Icons.logout_rounded, size: 17, color: textSecondary),
-        tooltip: 'Sign out',
+        tooltip: l.signOut,
         onPressed: () => _confirmSignOut(context, ref),
         padding: EdgeInsets.zero,
       ),
@@ -748,6 +810,7 @@ class _MobileSubTabItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final accent = Theme.of(context).colorScheme.primary;
+    final l = AppLocalizations.of(context)!;
 
     return GestureDetector(
       onTap: () => context.go(sub.route),
@@ -770,7 +833,7 @@ class _MobileSubTabItem extends StatelessWidget {
                   ),
                   const Gap(4),
                   Text(
-                    sub.label,
+                    sub.localizedLabel(l),
                     style: TextStyle(
                       fontFamily: 'Roboto',
                       fontSize: 11,
@@ -850,6 +913,8 @@ class _SidebarProfileHeader extends ConsumerWidget {
       );
     }
 
+    final l = AppLocalizations.of(context)!;
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 12, 4, 8),
       child: Row(
@@ -869,7 +934,7 @@ class _SidebarProfileHeader extends ConsumerWidget {
                   Text(
                     user?.fullName?.isNotEmpty == true
                         ? user!.fullName!
-                        : 'My Profile',
+                        : l.myProfile,
                     style: const TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
@@ -893,7 +958,7 @@ class _SidebarProfileHeader extends ConsumerWidget {
             onPressed: () => _confirmSignOut(context, ref),
             icon: const Icon(Icons.logout_rounded, size: 15),
             color: textMuted,
-            tooltip: 'Sign out',
+            tooltip: l.signOut,
             padding: const EdgeInsets.all(4),
             constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
           ),
@@ -901,7 +966,7 @@ class _SidebarProfileHeader extends ConsumerWidget {
             onPressed: onToggle,
             icon: const Icon(Icons.chevron_left_rounded, size: 16),
             color: textMuted,
-            tooltip: 'Collapse',
+            tooltip: l.collapse,
             padding: const EdgeInsets.all(4),
             constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
           ),
@@ -930,6 +995,8 @@ class _SidebarTabItem extends StatelessWidget {
     final textSecondary =
         isDark ? AppColors.textSecondary : AppColors.lightTextSecondary;
     final color = active ? accent : textSecondary;
+    final l = AppLocalizations.of(context)!;
+    final tabLabel = tab.localizedLabel(l);
 
     return Padding(
       padding: EdgeInsets.symmetric(
@@ -944,7 +1011,7 @@ class _SidebarTabItem extends StatelessWidget {
           borderRadius: BorderRadius.circular(10),
           hoverColor: accent.withValues(alpha: 0.06),
           child: Tooltip(
-            message: expanded ? '' : tab.label,
+            message: expanded ? '' : tabLabel,
             child: Padding(
               padding: EdgeInsets.symmetric(
                 horizontal: expanded ? 12.0 : 0,
@@ -958,7 +1025,7 @@ class _SidebarTabItem extends StatelessWidget {
                         const Gap(10),
                         Expanded(
                           child: Text(
-                            tab.label,
+                            tabLabel,
                             style: Theme.of(context)
                                 .textTheme
                                 .labelMedium
@@ -1017,6 +1084,7 @@ class _SidebarSubTabItem extends StatelessWidget {
     final textSecondary =
         isDark ? AppColors.textSecondary : AppColors.lightTextSecondary;
     final color = active ? accent : textSecondary;
+    final l = AppLocalizations.of(context)!;
 
     return Padding(
       padding: const EdgeInsets.only(left: 20, right: 8, top: 1, bottom: 1),
@@ -1045,7 +1113,7 @@ class _SidebarSubTabItem extends StatelessWidget {
                 Icon(sub.icon, color: color, size: 14),
                 const Gap(8),
                 Text(
-                  sub.label,
+                  sub.localizedLabel(l),
                   style: Theme.of(context).textTheme.labelMedium?.copyWith(
                         color: color,
                         fontWeight:
@@ -1078,11 +1146,12 @@ class _SidebarSubTabItemCollapsed extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textSecondary =
         isDark ? AppColors.textSecondary : AppColors.lightTextSecondary;
+    final l = AppLocalizations.of(context)!;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
       child: Tooltip(
-        message: sub.label,
+        message: sub.localizedLabel(l),
         child: Material(
           color: active ? accent.withValues(alpha: 0.1) : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
@@ -1136,19 +1205,21 @@ class _SidebarFooter extends StatelessWidget {
           ),
         );
 
+    final l = AppLocalizations.of(context)!;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
       child: Row(
         children: [
           iconBtn(
             Icons.chat_bubble_outline_rounded,
-            'Support',
+            l.support,
             () => launchUrl(Uri.parse('mailto:support@prp-app.website')),
           ),
           const Gap(2),
           iconBtn(
             Icons.description_outlined,
-            'Terms & Privacy',
+            l.termsPrivacy,
             () => context.go(Routes.terms),
           ),
           if (expanded) ...[
@@ -1327,7 +1398,7 @@ class _NotifPermissionBanner extends StatelessWidget {
           const Gap(10),
           Expanded(
             child: Text(
-              'Enable notifications for focus, fasting & habit reminders',
+              AppLocalizations.of(context)!.notificationsPrompt,
               style: TextStyle(fontSize: 12, color: textColor),
             ),
           ),
@@ -1340,9 +1411,9 @@ class _NotifPermissionBanner extends StatelessWidget {
                 color: accent,
                 borderRadius: BorderRadius.circular(6),
               ),
-              child: const Text(
-                'Enable',
-                style: TextStyle(
+              child: Text(
+                AppLocalizations.of(context)!.enableNotifications,
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
@@ -1373,7 +1444,8 @@ class _FocusTimerBanner extends ConsumerWidget {
 
     final mins = (timer.secondsLeft ~/ 60).toString().padLeft(2, '0');
     final secs = (timer.secondsLeft % 60).toString().padLeft(2, '0');
-    final label = timer.mode == 'focus' ? 'Focus' : 'Break';
+    final l = AppLocalizations.of(context)!;
+    final label = timer.mode == 'focus' ? l.focus : l.breakLabel;
     final color = timer.mode == 'focus' ? AppColors.accent : AppColors.warning;
 
     return Material(

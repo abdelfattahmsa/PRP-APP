@@ -138,9 +138,20 @@ class _AddTransactionSheetState extends ConsumerState<_AddTransactionSheet> {
 
   String _category = kDefaultTxCategories.first.storageKey;
   String? _accountName;
+  String _currency = 'EGP';
   bool _isIncome = false;
   DateTime _date = DateTime.now();
   bool _saving = false;
+
+  static const _currencies = ['EGP', 'USD', 'EUR', 'GBP', 'SAR', 'AED'];
+  static const _currencySymbols = {
+    'EGP': 'EGP £',
+    'USD': 'USD \$',
+    'EUR': 'EUR €',
+    'GBP': 'GBP £',
+    'SAR': 'SAR ﷼',
+    'AED': 'AED د.إ',
+  };
 
   @override
   void dispose() {
@@ -161,6 +172,7 @@ class _AddTransactionSheetState extends ConsumerState<_AddTransactionSheet> {
       amount: double.parse(_amountCtrl.text.trim()),
       category: _category,
       accountName: _accountName ?? 'Cash',
+      currency: _currency,
       notes: _notesCtrl.text.trim().isEmpty ? null : _notesCtrl.text.trim(),
       isIncome: _isIncome,
     );
@@ -272,28 +284,50 @@ class _AddTransactionSheetState extends ConsumerState<_AddTransactionSheet> {
             ),
             const Gap(12),
 
-            // Amount
-            TextFormField(
-              controller: _amountCtrl,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
-              decoration: InputDecoration(
-                labelText: 'Amount *',
-                prefixText: 'EGP  ',
-                prefixStyle: TextStyle(
-                  fontFamily: 'Roboto',
-                  fontSize: 13,
-                  color: _isIncome ? AppColors.success : AppColors.error,
-                  fontWeight: FontWeight.w600,
+            // Amount + Currency row
+            Row(children: [
+              Expanded(
+                flex: 3,
+                child: TextFormField(
+                  controller: _amountCtrl,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  decoration: InputDecoration(
+                    labelText: 'Amount *',
+                    prefixText: '$_currency  ',
+                    prefixStyle: TextStyle(
+                      fontFamily: 'Roboto',
+                      fontSize: 13,
+                      color: _isIncome ? AppColors.success : AppColors.error,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  validator: (v) {
+                    if (v == null || v.trim().isEmpty) return 'Required';
+                    if (double.tryParse(v.trim()) == null) return 'Invalid number';
+                    if (double.parse(v.trim()) <= 0) return 'Must be > 0';
+                    return null;
+                  },
                 ),
               ),
-              validator: (v) {
-                if (v == null || v.trim().isEmpty) return 'Required';
-                if (double.tryParse(v.trim()) == null) return 'Invalid number';
-                if (double.parse(v.trim()) <= 0) return 'Must be > 0';
-                return null;
-              },
-            ),
+              const Gap(10),
+              Expanded(
+                flex: 2,
+                child: DropdownButtonFormField<String>(
+                  initialValue: _currency,
+                  decoration: const InputDecoration(labelText: 'Currency'),
+                  items: _currencies
+                      .map((c) => DropdownMenuItem(
+                            value: c,
+                            child: Text(
+                              _currencySymbols[c] ?? c,
+                              style: const TextStyle(fontFamily: 'Roboto', fontSize: 12),
+                            ),
+                          ))
+                      .toList(),
+                  onChanged: (v) => setState(() => _currency = v!),
+                ),
+              ),
+            ]),
             const Gap(12),
 
             // Category

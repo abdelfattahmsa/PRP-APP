@@ -1,0 +1,237 @@
+{
+  "@@locale": "en",
+
+  "appName": "PRP",
+  "@appName": { "description": "Application name" },
+
+  "tabOverview": "Overview",
+  "@tabOverview": { "description": "Main nav tab: Overview" },
+
+  "tabTime": "Time",
+  "@tabTime": { "description": "Main nav tab: Time" },
+
+  "tabFinance": "Finance",
+  "@tabFinance": { "description": "Main nav tab: Finance" },
+
+  "tabEnergy": "Energy",
+  "@tabEnergy": { "description": "Main nav tab: Energy" },
+
+  "tabHealth": "Health",
+  "@tabHealth": { "description": "Main nav tab: Health" },
+
+  "tabProfile": "Profile",
+  "@tabProfile": { "description": "Main nav tab: Profile" },
+
+  "subOverview": "Overview",
+  "@subOverview": { "description": "Sub-tab label: Overview (shared)" },
+
+  "subCalendar": "Calendar",
+  "@subCalendar": { "description": "Sub-tab: Calendar (Time)" },
+
+  "subSchedule": "Schedule",
+  "@subSchedule": { "description": "Sub-tab: Schedule (Time)" },
+
+  "subTasks": "Tasks",
+  "@subTasks": { "description": "Sub-tab: Tasks (Time)" },
+
+  "subAccounts": "Accounts",
+  "@subAccounts": { "description": "Sub-tab: Accounts (Finance)" },
+
+  "subCards": "Cards",
+  "@subCards": { "description": "Sub-tab: Cards (Finance)" },
+
+  "subInvest": "Invest",
+  "@subInvest": { "description": "Sub-tab: Investments (Finance)" },
+
+  "subDebts": "Debts",
+  "@subDebts": { "description": "Sub-tab: Debts/Liabilities (Finance)" },
+
+  "subTxns": "Txns",
+  "@subTxns": { "description": "Sub-tab: Transactions (Finance)" },
+
+  "subFocus": "Focus",
+  "@subFocus": { "description": "Sub-tab: Focus (Energy)" },
+
+  "subMood": "Mood",
+  "@subMood": { "description": "Sub-tab: Mood (Energy)" },
+
+  "subGoals": "Goals",
+  "@subGoals": { "description": "Sub-tab: Goals (Energy)" },
+
+  "subIdeas": "Ideas",
+  "@subIdeas": { "description": "Sub-tab: Ideas (Energy)" },
+
+  "subProgress": "Progress",
+  "@subProgress": { "description": "Sub-tab: Progress (Health)" },
+
+  "subFasting": "Fasting",
+  "@subFasting": { "description": "Sub-tab: Fasting (Health)" },
+
+  "subHabits": "Habits",
+  "@subHabits": { "description": "Sub-tab: Habits (Health)" },
+
+  "subBody": "Body",
+  "@subBody": { "description": "Sub-tab: Body (Health)" },
+
+  "subNutrition": "Nutrition",
+  "@subNutrition": { "description": "Sub-tab: Nutrition (Health)" },
+
+  "subExercise": "Exercise",
+  "@subExercise": { "description": "Sub-tab: Exercise (Health)" },
+
+  "subAccount": "Account",
+  "@subAccount": { "description": "Sub-tab: Account settings (Profile)" },
+
+  "subApp": "App",
+  "@subApp": { "description": "Sub-tab: App settings (Profile)" },
+
+  "signOut": "Sign out",
+  "@signOut": { "description": "Sign out action" },
+
+  "signOutTitle": "Sign out?",
+  "@signOutTitle": { "description": "Sign out confirmation dialog title" },
+
+  "signOutMessage": "You will be returned to the login screen.",
+  "@signOutMessage": { "description": "Sign out confirmation dialog body" },
+
+  "cancel": "Cancel",
+  "@cancel": { "description": "Cancel action" },
+
+  "confirm": "Confirm",
+  "@confirm": { "description": "Generic confirm action" },
+
+  "save": "Save",
+  "@save": { "description": "Save action" },
+
+  "delete": "Delete",
+  "@delete": { "description": "Delete action" },
+
+  "edit": "Edit",
+  "@edit": { "description": "Edit action" },
+
+  "add": "Add",
+  "@add": { "description": "Add action" },
+
+  "close": "Close",
+  "@close": { "description": "Close action" },
+
+  "retry": "Retry",
+  "@retry": { "description": "Retry action" },
+
+  "done": "Done",
+  "@done": { "description": "Done action" },
+
+  "loading": "Loading…",
+  "@loading": { "description": "Generic loading indicator text" },
+
+  "language": "Language",
+  "@language": { "description": "Language setting label" },
+
+  "languageEnglish": "English",
+  "@languageEnglish": { "description": "English language option" },
+
+  "languageArabic": "العربية",
+  "@languageArabic": { "description": "Arabic language option" },
+
+  "theme": "Theme",
+  "@theme": { "description": "Theme setting label" },
+
+  "themeSystem": "System",
+  "@themeSystem": { "description": "System theme option" },
+
+  "themeLight": "Light",
+  "@themeLight": { "description": "Light theme option" },
+
+  "themeDark": "Dark",
+  "@themeDark": { "description": "Dark theme option" },
+
+  "notificationsEnabled": "✓ Notifications enabled",
+  "@notificationsEnabled": { "description": "Snackbar: notifications enabled" },
+
+  "enableNotifications": "Enable",
+  "@enableNotifications": { "description": "Enable notifications button" },
+
+  "notificationsPrompt": "Enable notifications for focus, fasting & habit reminders",
+  "@notificationsPrompt": { "description": "Notification permission banner text" },
+
+  "emailVerifyPrompt": "Please verify your email",
+  "@emailVerifyPrompt": { "description": "Email verification banner prompt" },
+
+  "emailVerifyUnlock": "to unlock all features.",
+  "@emailVerifyUnlock": { "description": "Email verification banner tail text" },
+
+  "resend": "Resend",
+  "@resend": { "description": "Resend verification email button" },
+
+  "focusSessionComplete": "🍅 Focus session complete!",
+  "@focusSessionComplete": { "description": "Focus session completion notification" },
+
+  "breakOver": "☕ Break over!",
+  "@breakOver": { "description": "Break over notification" },
+
+  "tapToReturn": "Tap to return to PRP",
+  "@tapToReturn": { "description": "Notification body to return to app" },
+
+  "focus": "Focus",
+  "@focus": { "description": "Focus timer label" },
+
+  "breakLabel": "Break",
+  "@breakLabel": { "description": "Break timer label" },
+
+  "support": "Support",
+  "@support": { "description": "Support link tooltip" },
+
+  "termsPrivacy": "Terms & Privacy",
+  "@termsPrivacy": { "description": "Terms and privacy link tooltip" },
+
+  "collapse": "Collapse",
+  "@collapse": { "description": "Collapse sidebar tooltip" },
+
+  "myProfile": "My Profile",
+  "@myProfile": { "description": "Profile header fallback name" },
+
+  "manualEntryOnly": "Manual entry only on this platform",
+  "@manualEntryOnly": { "description": "Health sync: manual entry on unsupported platform" },
+
+  "syncingFrom": "Syncing from {platform}…",
+  "@syncingFrom": {
+    "description": "Health sync: syncing in progress",
+    "placeholders": { "platform": { "type": "String" } }
+  },
+
+  "syncFailed": "Sync failed",
+  "@syncFailed": { "description": "Health sync: error state" },
+
+  "connectTo": "Connect to {platform}",
+  "@connectTo": {
+    "description": "Health sync: connect prompt",
+    "placeholders": { "platform": { "type": "String" } }
+  },
+
+  "connectDescription": "Sync weight, heart rate, steps & sleep automatically",
+  "@connectDescription": { "description": "Health sync: connect description" },
+
+  "permissionRequired": "Permission required",
+  "@permissionRequired": { "description": "Health sync: permission denied state" },
+
+  "permissionTap": "Tap to grant access to {platform}",
+  "@permissionTap": {
+    "description": "Health sync: tap to grant permission",
+    "placeholders": { "platform": { "type": "String" } }
+  },
+
+  "syncedFrom": "Synced from {platform}",
+  "@syncedFrom": {
+    "description": "Health sync: success state",
+    "placeholders": { "platform": { "type": "String" } }
+  },
+
+  "grantAccess": "Grant access",
+  "@grantAccess": { "description": "Health sync: grant access button" },
+
+  "syncAgain": "Sync again",
+  "@syncAgain": { "description": "Health sync: sync again button" },
+
+  "connect": "Connect",
+  "@connect": { "description": "Health sync: connect button" }
+}

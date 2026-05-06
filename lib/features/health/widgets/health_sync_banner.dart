@@ -4,6 +4,7 @@ import 'package:gap/gap.dart';
 import 'package:intl/intl.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../engines/health/providers/health_providers.dart';
+import '../../../l10n/app_localizations.dart';
 
 // ══════════════════════════════════════════════════════════════════
 // HEALTH SYNC BANNER
@@ -18,12 +19,14 @@ class HealthSyncBanner extends ConsumerWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final syncAsync = ref.watch(healthSyncProvider);
     final notifier = ref.read(healthSyncProvider.notifier);
+    final l = AppLocalizations.of(context)!;
+    final platform = notifier.platformName;
 
     // Not a supported platform — show simple info chip
     if (!notifier.isSupported) {
       return _InfoChip(
         icon: Icons.edit_note_outlined,
-        label: 'Manual entry only on this platform',
+        label: l.manualEntryOnly,
         isDark: isDark,
       );
     }
@@ -32,7 +35,7 @@ class HealthSyncBanner extends ConsumerWidget {
       loading: () => _SyncCard(
         icon: Icons.sync,
         spinning: true,
-        label: 'Syncing from ${notifier.platformName}…',
+        label: l.syncingFrom(platform),
         sub: null,
         action: null,
         isDark: isDark,
@@ -40,9 +43,9 @@ class HealthSyncBanner extends ConsumerWidget {
       error: (e, _) => _SyncCard(
         icon: Icons.error_outline,
         spinning: false,
-        label: 'Sync failed',
+        label: l.syncFailed,
         sub: '$e',
-        action: _SyncButton(label: 'Retry', onTap: () => notifier.sync()),
+        action: _SyncButton(label: l.retry, onTap: () => notifier.sync()),
         isDark: isDark,
       ),
       data: (result) {
@@ -50,9 +53,9 @@ class HealthSyncBanner extends ConsumerWidget {
           return _SyncCard(
             icon: Icons.health_and_safety_outlined,
             spinning: false,
-            label: 'Connect to ${notifier.platformName}',
-            sub: 'Sync weight, heart rate, steps & sleep automatically',
-            action: _SyncButton(label: 'Connect', onTap: () => notifier.sync()),
+            label: l.connectTo(platform),
+            sub: l.connectDescription,
+            action: _SyncButton(label: l.connect, onTap: () => notifier.sync()),
             isDark: isDark,
           );
         }
@@ -60,16 +63,16 @@ class HealthSyncBanner extends ConsumerWidget {
           return _SyncCard(
             icon: Icons.lock_outline,
             spinning: false,
-            label: 'Permission required',
-            sub: 'Tap to grant access to ${notifier.platformName}',
-            action: _SyncButton(label: 'Grant access', onTap: () => notifier.sync()),
+            label: l.permissionRequired,
+            sub: l.permissionTap(platform),
+            action: _SyncButton(label: l.grantAccess, onTap: () => notifier.sync()),
             isDark: isDark,
           );
         }
         if (!result.available) {
           return _InfoChip(
             icon: Icons.edit_note_outlined,
-            label: 'Manual entry only on this platform',
+            label: l.manualEntryOnly,
             isDark: isDark,
           );
         }
@@ -82,12 +85,12 @@ class HealthSyncBanner extends ConsumerWidget {
           icon: Icons.check_circle_outline,
           spinning: false,
           iconColor: Colors.green,
-          label: 'Synced from ${notifier.platformName}',
+          label: l.syncedFrom(platform),
           sub: 'Last sync: $syncedAt · '
               '${result.steps > 0 ? "${result.steps} steps · " : ""}'
               '${result.activeCaloriesBurned > 0 ? "${result.activeCaloriesBurned} kcal burned · " : ""}'
               '${result.avgHeartRate != null ? "${result.avgHeartRate!.round()} bpm avg" : ""}',
-          action: _SyncButton(label: 'Sync again', onTap: () => notifier.sync()),
+          action: _SyncButton(label: l.syncAgain, onTap: () => notifier.sync()),
           isDark: isDark,
         );
       },

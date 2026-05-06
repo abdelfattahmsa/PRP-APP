@@ -33,6 +33,19 @@ class CheckinRepository {
         'evening_mood': checkin.eveningMood,
       if (checkin.accomplishment != null)
         'accomplishment': checkin.accomplishment,
+      // 4-resource extensions
+      if (checkin.morningMoneyNote != null)
+        'morning_money_note': checkin.morningMoneyNote,
+      if (checkin.morningTimeNote != null)
+        'morning_time_note': checkin.morningTimeNote,
+      if (checkin.morningHealthNote != null)
+        'morning_health_note': checkin.morningHealthNote,
+      if (checkin.eveningMoneyNote != null)
+        'evening_money_note': checkin.eveningMoneyNote,
+      if (checkin.eveningTimeNote != null)
+        'evening_time_note': checkin.eveningTimeNote,
+      if (checkin.eveningHealthNote != null)
+        'evening_health_note': checkin.eveningHealthNote,
     };
 
     final res = await _db

@@ -90,9 +90,12 @@ class FinanceAccountsScreen extends ConsumerWidget {
                 BentoCell(
                   child: KpiCard(
                     label: 'Accounts',
-                    value: '${banksAsync.value?.length ?? 0}',
+                    value: '${banksAsync.value?.where((b) => !b.isDigitalWallet).length ?? 0}',
                     icon: Icons.account_balance_wallet_rounded,
                     iconColor: AppColors.info,
+                    subtitle: banksAsync.value?.any((b) => b.isDigitalWallet) == true
+                        ? '${banksAsync.value!.where((b) => b.isDigitalWallet).length} wallets'
+                        : null,
                   ),
                 ),
               ],
@@ -115,51 +118,104 @@ class FinanceAccountsScreen extends ConsumerWidget {
             const Gap(20),
 
             // ── Account List ──────────────────────────────────────
-            BentoSectionHeader('Accounts'),
-            const Gap(12),
             banksAsync.when(
               loading: () => const LoadingCard(height: 80),
               error: (e, _) =>
                   const ErrorState(message: 'Could not load accounts'),
               data: (banks) {
                 if (banks.isEmpty) {
-                  return EmptyState(
-                    message: 'No accounts added yet',
-                    icon: Icons.account_balance_outlined,
-                    compact: true,
-                    action: TextButton(
-                      onPressed: () => showAddTransaction(context),
-                      child: const Text('Add a transaction'),
-                    ),
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      BentoSectionHeader('Accounts'),
+                      const Gap(12),
+                      EmptyState(
+                        message: 'No accounts added yet',
+                        icon: Icons.account_balance_outlined,
+                        compact: true,
+                        action: TextButton(
+                          onPressed: () => showAddTransaction(context),
+                          child: const Text('Add a transaction'),
+                        ),
+                      ),
+                    ],
                   );
                 }
-                return AppCard(
-                  padding: EdgeInsets.zero,
-                  child: Column(
-                    children: [
-                      for (int i = 0; i < banks.length; i++) ...[
-                        if (i > 0)
-                          Divider(
-                              height: 1,
-                              color: isDark
-                                  ? AppColors.border
-                                  : AppColors.lightBorder),
-                        _AccountDetailTile(
-                          bank: banks[i],
-                          textSecondary: textSecondary,
-                          onTap: () => _showBankAccountSheet(
-                              context, ref, existing: banks[i]),
-                          onDelete: () => ref
-                              .read(bankAccountsProvider.notifier)
-                              .delete(banks[i].id),
+
+                final bankAccounts = banks
+                    .where((b) => !b.isDigitalWallet)
+                    .toList();
+                final wallets = banks
+                    .where((b) => b.isDigitalWallet)
+                    .toList();
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Bank accounts
+                    if (bankAccounts.isNotEmpty) ...[
+                      BentoSectionHeader('Bank Accounts'),
+                      const Gap(12),
+                      AppCard(
+                        padding: EdgeInsets.zero,
+                        child: Column(
+                          children: [
+                            for (int i = 0; i < bankAccounts.length; i++) ...[
+                              if (i > 0)
+                                Divider(
+                                    height: 1,
+                                    color: isDark
+                                        ? AppColors.border
+                                        : AppColors.lightBorder),
+                              _AccountDetailTile(
+                                bank: bankAccounts[i],
+                                textSecondary: textSecondary,
+                                onTap: () => _showBankAccountSheet(
+                                    context, ref, existing: bankAccounts[i]),
+                                onDelete: () => ref
+                                    .read(bankAccountsProvider.notifier)
+                                    .delete(bankAccounts[i].id),
+                              ),
+                            ],
+                          ],
                         ),
-                      ],
+                      ),
+                      const Gap(20),
                     ],
-                  ),
+                    // Digital wallets
+                    if (wallets.isNotEmpty) ...[
+                      BentoSectionHeader('Digital Wallets'),
+                      const Gap(12),
+                      AppCard(
+                        padding: EdgeInsets.zero,
+                        child: Column(
+                          children: [
+                            for (int i = 0; i < wallets.length; i++) ...[
+                              if (i > 0)
+                                Divider(
+                                    height: 1,
+                                    color: isDark
+                                        ? AppColors.border
+                                        : AppColors.lightBorder),
+                              _WalletTile(
+                                wallet: wallets[i],
+                                textSecondary: textSecondary,
+                                onTap: () => _showBankAccountSheet(
+                                    context, ref, existing: wallets[i]),
+                                onDelete: () => ref
+                                    .read(bankAccountsProvider.notifier)
+                                    .delete(wallets[i].id),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                      const Gap(20),
+                    ],
+                  ],
                 );
               },
             ),
-            const Gap(20),
 
             // ── Per-account transaction breakdown ─────────────────
             if (txAsync.value != null && banksAsync.value != null)
@@ -205,13 +261,13 @@ class FinanceAccountsScreen extends ConsumerWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          FloatingActionButton.extended(
+          FloatingActionButton.small(
             heroTag: 'add_account',
             onPressed: () => _showBankAccountSheet(context, ref),
             backgroundColor: AppColors.info,
             foregroundColor: Colors.white,
-            icon: const Icon(Icons.account_balance_rounded, size: 18),
-            label: const Text('Add Account'),
+            tooltip: 'Add account or wallet',
+            child: const Icon(Icons.account_balance_rounded, size: 18),
           ),
           const Gap(10),
           FloatingActionButton.extended(
@@ -407,6 +463,100 @@ class _BalancePill extends StatelessWidget {
   }
 }
 
+// ── Digital Wallet Tile ───────────────────────────────────────────
+
+class _WalletTile extends StatelessWidget {
+  const _WalletTile({
+    required this.wallet,
+    required this.textSecondary,
+    this.onTap,
+    this.onDelete,
+  });
+  final BankAccount wallet;
+  final Color textSecondary;
+  final VoidCallback? onTap;
+  final VoidCallback? onDelete;
+
+  IconData get _walletIcon {
+    final p = (wallet.walletProvider ?? wallet.name).toLowerCase();
+    if (p.contains('paypal')) return Icons.payment_rounded;
+    if (p.contains('vodafone') || p.contains('cash')) return Icons.phone_android_rounded;
+    if (p.contains('payoneer') || p.contains('wise')) return Icons.currency_exchange_rounded;
+    if (p.contains('fawry') || p.contains('instapay') || p.contains('opay')) return Icons.account_balance_wallet_rounded;
+    return Icons.account_balance_wallet_outlined;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final fmt = NumberFormat('#,##0.##', 'en_US');
+    final balance = wallet.currentBalance + wallet.savingsBalance;
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: AppColors.finance.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(_walletIcon, size: 18, color: AppColors.finance),
+            ),
+            const Gap(12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    wallet.name,
+                    style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                  ),
+                  if (wallet.walletProvider != null)
+                    Text(
+                      wallet.walletProvider!,
+                      style: TextStyle(fontSize: 11, color: textSecondary),
+                    ),
+                ],
+              ),
+            ),
+            if (onDelete != null) ...[
+              IconButton(
+                icon: const Icon(Icons.delete_outline_rounded,
+                    size: 18, color: AppColors.error),
+                onPressed: onDelete,
+                tooltip: 'Delete wallet',
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              ),
+              const Gap(8),
+            ],
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  '${wallet.currency} ${fmt.format(balance)}',
+                  style: TextStyle(
+                    fontFamily: 'Roboto',
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: balance >= 0 ? AppColors.success : AppColors.error,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 // ── Bank Account Add / Edit ───────────────────────────────────────
 
 Future<void> _showBankAccountSheet(BuildContext context, WidgetRef ref,
@@ -431,13 +581,15 @@ class _BankAccountSheet extends ConsumerStatefulWidget {
 }
 
 class _BankAccountSheetState extends ConsumerState<_BankAccountSheet> {
-  final _nameCtrl = TextEditingController();
+  final _nameCtrl    = TextEditingController();
   final _currentCtrl = TextEditingController();
   final _savingsCtrl = TextEditingController();
   final _ccBalanceCtrl = TextEditingController();
-  final _ccLimitCtrl = TextEditingController();
-  bool _hasCard = false;
-  bool _saving = false;
+  final _ccLimitCtrl   = TextEditingController();
+  bool _hasCard  = false;
+  bool _saving   = false;
+  AccountType _accountType = AccountType.savings;
+  String? _walletProvider;
 
   @override
   void initState() {
@@ -445,12 +597,14 @@ class _BankAccountSheetState extends ConsumerState<_BankAccountSheet> {
     if (widget.existing != null) {
       final b = widget.existing!;
       _nameCtrl.text = b.name;
+      _accountType   = b.accountType;
+      _walletProvider = b.walletProvider;
       _currentCtrl.text = b.currentBalance > 0 ? b.currentBalance.toString() : '';
-      _savingsCtrl.text = b.savingsBalance > 0 ? b.savingsBalance.toString() : '';
+      _savingsCtrl.text  = b.savingsBalance > 0 ? b.savingsBalance.toString() : '';
       _hasCard = b.hasCard;
       if (b.hasCard) {
         _ccBalanceCtrl.text = b.creditCardBalance > 0 ? b.creditCardBalance.toString() : '';
-        _ccLimitCtrl.text = b.creditCardLimit > 0 ? b.creditCardLimit.toString() : '';
+        _ccLimitCtrl.text   = b.creditCardLimit  > 0 ? b.creditCardLimit.toString()   : '';
       }
     }
   }
@@ -465,6 +619,8 @@ class _BankAccountSheetState extends ConsumerState<_BankAccountSheet> {
     super.dispose();
   }
 
+  bool get _isWallet => _accountType == AccountType.digitalWallet;
+
   Future<void> _save() async {
     if (_nameCtrl.text.trim().isEmpty) return;
     setState(() => _saving = true);
@@ -472,10 +628,12 @@ class _BankAccountSheetState extends ConsumerState<_BankAccountSheet> {
       final acc = BankAccount(
         id: widget.existing?.id ?? _uuid.v4(),
         name: _nameCtrl.text.trim(),
+        accountType: _accountType,
+        walletProvider: _isWallet ? _walletProvider : null,
         currentBalance: double.tryParse(_currentCtrl.text) ?? 0,
-        savingsBalance: double.tryParse(_savingsCtrl.text) ?? 0,
-        creditCardBalance: _hasCard ? (double.tryParse(_ccBalanceCtrl.text) ?? 0) : 0,
-        creditCardLimit: _hasCard ? (double.tryParse(_ccLimitCtrl.text) ?? 0) : 0,
+        savingsBalance: _isWallet ? 0 : (double.tryParse(_savingsCtrl.text) ?? 0),
+        creditCardBalance: _hasCard && !_isWallet ? (double.tryParse(_ccBalanceCtrl.text) ?? 0) : 0,
+        creditCardLimit:   _hasCard && !_isWallet ? (double.tryParse(_ccLimitCtrl.text) ?? 0) : 0,
         minimumPayment: 0,
         order: widget.existing?.order ?? 0,
       );
@@ -523,69 +681,130 @@ class _BankAccountSheetState extends ConsumerState<_BankAccountSheet> {
                 widget.existing == null ? 'Add Account' : 'Edit Account',
                 style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
               ),
-              const Gap(20),
+              const Gap(16),
 
-              // Bank name autocomplete
-              Autocomplete<String>(
-                initialValue: TextEditingValue(text: _nameCtrl.text),
-                optionsBuilder: (v) => v.text.isEmpty
-                    ? const Iterable.empty()
-                    : AppConstants.egyptBanks.where(
-                        (b) => b.toLowerCase().contains(v.text.toLowerCase())),
-                onSelected: (s) => _nameCtrl.text = s,
-                fieldViewBuilder: (ctx, ctrl, fn, _) {
-                  if (_nameCtrl.text.isNotEmpty && ctrl.text.isEmpty) {
-                    ctrl.text = _nameCtrl.text;
-                  }
-                  return TextField(
-                    controller: ctrl,
-                    focusNode: fn,
-                    onChanged: (v) => _nameCtrl.text = v,
-                    decoration: InputDecoration(
-                      labelText: 'Bank / Account name',
-                      border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10)),
-                      contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 12),
-                    ),
-                  );
-                },
-              ),
-              const Gap(12),
-
+              // ── Account type toggle ────────────────────────────
               Row(children: [
-                Expanded(
-                  child: _NumField(
-                      ctrl: _currentCtrl, label: 'Current balance (EGP)'),
-                ),
-                const Gap(10),
-                Expanded(
-                  child: _NumField(
-                      ctrl: _savingsCtrl, label: 'Savings balance (EGP)'),
-                ),
+                for (final entry in [
+                  (AccountType.savings, '🏦 Bank', AppColors.info),
+                  (AccountType.digitalWallet, '📱 Wallet', AppColors.finance),
+                ])
+                  Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.only(
+                          right: entry.$1 == AccountType.savings ? 6 : 0),
+                      child: GestureDetector(
+                        onTap: () => setState(() => _accountType = entry.$1),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 150),
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          decoration: BoxDecoration(
+                            color: _accountType == entry.$1
+                                ? entry.$3.withValues(alpha: 0.12)
+                                : Colors.transparent,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: _accountType == entry.$1
+                                  ? entry.$3
+                                  : (isDark ? AppColors.border : AppColors.lightBorder),
+                            ),
+                          ),
+                          child: Center(
+                            child: Text(
+                              entry.$2,
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: _accountType == entry.$1
+                                    ? entry.$3
+                                    : (isDark ? AppColors.textSecondary : AppColors.lightTextSecondary),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
               ]),
+              const Gap(14),
+
+              // ── Name field ─────────────────────────────────────
+              if (_isWallet)
+                TextField(
+                  controller: _nameCtrl,
+                  decoration: InputDecoration(
+                    labelText: 'Wallet name',
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  ),
+                )
+              else
+                Autocomplete<String>(
+                  initialValue: TextEditingValue(text: _nameCtrl.text),
+                  optionsBuilder: (v) => v.text.isEmpty
+                      ? const Iterable.empty()
+                      : AppConstants.egyptBanks.where(
+                          (b) => b.toLowerCase().contains(v.text.toLowerCase())),
+                  onSelected: (s) => _nameCtrl.text = s,
+                  fieldViewBuilder: (ctx, ctrl, fn, _) {
+                    if (_nameCtrl.text.isNotEmpty && ctrl.text.isEmpty) {
+                      ctrl.text = _nameCtrl.text;
+                    }
+                    return TextField(
+                      controller: ctrl,
+                      focusNode: fn,
+                      onChanged: (v) => _nameCtrl.text = v,
+                      decoration: InputDecoration(
+                        labelText: 'Bank / Account name',
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      ),
+                    );
+                  },
+                ),
               const Gap(12),
 
-              SwitchListTile(
-                value: _hasCard,
-                onChanged: (v) => setState(() => _hasCard = v),
-                title: const Text('Has credit card'),
-                contentPadding: EdgeInsets.zero,
-              ),
-
-              if (_hasCard) ...[
-                const Gap(4),
+              // ── Wallet provider (for digital wallets only) ─────
+              if (_isWallet) ...[
+                DropdownButtonFormField<String>(
+                  initialValue: kDigitalWallets.contains(_walletProvider) ? _walletProvider : null,
+                  decoration: InputDecoration(
+                    labelText: 'Wallet provider (optional)',
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  ),
+                  hint: const Text('Select provider'),
+                  items: kDigitalWallets
+                      .map((w) => DropdownMenuItem(value: w, child: Text(w)))
+                      .toList(),
+                  onChanged: (v) => setState(() => _walletProvider = v),
+                ),
+                const Gap(12),
+                _NumField(ctrl: _currentCtrl, label: 'Balance'),
+              ] else ...[
+                // ── Bank balance fields ──────────────────────────
                 Row(children: [
-                  Expanded(
-                    child: _NumField(
-                        ctrl: _ccBalanceCtrl, label: 'CC balance used (EGP)'),
-                  ),
+                  Expanded(child: _NumField(ctrl: _currentCtrl, label: 'Current balance (EGP)')),
                   const Gap(10),
-                  Expanded(
-                    child:
-                        _NumField(ctrl: _ccLimitCtrl, label: 'CC limit (EGP)'),
-                  ),
+                  Expanded(child: _NumField(ctrl: _savingsCtrl, label: 'Savings balance (EGP)')),
                 ]),
+                const Gap(12),
+
+                SwitchListTile(
+                  value: _hasCard,
+                  onChanged: (v) => setState(() => _hasCard = v),
+                  title: const Text('Has credit card'),
+                  contentPadding: EdgeInsets.zero,
+                ),
+
+                if (_hasCard) ...[
+                  const Gap(4),
+                  Row(children: [
+                    Expanded(child: _NumField(ctrl: _ccBalanceCtrl, label: 'CC balance used (EGP)')),
+                    const Gap(10),
+                    Expanded(child: _NumField(ctrl: _ccLimitCtrl, label: 'CC limit (EGP)')),
+                  ]),
+                ],
               ],
 
               const Gap(24),
@@ -595,10 +814,11 @@ class _BankAccountSheetState extends ConsumerState<_BankAccountSheet> {
                   onPressed: _saving ? null : _save,
                   child: _saving
                       ? const SizedBox(
-                          width: 20,
-                          height: 20,
+                          width: 20, height: 20,
                           child: CircularProgressIndicator(strokeWidth: 2))
-                      : Text(widget.existing == null ? 'Add Account' : 'Save'),
+                      : Text(widget.existing == null
+                          ? (_isWallet ? 'Add Wallet' : 'Add Account')
+                          : 'Save'),
                 ),
               ),
             ],
